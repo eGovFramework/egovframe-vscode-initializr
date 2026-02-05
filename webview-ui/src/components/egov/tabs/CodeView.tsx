@@ -72,8 +72,8 @@ const CodeView = () => {
 	const [monacoTheme, setMonacoTheme] = useState<"light" | "vs-dark">("vs-dark")
 	// Monaco Editor 포커스 상태
 	const [isEditorFocused, setIsEditorFocused] = useState(false)
-	// SQL 방언 선택 (MySQL or PostgreSQL or etc)
-	const [sqlDialect, setSqlDialect] = useState<"mysql" | "pgsql" | "etc">("mysql")
+	// SQL 방언 선택 (MySQL or PostgreSQL or Generic)
+	const [sqlDialect, setSqlDialect] = useState<"mysql" | "pgsql" | "generic">("mysql")
 	// 현재 선택된 샘플 키 추적
 	const [selectedSampleKey, setSelectedSampleKey] = useState<string>("")
 	// Monaco Editor 인스턴스 참조
@@ -601,7 +601,7 @@ const CodeView = () => {
 									id="sql-dialect-select"
 									value={sqlDialect}
 									onChange={(e) => {
-										setSqlDialect(e.target.value as "mysql" | "pgsql" | "etc")
+										setSqlDialect(e.target.value as "mysql" | "pgsql" | "generic")
 										setSelectedSampleKey("")
 									}}
 									style={{
@@ -622,7 +622,7 @@ const CodeView = () => {
 									}}>
 									<option value="mysql">MySQL</option>
 									<option value="pgsql">PostgreSQL</option>
-									<option value="etc">etc</option>
+									<option value="generic">Generic</option>
 								</select>
 							</div>
 
@@ -676,7 +676,7 @@ const CodeView = () => {
 									e.target.style.border = "1px solid var(--vscode-dropdown-border)"
 								}}>
 								<option value="">Enter directly</option>
-								{sqlDialect !== "etc" &&
+								{sqlDialect !== "generic" &&
 									sampleDDLs &&
 									Object.entries(sampleDDLs)
 										.filter(([key, sample]) => sample.dialect === sqlDialect)
@@ -724,7 +724,7 @@ const CodeView = () => {
 						}}>
 						<Editor // Monaco Editor -> SQL Syntax Highlighting with monaco-sql-languages
 							height="300px"
-							language={sqlDialect === "etc" ? "sql" : sqlDialect} // Use selected SQL dialect (mysql, pgsql, or generic sql for etc)
+							language={sqlDialect === "generic" ? "sql" : sqlDialect} // Use selected SQL dialect (mysql, pgsql, or generic sql)
 							theme={monacoTheme} // 동적 테마 적용
 							value={ddlContent}
 							onChange={(value) => setDdlContent(value || "")}
@@ -835,9 +835,9 @@ const CodeView = () => {
 							{error}
 						</div>
 					)}
-					{sqlDialect === "etc" && (
+					{sqlDialect === "generic" && (
 						<div style={{ fontSize: "12px", color: "var(--vscode-foreground)", marginTop: "5px" }}>
-							'DDL Input: etc' supports basic SQL validation only.
+							'DDL Input: Generic' supports basic SQL validation only.
 						</div>
 					)}
 				</div>
