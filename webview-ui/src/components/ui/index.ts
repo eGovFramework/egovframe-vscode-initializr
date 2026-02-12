@@ -12,3 +12,6 @@ export { ResponsiveMenuButton, type ResponsiveMenuButtonProps } from "./Responsi
 
 // Theme System
 export { createVSCodeTheme, useVSCodeTheme, VSCodeThemeContext, type VSCodeTheme } from "./theme"
+
+// Language
+export { LanguageSelector } from "./LanguageSelector"

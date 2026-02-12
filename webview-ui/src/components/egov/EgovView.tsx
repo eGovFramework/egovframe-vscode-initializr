@@ -1,6 +1,7 @@
 import { useState, useEffect, memo } from "react"
+import { useTranslation } from "react-i18next"
 import { EgovViewTab } from "../../shared/egovframe"
-import { Button, useVSCodeTheme } from "../ui"
+import { Button, useVSCodeTheme, LanguageSelector } from "../ui"
 import ProjectsView from "./tabs/ProjectsView"
 import CodeView from "./tabs/CodeView"
 import ConfigView from "./tabs/ConfigView"
@@ -13,6 +14,7 @@ interface EgovViewProps {
 const EgovView = memo(({ onDone, initialTab }: EgovViewProps) => {
 	const [activeTab, setActiveTab] = useState<EgovViewTab>(initialTab || "projects")
 	const theme = useVSCodeTheme()
+	const { t } = useTranslation()
 
 	const handleTabChange = (tab: EgovViewTab) => {
 		setActiveTab(tab)
@@ -50,19 +52,23 @@ const EgovView = memo(({ onDone, initialTab }: EgovViewProps) => {
 				<div
 					style={{
 						display: "flex",
-						gap: "1px",
+						justifyContent: "space-between",
+						alignItems: "center",
 						padding: "0 20px 0 20px",
 						borderBottom: `1px solid ${theme.colors.panelBorder}`,
 					}}>
-					<TabButton isActive={activeTab === "projects"} onClick={() => handleTabChange("projects")}>
-						Projects
-					</TabButton>
-					<TabButton isActive={activeTab === "code"} onClick={() => handleTabChange("code")}>
-						Code Generator
-					</TabButton>
-					<TabButton isActive={activeTab === "config"} onClick={() => handleTabChange("config")}>
-						Configuration
-					</TabButton>
+					<div style={{ display: "flex", gap: "1px" }}>
+						<TabButton isActive={activeTab === "projects"} onClick={() => handleTabChange("projects")}>
+							{t("tabs.projects")}
+						</TabButton>
+						<TabButton isActive={activeTab === "code"} onClick={() => handleTabChange("code")}>
+							{t("tabs.codeGenerator")}
+						</TabButton>
+						<TabButton isActive={activeTab === "config"} onClick={() => handleTabChange("config")}>
+							{t("tabs.configuration")}
+						</TabButton>
+					</div>
+					<LanguageSelector />
 				</div>
 
 				{/* Content container */}

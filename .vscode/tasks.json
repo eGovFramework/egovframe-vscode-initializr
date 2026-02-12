@@ -97,7 +97,21 @@
 			"type": "npm",
 			"script": "watch:esbuild",
 			"group": "build",
-			"problemMatcher": "$esbuild-watch",
+			"problemMatcher": {
+				"pattern": {
+					"regexp": "^(.+):(\\d+):(\\d+): (error|warning): (.+)$",
+					"file": 1,
+					"line": 2,
+					"column": 3,
+					"severity": 4,
+					"message": 5
+				},
+				"background": {
+					"activeOnStart": true,
+					"beginsPattern": "^\\[watch\\] build started",
+					"endsPattern": "^\\[watch\\] build finished"
+				}
+			},
 			"isBackground": true,
 			"label": "npm: watch:esbuild",
 			"dependsOn": [],
@@ -115,7 +129,21 @@
 			"type": "npm",
 			"script": "watch:esbuild:test",
 			"group": "build",
-			"problemMatcher": "$esbuild-watch",
+			"problemMatcher": {
+				"pattern": {
+					"regexp": "^(.+):(\\d+):(\\d+): (error|warning): (.+)$",
+					"file": 1,
+					"line": 2,
+					"column": 3,
+					"severity": 4,
+					"message": 5
+				},
+				"background": {
+					"activeOnStart": true,
+					"beginsPattern": "^\\[watch\\] build started",
+					"endsPattern": "^\\[watch\\] build finished"
+				}
+			},
 			"isBackground": true,
 			"label": "npm: watch:esbuild:test",
 			"dependsOn": [],

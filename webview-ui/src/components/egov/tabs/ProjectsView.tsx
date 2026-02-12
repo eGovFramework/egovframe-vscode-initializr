@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react"
+import { useTranslation } from "react-i18next"
 import { Button, TextField, TextArea, Select, RadioGroup, ProgressRing, Link, Divider } from "../../ui"
 import { vscode } from "../../../utils/vscode"
 import {
@@ -14,6 +15,7 @@ import { createSelectOutputPathMessage } from "../../../utils/egovUtils"
 import { useProjectsViewState } from "../../../context/EgovTabsStateContext"
 
 export const ProjectsView = () => {
+	const { t } = useTranslation()
 	const { state, updateState } = useProjectsViewState()
 	const {
 		selectedCategory,
@@ -245,9 +247,7 @@ export const ProjectsView = () => {
 		<div style={{ padding: "20px" }}>
 			{/* Header */}
 			<div style={{ marginBottom: "20px" }}>
-				<h3 style={{ color: "var(--vscode-foreground)", marginTop: 0, marginBottom: "8px" }}>
-					Generate eGovFrame Projects
-				</h3>
+				<h3 style={{ color: "var(--vscode-foreground)", marginTop: 0, marginBottom: "8px" }}>{t("projects.title")}</h3>
 				<p
 					style={{
 						fontSize: "12px",
@@ -255,8 +255,7 @@ export const ProjectsView = () => {
 						margin: 0,
 						marginTop: "5px",
 					}}>
-					Generate new eGovFrame projects from predefined templates. Choose from various project templates including
-					basic Spring applications, AI applications, and more. Learn more at{" "}
+					{t("projects.description")}{" "}
 					<Link
 						href="https://github.com/eGovFramework/egovframe-vscode-initializr"
 						style={{ display: "inline", fontSize: "12px" }}>
@@ -382,7 +381,7 @@ export const ProjectsView = () => {
 					{/* Template Category Selection */}
 					<div style={{ marginBottom: "20px" }}>
 						<h4 style={{ color: "var(--vscode-foreground)", marginBottom: "10px", marginTop: 0 }}>
-							Template Category
+							{t("projects.templateCategory")}
 						</h4>
 						<select
 							value={selectedCategory}
@@ -417,7 +416,9 @@ export const ProjectsView = () => {
 
 					{/* Template Selection */}
 					<div style={{ marginBottom: "20px" }}>
-						<h4 style={{ color: "var(--vscode-foreground)", marginBottom: "10px" }}>Template Selection</h4>
+						<h4 style={{ color: "var(--vscode-foreground)", marginBottom: "10px" }}>
+							{t("projects.templateSelection")}
+						</h4>
 						<div
 							style={{
 								border: "1px solid var(--vscode-dropdown-border)",
@@ -434,7 +435,7 @@ export const ProjectsView = () => {
 										padding: "20px",
 										color: "var(--vscode-descriptionForeground)",
 									}}>
-									Loading templates...
+									{t("projects.loadingTemplates")}
 								</div>
 							) : filteredTemplates.length === 0 ? (
 								<div
@@ -443,7 +444,7 @@ export const ProjectsView = () => {
 										padding: "20px",
 										color: "var(--vscode-descriptionForeground)",
 									}}>
-									No templates available
+									{t("projects.noTemplates")}
 								</div>
 							) : (
 								filteredTemplates.map((template) => (
@@ -479,19 +480,21 @@ export const ProjectsView = () => {
 					{/* Project Configuration */}
 					{selectedTemplate && (
 						<div style={{ marginBottom: "20px" }}>
-							<h4 style={{ color: "var(--vscode-foreground)", marginBottom: "10px" }}>Project Configuration</h4>
+							<h4 style={{ color: "var(--vscode-foreground)", marginBottom: "10px" }}>
+								{t("projects.projectConfiguration")}
+							</h4>
 
 							{/* Project Name */}
 							<div style={{ width: "calc(100% - 24px)", marginBottom: "15px" }}>
 								<TextField
-									label="Project Name"
+									label={t("projects.projectName")}
 									value={projectName}
 									onChange={handleProjectNameChange}
-									placeholder="Enter project name"
+									placeholder={t("projects.projectNamePlaceholder")}
 									isRequired
 								/>
 								<div style={{ fontSize: "10px", color: "var(--vscode-descriptionForeground)", marginTop: "2px" }}>
-									Will be used as the project folder name
+									{t("projects.projectNameHint")}
 								</div>
 							</div>
 
@@ -499,10 +502,10 @@ export const ProjectsView = () => {
 							{selectedTemplate.pomFile && (
 								<div style={{ width: "calc(100% - 24px)", marginBottom: "15px" }}>
 									<TextField
-										label="Group ID"
+										label={t("projects.groupId")}
 										value={groupId}
 										onChange={handleGroupIdChange}
-										placeholder="com.company.project (lowercase letters, numbers, or dots only)"
+										placeholder={t("projects.groupIdPlaceholder")}
 										isRequired
 									/>
 									<div
@@ -511,7 +514,7 @@ export const ProjectsView = () => {
 											color: "var(--vscode-descriptionForeground)",
 											marginTop: "2px",
 										}}>
-										Will be used as the groupId in pom.xml
+										{t("projects.groupIdHint")}
 									</div>
 								</div>
 							)}
@@ -520,10 +523,10 @@ export const ProjectsView = () => {
 							{selectedTemplate.pomFile && (
 								<div style={{ width: "calc(100% - 24px)", marginBottom: "15px" }}>
 									<TextField
-										label="Artifact ID"
+										label={t("projects.artifactId")}
 										value={artifactId}
 										onChange={handleArtifactIdChange}
-										placeholder="my-project (lowercase letters, numbers, or hyphens only)"
+										placeholder={t("projects.artifactIdPlaceholder")}
 										isRequired
 									/>
 									<div
@@ -532,7 +535,7 @@ export const ProjectsView = () => {
 											color: "var(--vscode-descriptionForeground)",
 											marginTop: "2px",
 										}}>
-										Will be used as the artifactId and name in pom.xml
+										{t("projects.artifactIdHint")}
 									</div>
 								</div>
 							)}
@@ -542,10 +545,10 @@ export const ProjectsView = () => {
 								<div style={{ display: "flex", gap: "10px", alignItems: "end" }}>
 									<div style={{ flex: 1, marginRight: "10px" }}>
 										<TextField
-											label="Output Path"
+											label={t("projects.outputPath")}
 											value={outputPath}
 											onChange={(e: any) => setOutputPath(e.target.value)}
-											placeholder="Select output directory"
+											placeholder={t("projects.outputPathPlaceholder")}
 											isRequired
 										/>
 									</div>
@@ -579,11 +582,12 @@ export const ProjectsView = () => {
 										}}
 										onClick={handleSelectOutputPath}>
 										<span className="codicon codicon-folder-opened" style={{ marginRight: "6px" }}></span>
-										Browse
+										{t("common.browse")}
 									</button>
 								</div>
 								<div style={{ fontSize: "10px", color: "var(--vscode-descriptionForeground)", marginTop: "2px" }}>
-									Project will be created in: {outputPath ? `${outputPath}/${projectName}` : "Not selected"}
+									{t("projects.outputPathHint")}{" "}
+									{outputPath ? `${outputPath}/${projectName}` : t("projects.notSelected")}
 								</div>
 							</div>
 
@@ -597,7 +601,7 @@ export const ProjectsView = () => {
 									marginBottom: "15px",
 								}}>
 								<div style={{ fontSize: "12px", marginBottom: "5px" }}>
-									<strong>Selected Template:</strong> {selectedTemplate.displayName}
+									<strong>{t("projects.selectedTemplate")}</strong> {selectedTemplate.displayName}
 								</div>
 								<div style={{ fontSize: "11px", color: "var(--vscode-descriptionForeground)" }}>
 									{selectedTemplate.description}
@@ -609,7 +613,7 @@ export const ProjectsView = () => {
 											color: "var(--vscode-descriptionForeground)",
 											marginTop: "5px",
 										}}>
-										Includes: Maven POM configuration
+										{t("projects.includesMaven")}
 									</div>
 								)}
 							</div>
@@ -627,7 +631,7 @@ export const ProjectsView = () => {
 									padding: "10px",
 									borderRadius: "3px",
 								}}>
-								<div style={{ fontWeight: "bold", marginBottom: "5px" }}>Validation Errors:</div>
+								<div style={{ fontWeight: "bold", marginBottom: "5px" }}>{t("projects.validationErrors")}</div>
 								<ul style={{ margin: 0, paddingLeft: "20px" }}>
 									{validationErrors.map((error, index) => (
 										<li key={index} style={{ fontSize: "12px" }}>
@@ -724,12 +728,12 @@ export const ProjectsView = () => {
 									<span
 										className="codicon codicon-loading codicon-modifier-spin"
 										style={{ marginRight: "6px" }}></span>
-									Generating...
+									{t("common.generating")}
 								</>
 							) : (
 								<>
 									<span className="codicon codicon-rocket" style={{ marginRight: "6px" }}></span>
-									Generate Project
+									{t("projects.generateProject")}
 								</>
 							)}
 						</button>
@@ -747,33 +751,33 @@ export const ProjectsView = () => {
 					marginTop: "20px",
 				}}>
 				<h4 style={{ color: "var(--vscode-foreground)", marginBottom: "10px", marginTop: 0 }}>
-					Available Templates ({projectTemplates.length})
+					{t("projects.availableTemplates")} ({projectTemplates.length})
 				</h4>
 				<div style={{ fontSize: "12px", color: "var(--vscode-foreground)" }}>
 					<div style={{ marginBottom: "8px" }}>
-						<strong>Categories:</strong>
+						<strong>{t("projects.categories")}</strong>
 					</div>
 					<ul style={{ fontSize: "11px", color: "var(--vscode-foreground)", margin: "0", paddingLeft: "20px" }}>
 						<li>
-							<strong>Web:</strong> Basic web application projects
+							<strong>Web:</strong> {t("projects.categoryWeb")}
 						</li>
 						<li>
-							<strong>Template:</strong> Pre-configured project templates
+							<strong>Template:</strong> {t("projects.categoryTemplate")}
 						</li>
 						<li>
-							<strong>Boot:</strong> Spring Boot based projects
+							<strong>Boot:</strong> {t("projects.categoryBoot")}
 						</li>
 						<li>
-							<strong>MSA:</strong> Microservices architecture projects
+							<strong>MSA:</strong> {t("projects.categoryMSA")}
 						</li>
 						<li>
-							<strong>Mobile:</strong> Mobile and hybrid app projects
+							<strong>Mobile:</strong> {t("projects.categoryMobile")}
 						</li>
 						<li>
-							<strong>Batch:</strong> Batch processing projects
+							<strong>Batch:</strong> {t("projects.categoryBatch")}
 						</li>
 						<li>
-							<strong>AI:</strong> AI-powered application projects
+							<strong>AI:</strong> {t("projects.categoryAI")}
 						</li>
 					</ul>
 				</div>
