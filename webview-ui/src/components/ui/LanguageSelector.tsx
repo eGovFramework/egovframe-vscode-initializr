@@ -2,12 +2,23 @@ import { useTranslation } from "react-i18next"
 import { changeLanguage } from "../../i18n"
 import { useVSCodeTheme } from "./theme"
 
-export const LanguageSelector = () => {
+interface LanguageSelectorProps {
+	value?: string // value가 주어지면 해당 값을 드롭다운에 표시. 주어지지 않으면 i18n.language를 사용.
+	onChange?: (lang: string) => void // onChange가 주어지면 즉시 언어를 변경하는 대신 해당 함수를 호출. 주어지지 않으면 changeLanguage를 사용하여 언어 변경.
+}
+
+export const LanguageSelector = ({ value, onChange }: LanguageSelectorProps = {}) => {
 	const { t, i18n } = useTranslation()
 	const theme = useVSCodeTheme()
 
+	const currentValue = value ?? i18n.language
+
 	const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-		changeLanguage(e.target.value)
+		if (onChange) {
+			onChange(e.target.value)
+		} else {
+			changeLanguage(e.target.value)
+		}
 	}
 
 	return (
@@ -25,7 +36,7 @@ export const LanguageSelector = () => {
 				{t("language.select")}:
 			</label>
 			<select
-				value={i18n.language}
+				value={currentValue}
 				onChange={handleLanguageChange}
 				style={{
 					padding: "4px 8px",

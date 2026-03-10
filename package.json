@@ -113,6 +113,15 @@
 					"type": "string",
 					"default": "egovframework.example.sample",
 					"description": "Default package name for eGovFrame CRUD code generation"
+				},
+				"egovframeInitializr.language": {
+					"type": "string",
+					"enum": [
+						"en",
+						"ko"
+					],
+					"default": "en",
+					"description": "Display language for eGovFrame Initializr (en: English, ko: Korean). Default is English."
 				}
 			}
 		}

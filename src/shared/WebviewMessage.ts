@@ -24,5 +24,6 @@ export interface WebviewMessage {
 		defaultGroupId?: string
 		defaultArtifactId?: string
 		defaultPackageName?: string
+		language?: string
 	}
 }

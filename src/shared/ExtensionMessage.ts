@@ -79,6 +79,7 @@ export type ExtensionMessage =
 				defaultGroupId: string
 				defaultArtifactId: string
 				defaultPackageName: string
+				language: string
 			}
 	  }
 	| {

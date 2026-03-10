@@ -52,23 +52,25 @@ const EgovView = memo(({ onDone, initialTab }: EgovViewProps) => {
 				<div
 					style={{
 						display: "flex",
-						justifyContent: "space-between",
-						alignItems: "center",
+						gap: "1px",
 						padding: "0 20px 0 20px",
 						borderBottom: `1px solid ${theme.colors.panelBorder}`,
 					}}>
-					<div style={{ display: "flex", gap: "1px" }}>
+					<div style={{ flex: "auto", textAlign: "center" }}>
 						<TabButton isActive={activeTab === "projects"} onClick={() => handleTabChange("projects")}>
 							{t("tabs.projects")}
 						</TabButton>
+					</div>
+					<div style={{ flex: "auto", textAlign: "center" }}>
 						<TabButton isActive={activeTab === "code"} onClick={() => handleTabChange("code")}>
 							{t("tabs.codeGenerator")}
 						</TabButton>
+					</div>
+					<div style={{ flex: "auto", textAlign: "center" }}>
 						<TabButton isActive={activeTab === "config"} onClick={() => handleTabChange("config")}>
 							{t("tabs.configuration")}
 						</TabButton>
 					</div>
-					<LanguageSelector />
 				</div>
 
 				{/* Content container */}

@@ -117,18 +117,31 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
 			vscode.Uri.joinPath(this.context.extensionUri, "webview-ui", "build", "assets", "index.css"),
 		)
 
+		// VSCode settings에서 language 읽기 (vscode.workspace.getConfiguration — Extension Host에서 실행)
+		const language = vscode.workspace.getConfiguration("egovframeInitializr").get<string>("language", "en")
+		// XSS 방지: enum 검증
+		const safeLanguage = language === "ko" ? "ko" : "en"
+		// CSP(Content Security Policy)에 inline script 허용하기 위해 보안용 랜덤 nonce 생성
+		const nonce = Array.from(crypto.getRandomValues(new Uint8Array(16)))
+			.map((b) => b.toString(16).padStart(2, "0"))
+			.join("")
+		// html head에 CSP 설정 추가, script에 window.__EGOV_INIT_LANGUAGE__ TypeScript 전역 타입 선언
+		// nonce 값을 통해 각 script에 고유한 값을 부여하여 CSP 위반 방지
+
 		return `
 			<!DOCTYPE html>
 			<html lang="en">
 			<head>
 				<meta charset="UTF-8">
 				<meta name="viewport" content="width=device-width, initial-scale=1.0">
+				<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'nonce-${nonce}' ${webview.cspSource}; style-src ${webview.cspSource} 'unsafe-inline'; font-src ${webview.cspSource};">
 				<title>eGovFrame Initializr</title>
 				<link rel="stylesheet" type="text/css" href="${styleUri}">
 			</head>
 			<body>
 				<div id="root"></div>
-				<script type="module" src="${scriptUri}"></script>
+				<script nonce="${nonce}">window.__EGOV_INIT_LANGUAGE__ = "${safeLanguage}";</script>
+				<script type="module" src="${scriptUri}" nonce="${nonce}"></script>
 			</body>
 			</html>
 		`

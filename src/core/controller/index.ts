@@ -174,6 +174,7 @@ export class Controller {
 				const defaultArtifactId = config.get<string>("defaultArtifactId", "egovframe-project") || "egovframe-project"
 				const defaultPackageName =
 					config.get<string>("defaultPackageName", "egovframework.example.sample") || "egovframework.example.sample"
+				const language = config.get<string>("language", "en") || "en"
 
 				await this.postMessageToWebview({
 					type: "egovSettings",
@@ -181,6 +182,7 @@ export class Controller {
 						defaultGroupId,
 						defaultArtifactId,
 						defaultPackageName,
+						language,
 					},
 				})
 				break
@@ -516,6 +518,7 @@ export class Controller {
 						defaultGroupId: config.get<string>("defaultGroupId", "egovframework.com"),
 						defaultArtifactId: config.get<string>("defaultArtifactId", "egovframe-project"),
 						defaultPackageName: config.get<string>("defaultPackageName", "egovframework.example.sample"),
+						language: config.get<string>("language", "en"),
 					}
 
 					await this.postMessageToWebview({
@@ -552,6 +555,9 @@ export class Controller {
 							message.settings.defaultPackageName,
 							vscode.ConfigurationTarget.Global,
 						)
+					}
+					if (message.settings && message.settings.language !== undefined) {
+						await config.update("language", message.settings.language, vscode.ConfigurationTarget.Global)
 					}
 
 					await this.postMessageToWebview({

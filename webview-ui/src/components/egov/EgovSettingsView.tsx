@@ -1,7 +1,8 @@
 import { memo, useState, useEffect } from "react"
-import { Button, TextField, useVSCodeTheme, ResponsiveMenuButton } from "../ui"
+import { Button, TextField, useVSCodeTheme, ResponsiveMenuButton, LanguageSelector } from "../ui"
 import { vscode } from "../../utils/vscode"
 import { validateEgovSettings } from "../../utils/settingsUtils"
+import i18n, { changeLanguage } from "../../i18n"
 
 interface EgovSettingsViewProps {
 	onDone: () => void
@@ -54,6 +55,7 @@ const EgovSettingsView = memo(({ onDone }: EgovSettingsViewProps) => {
 		type: null,
 	})
 	const [validationErrors, setValidationErrors] = useState<string[]>([])
+	const [pendingLanguage, setPendingLanguage] = useState<string>(() => i18n.language)
 
 	// 화면 크기 감지 및 컴팩트 모드 설정
 	useEffect(() => {
@@ -78,6 +80,9 @@ const EgovSettingsView = memo(({ onDone }: EgovSettingsViewProps) => {
 			const message = event.data
 			if (message.type === "egovSettings") {
 				setSettings(message.settings)
+				if (message.settings.language) {
+					setPendingLanguage(message.settings.language)
+				}
 				settingsLoaded = true
 				if (extensionInfoLoaded) {
 					setIsLoading(false)
@@ -146,9 +151,16 @@ const EgovSettingsView = memo(({ onDone }: EgovSettingsViewProps) => {
 			message: "",
 			type: null,
 		})
+
+		// 선택된 언어 적용
+		changeLanguage(pendingLanguage)
+
 		vscode.postMessage({
 			type: "updateEgovSettings",
-			settings,
+			settings: {
+				...settings,
+				language: pendingLanguage,
+			},
 		})
 	}
 
@@ -188,7 +200,7 @@ const EgovSettingsView = memo(({ onDone }: EgovSettingsViewProps) => {
 				</h3>
 			</div>
 
-			{/* Generate eGovFrame Projects Settings */}
+			{/* Language Settings */}
 			<div style={{ marginBottom: "32px" }}>
 				<h4
 					style={{
@@ -197,7 +209,24 @@ const EgovSettingsView = memo(({ onDone }: EgovSettingsViewProps) => {
 						fontSize: theme.fontSize.md,
 						fontWeight: "600",
 					}}>
-					Generate eGovFrame Projects Settings
+					Language Settings
+				</h4>
+				<LanguageSelector value={pendingLanguage} onChange={setPendingLanguage} />
+				<p className="text-sm" style={{ color: theme.colors.descriptionForeground }}>
+					Currently, only applied to the "Projects" tab.
+				</p>
+			</div>
+
+			{/* Generate Projects Settings */}
+			<div style={{ marginBottom: "32px" }}>
+				<h4
+					style={{
+						color: theme.colors.foreground,
+						margin: "0 0 16px 0",
+						fontSize: theme.fontSize.md,
+						fontWeight: "600",
+					}}>
+					Generate Projects Settings
 				</h4>
 
 				<div style={{ display: "flex", flexDirection: "column", gap: "0px" }}>
@@ -223,7 +252,7 @@ const EgovSettingsView = memo(({ onDone }: EgovSettingsViewProps) => {
 				</div>
 			</div>
 
-			{/* Generate eGovFrame Code Settings */}
+			{/* Generate Code Settings */}
 			<div style={{ marginBottom: "32px" }}>
 				<h4
 					style={{
@@ -232,7 +261,7 @@ const EgovSettingsView = memo(({ onDone }: EgovSettingsViewProps) => {
 						fontSize: theme.fontSize.md,
 						fontWeight: "600",
 					}}>
-					Generate eGovFrame CRUD Code Settings
+					Generate CRUD Code Settings
 				</h4>
 
 				<div style={{ width: "calc(100% - 24px)", marginBottom: "15px" }}>
