@@ -152,8 +152,7 @@
 		]
 	},
 	"devDependencies": {
-		"@types/archiver": "^6.0.3",
-		"@types/fs-extra": "^11.0.4",
+		"@types/fs-extra": "^11.2.0",
 		"@types/node": "20.x",
 		"@types/vscode": "^1.84.0",
 		"@typescript-eslint/eslint-plugin": "^7.14.1",
@@ -168,7 +167,6 @@
 		"typescript": "^5.4.5"
 	},
 	"dependencies": {
-		"archiver": "^7.0.1",
 		"extract-zip": "^2.0.1",
 		"fs-extra": "^11.2.0",
 		"handlebars": "^4.7.8"

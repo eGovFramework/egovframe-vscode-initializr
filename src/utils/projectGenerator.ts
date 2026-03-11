@@ -1,7 +1,6 @@
 import * as vscode from "vscode"
 import * as fs from "fs-extra"
 import * as path from "path"
-import archiver from "archiver"
 import extractZip from "extract-zip"
 
 export interface EgovProjectTemplate {
