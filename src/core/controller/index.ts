@@ -220,7 +220,7 @@ export class Controller {
 				if (message.ddl) {
 					try {
 						const { uploadTemplates } = await import("../../utils/codeGenerator")
-						await uploadTemplates(message.ddl)
+						await uploadTemplates(message.ddl, message.packageName || "")
 						await this.postMessageToWebview({
 							type: "success",
 							text: "Custom template code generation completed successfully",

@@ -1,5 +1,6 @@
 import { Column } from "./ddlParser"
 
+// 템플릿 렌더링에 필요한 컨텍스트 정보를 담는 인터페이스
 export interface TemplateContext {
 	//namespace: string
 	//resultMapId: string
@@ -20,11 +21,12 @@ export interface TemplateContext {
 	version: string
 }
 
+// 템플릿 렌더링에 필요한 컨텍스트 정보를 생성
 export function getTemplateContext(
 	tableName: string,
 	attributes: Column[],
 	pkAttributes: Column[],
-	packageName: string = "egovframework.example.sample",
+	packageName: string = "egovframework.example.sample", // vscode.workspace.getConfiguration("egovframeInitializr").get<string>("defaultPackageName", "egovframework.example.sample")
 ): TemplateContext {
 	return {
 		// MyBatis 설정

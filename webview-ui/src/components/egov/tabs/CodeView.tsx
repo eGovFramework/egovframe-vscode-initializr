@@ -1,7 +1,7 @@
 import { Button, TextArea, Link, ProgressRing, TextField } from "../../ui"
 import { useState, useEffect, useRef } from "react"
-import { parseDDL, validateDDL, ParsedDDL } from "../../../utils/ddlParser"
-import { getTemplateContext } from "../../../utils/templateContext"
+import { parseDDL, validateDDL, ParsedDDL } from "@shared/ddlParser"
+import { getTemplateContext } from "@shared/templateContext"
 import { WebviewMessage, ExtensionResponse } from "../../../utils/messageTypes"
 import { createSelectOutputPathMessage } from "../../../utils/egovUtils"
 import { vscode } from "../../../utils/vscode"
@@ -429,6 +429,7 @@ const CodeView = () => {
 			vscode.postMessage({
 				type: "uploadTemplates",
 				ddl: ddlContent,
+				packageName: packageName,
 			})
 		} catch (err) {
 			console.error("Error sending uploadTemplates message:", err)
@@ -458,7 +459,7 @@ const CodeView = () => {
 			vscode.postMessage({
 				type: "downloadTemplateContext",
 				ddl: ddlContent,
-				context,
+				context: context,
 			})
 		} catch (err) {
 			console.error("Error in downloadTemplateContext:", err)

@@ -1,5 +1,6 @@
-import { getJavaClassName } from "../../../src/shared/dataTypes"
+import { getJavaClassName } from "./dataTypes"
 
+// 데이터베이스 컬럼의 정보를 담는 인터페이스
 export interface Column {
 	ccName: string // camelCase name
 	columnName: string // original column name
@@ -27,8 +28,6 @@ function convertCamelcaseToPascalcase(name: string): string {
 	}
 	return name.charAt(0).toUpperCase() + name.slice(1)
 }
-
-// Note: getJavaClassName is now imported from shared/dataTypes.ts
 
 // DDL 파싱 함수
 export function parseDDL(ddl: string): ParsedDDL {
@@ -141,6 +140,7 @@ export function validateDDL(ddl: string): boolean {
 	// 괄호 쌍 확인
 	const openParens = (ddl.match(/\(/g) || []).length
 	const closeParens = (ddl.match(/\)/g) || []).length
+
 	// 괄호 개수가 맞지 않으면 유효하지 않음
 	if (openParens !== closeParens) {
 		return false
@@ -186,22 +186,4 @@ export function validateDDL(ddl: string): boolean {
 	}
 
 	return true
-}
-
-// 샘플 DDL 생성 함수
-export function generateSampleDDL(): string {
-	return `CREATE TABLE SAMPLE_TABLE (
-    ID NUMBER(10) PRIMARY KEY,
-    NAME VARCHAR2(100) NOT NULL,
-    EMAIL VARCHAR2(200),
-    PHONE VARCHAR2(20),
-    CREATED_DATE DATE DEFAULT SYSDATE,
-    UPDATED_DATE DATE
-);
-
--- Add comments
-COMMENT ON TABLE SAMPLE_TABLE IS 'Sample table for CRUD generation';
-COMMENT ON COLUMN SAMPLE_TABLE.ID IS 'Primary key';
-COMMENT ON COLUMN SAMPLE_TABLE.NAME IS 'User name';
-COMMENT ON COLUMN SAMPLE_TABLE.EMAIL IS 'Email address';`
 }

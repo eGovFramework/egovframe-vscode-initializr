@@ -2,8 +2,9 @@ import * as vscode from "vscode"
 import * as path from "path"
 import * as fs from "fs-extra"
 import * as fsPromises from "fs/promises"
-import { parseDDL } from "./ddlParser"
-import { getTemplateContext, renderTemplate, showFileList, getFilePathForOutput } from "./codeGeneratorUtils"
+import { parseDDL } from "../shared/ddlParser"
+import { renderTemplate, showFileList, getFilePathForOutput } from "./codeGeneratorUtils"
+import { getTemplateContext } from "../shared/templateContext"
 
 // Template file mapping
 interface TemplateFileInfo {
@@ -322,7 +323,7 @@ export async function generateCrudFromDDL(
 /*
  * Upload Templates
  */
-export async function uploadTemplates(ddl: string): Promise<void> {
+export async function uploadTemplates(ddl: string, packageName: string): Promise<void> {
 	const selectedFiles = await vscode.window.showOpenDialog({
 		title: "Select HBS Template Files to Upload",
 		canSelectFolders: false,
@@ -343,8 +344,13 @@ export async function uploadTemplates(ddl: string): Promise<void> {
 		const outputPath = path.join(selectedFolderPath, path.basename(file.fsPath, ".hbs") + ".generated")
 
 		try {
-			const { tableName, attributes, pkAttributes } = parseDDL(ddl)
-			const context = getTemplateContext(tableName, attributes, pkAttributes) // Todo: packageName 등 생각해보자
+			const currentParsedDDL = parseDDL(ddl)
+			const context = getTemplateContext(
+				currentParsedDDL.tableName,
+				currentParsedDDL.attributes,
+				currentParsedDDL.pkAttributes,
+				packageName,
+			)
 			const renderedContent = await renderTemplate(templatePath, context)
 			await fs.writeFile(outputPath, renderedContent)
 			vscode.window.showInformationMessage(`Custom template saved successfully to ${outputPath}`)

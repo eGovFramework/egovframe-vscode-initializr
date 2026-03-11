@@ -1,4 +1,4 @@
-import { TemplateContext } from "./templateContext"
+import { TemplateContext } from "@shared/templateContext"
 
 export interface GenerateCodeMessage {
 	type: "generateCode"

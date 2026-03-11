@@ -1,8 +1,9 @@
 import * as vscode from "vscode"
 import * as path from "path"
 import * as fs from "fs-extra"
-import { parseDDL, validateDDL } from "./ddlParser"
-import { getTemplateContext, renderTemplate } from "./codeGeneratorUtils"
+import { parseDDL, validateDDL } from "../shared/ddlParser"
+import { renderTemplate } from "./codeGeneratorUtils"
+import { getTemplateContext } from "../shared/templateContext"
 
 // 검증 결과 인터페이스
 export interface ValidationResult {

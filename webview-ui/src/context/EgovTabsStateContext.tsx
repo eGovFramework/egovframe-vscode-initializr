@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, ReactNode } from "react"
-import { ParsedDDL } from "../utils/ddlParser"
+import { ParsedDDL } from "@shared/ddlParser"
 import { ProjectTemplate } from "../utils/projectUtils"
 import { TemplateConfig } from "../components/egov/types/templates"
 
