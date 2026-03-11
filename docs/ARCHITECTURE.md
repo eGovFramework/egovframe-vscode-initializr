@@ -93,8 +93,6 @@ src/
 │   ├── previewGenerator.ts     # 코드 미리보기 생성
 │   └── codeGeneratorUtils.ts   # 공통 코드 생성 유틸
 ├── services/                   # 보조 서비스
-│   └── glob/
-│       └── list-files.ts       # 파일 목록 서비스
 └── shared/                     # 공유 타입 및 유틸리티
     ├── api.ts
     ├── ExtensionMessage.ts
