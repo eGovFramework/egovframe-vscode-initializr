@@ -16,7 +16,6 @@ eGovFrame VSCode Initializr를 기반으로 개발하려는 개발자를 위한 
 - **파일 처리**:
   - fs-extra 11.2+ (파일 시스템 유틸리티)
   - extract-zip 2.0+ (ZIP 압축 해제)
-  - archiver 7.0+ (파일 압축)
 
 ### Frontend (Webview UI)
 - **프레임워크**: React 18.3+
