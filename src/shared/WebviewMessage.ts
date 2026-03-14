@@ -15,11 +15,14 @@ export interface WebviewMessage {
 	packageName?: string
 	outputPath?: string
 	projectConfig?: any
+	projectPath?: string
 	method?: string
 	telemetrySetting?: string
 	user?: any
 	grpc_request?: any
 	grpc_request_cancel?: any
+	results?: any
+	filePath?: string
 	settings?: {
 		defaultGroupId?: string
 		defaultArtifactId?: string

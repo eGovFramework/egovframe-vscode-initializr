@@ -1,6 +1,7 @@
 import * as vscode from "vscode"
 import { WebviewProvider } from "./core/webview"
 import { Controller } from "./core/controller"
+import { registerClearTemplateCacheCommand, registerShowTemplateCacheInfoCommand } from "./commands/clearTemplateCache"
 
 let outputChannel: vscode.OutputChannel
 
@@ -21,6 +22,10 @@ export async function activate(context: vscode.ExtensionContext) {
 	)
 
 	outputChannel.appendLine("WebviewProvider registered successfully")
+
+	// Register cache management commands
+	context.subscriptions.push(registerClearTemplateCacheCommand(context))
+	context.subscriptions.push(registerShowTemplateCacheInfoCommand(context))
 
 	// Register the eGovFrame button command
 	context.subscriptions.push(

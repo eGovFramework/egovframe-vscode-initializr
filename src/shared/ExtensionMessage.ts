@@ -96,14 +96,32 @@ export type ExtensionMessage =
 	  }
 	| {
 			type: "projectTemplates"
-			templates: Array<{
-				displayName: string
-				fileName: string
-				pomFile: string
-				description?: string
-				category?: string
-				projectName?: string
-			}>
+			templates: {
+				description: string
+				repository: {
+					owner: string
+					repo: string
+					baseUrl: string
+				}
+				templates: Array<{
+					templateId: string
+					displayName: string
+					description: string
+					category: string
+					latestVersion: string
+					versions: Array<{
+						version: string
+						fileName: string
+						pomFile: string
+						releaseDate: string
+						isLatest: boolean
+						included: boolean
+						downloadUrl?: string
+						pomDownloadUrl?: string
+						fileSize?: string
+					}>
+				}>
+			}
 	  }
 	| {
 			type: "configTemplates"
@@ -117,4 +135,18 @@ export type ExtensionMessage =
 				yamlTemplate: string
 				propertiesTemplate: string
 			}>
+	  }
+	| {
+			type: "selectedProjectPath"
+			text: string
+	  }
+	| {
+			type: "archCheckProgress"
+			text: string
+	  }
+	| {
+			type: "archCheckResult"
+			success: boolean
+			results?: any
+			error?: string
 	  }

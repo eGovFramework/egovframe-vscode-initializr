@@ -21,6 +21,10 @@ migrate-*.sh
 # Project specific
 egovframe-pack
 
+# Downloaded template cache
+templates/projects/examples/cache/
+templates/projects/pom/cache/
+
 # macOS
 .DS_Store
 

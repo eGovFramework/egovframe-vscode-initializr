@@ -1,3 +1,42 @@
+// Version information for a template
+export interface TemplateVersion {
+	version: string
+	fileName: string
+	pomFile: string
+	releaseDate: string
+	isLatest: boolean
+	included: boolean // true: Extension에 포함됨, false: 다운로드 필요
+	downloadUrl?: string // included가 false일 때 다운로드 URL
+	pomDownloadUrl?: string // included가 false일 때 POM 다운로드 URL
+	fileSize?: string
+}
+
+// Template manifest structure (from templates-projects.json)
+export interface TemplateManifest {
+	templateId: string
+	displayName: string
+	description: string
+	category: string
+	projectName?: string
+	latestVersion: string
+	versions: TemplateVersion[]
+}
+
+// Repository information for downloading templates
+export interface TemplateRepository {
+	owner: string
+	repo: string
+	baseUrl: string
+}
+
+// Full manifest structure
+export interface ProjectTemplatesManifest {
+	description: string
+	repository: TemplateRepository
+	templates: TemplateManifest[]
+}
+
+// Project template with version information (used in UI)
 export interface ProjectTemplate {
 	displayName: string
 	fileName: string
@@ -6,6 +45,15 @@ export interface ProjectTemplate {
 	category?: string
 	projectName?: string
 	artifactId?: string
+	// Version-related fields
+	templateId?: string
+	version?: string
+	isLatest?: boolean
+	included?: boolean // true: Extension에 포함됨, false: 다운로드 필요
+	downloadUrl?: string
+	pomDownloadUrl?: string
+	fileSize?: string
+	releaseDate?: string
 }
 
 export interface ProjectConfig {
@@ -28,6 +76,46 @@ export interface EgovProjectGenerationResponse {
 	message: string
 	projectPath?: string
 	error?: string
+}
+
+/**
+ * Manifest에서 ProjectTemplate 배열로 변환 (최신 버전 기준)
+ */
+export function convertManifestToTemplates(manifest: ProjectTemplatesManifest): ProjectTemplate[] {
+	const templates: ProjectTemplate[] = []
+
+	manifest.templates.forEach((template) => {
+		// Get latest version
+		const latestVersion = template.versions.find((v) => v.isLatest) || template.versions[0]
+		if (latestVersion) {
+			templates.push({
+				displayName: template.displayName,
+				fileName: latestVersion.fileName,
+				pomFile: latestVersion.pomFile || "",
+				description: template.description,
+				category: template.category,
+				projectName: template.projectName,
+				version: latestVersion.version,
+				isLatest: latestVersion.isLatest,
+				included: latestVersion.included,
+				downloadUrl: latestVersion.downloadUrl,
+				pomDownloadUrl: latestVersion.pomDownloadUrl,
+				fileSize: latestVersion.fileSize,
+				releaseDate: latestVersion.releaseDate,
+				templateId: template.templateId,
+			})
+		}
+	})
+
+	return templates
+}
+
+/**
+ * 특정 템플릿의 모든 버전 정보 가져오기
+ */
+export function getTemplateVersions(manifest: ProjectTemplatesManifest, templateId: string): TemplateVersion[] {
+	const template = manifest.templates.find((t) => t.templateId === templateId)
+	return template?.versions || []
 }
 
 /**
@@ -113,6 +201,12 @@ export function createProjectGenerationMessage(config: ProjectConfig, method: "f
 				displayName: config.template.displayName,
 				fileName: config.template.fileName,
 				pomFile: config.template.pomFile,
+				// Version-related fields for download support
+				templateId: config.template.templateId,
+				version: config.template.version,
+				included: config.template.included,
+				downloadUrl: config.template.downloadUrl,
+				pomDownloadUrl: config.template.pomDownloadUrl,
 			},
 		},
 		method,
