@@ -7,8 +7,9 @@
 가이드 문서들 목록은 다음과 같습니다.
 - **README.md**: Extension 사용자를 위한 기능 활용 방법 소개
 - **[CONTRIBUTING.md](https://github.com/eGovFramework/egovframe-vscode-initializr?tab=contributing-ov-file#contributing-guide)**: 컨트리뷰션 참여자를 위한 컨트리뷰션 참여 방법 소개
-- **[DEVELOPER.md](./docs/DEVELOPER.md)**: Extension 개발자를 위한 기능, 시스템, 기술스택 소개
 - **[ARCHITECTURE.md](./docs/ARCHITECTURE.md)**: Extension 개발자를 위한 아키텍쳐, 폴더 구조 소개
+- **[GettingStarted.md](./docs/GettingStarted.md)**: eGovFrame VSCode Initializr를 처음 개발하는 분들을 위한 소개
+- **[DEVELOPER.md](./docs/DEVELOPER.md)**: eGovFrame VSCode Initializr 개발을 위한 기능, 시스템, 기술스택 소개
 
 ## 주요 기능
 

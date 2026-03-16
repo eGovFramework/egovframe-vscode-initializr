@@ -164,14 +164,14 @@ code --install-extension egovframe-vscode-initializr-5.0.2.vsix
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│                    VS Code                               │
+│                    VS Code                              │
 ├─────────────────────────────────────────────────────────┤
-│  Extension Host (Node.js)    │  Webview (브라우저 환경)   │
-│  ├── extension.ts            │  ├── React App            │
-│  ├── WebviewProvider         │  ├── HTML/CSS/JS          │
-│  └── 파일 시스템 접근 가능    │  └── 파일 시스템 접근 불가  │
+│  Extension Host (Node.js)    │  Webview (브라우저 환경)    │
+│  ├── extension.ts            │  ├── React App           │
+│  ├── WebviewProvider         │  ├── HTML/CSS/JS         │
+│  └── 파일 시스템 접근 가능        │  └── 파일 시스템 접근 불가    │
 ├─────────────────────────────────────────────────────────┤
-│              postMessage() 로 양방향 통신                 │
+│              postMessage() 로 양방향 통신                  │
 └─────────────────────────────────────────────────────────┘
 ```
 
