@@ -275,7 +275,7 @@ const TransactionForm: React.FC<FormComponentProps> = ({ onSubmit, onCancel, tem
 				<h4 style={{ color: "var(--vscode-foreground)", marginBottom: "10px", marginTop: 0 }}>Guide:</h4>
 				<div style={{ marginBottom: "10px" }}>
 					<Link
-						href="https://egovframework.github.io/egovframe-docs/egovframe-runtime/persistence-layer/transaction/"
+						href="https://www.egovframe.go.kr/docs/5.0/egovframe-runtime/persistence-layer/transaction/"
 						style={{ display: "inline", fontSize: "12px" }}>
 						Transaction Guide Here
 					</Link>

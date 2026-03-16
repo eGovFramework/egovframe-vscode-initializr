@@ -175,7 +175,7 @@ const CacheForm: React.FC<FormComponentProps> = ({ onSubmit, onCancel, template,
 				<h4 style={{ color: "var(--vscode-foreground)", marginBottom: "10px", marginTop: 0 }}>Guide:</h4>
 				<div style={{ marginBottom: "10px" }}>
 					<Link
-						href="https://egovframework.github.io/egovframe-docs/egovframe-runtime/foundation-layer/cache/ehCache/"
+						href="https://www.egovframe.go.kr/docs/5.0/egovframe-runtime/foundation-layer/cache/ehCache/"
 						style={{ display: "inline", fontSize: "12px" }}>
 						Cache Guide Here
 					</Link>
