@@ -482,34 +482,35 @@ const EgovSettingsView = memo(({ onDone }: EgovSettingsViewProps) => {
 					<span style={sectionTitleStyle}>Guide</span>
 					<div style={itemStyle}>
 						<a
-							href="https://egovframe.go.kr/wiki/doku.php"
+							href="https://www.egovframe.go.kr/docs/5.0/"
 							style={linkStyle}
 							target="_blank"
 							rel="noopener noreferrer"
 							onMouseEnter={(e) => Object.assign(e.currentTarget.style, linkHoverStyle)}
 							onMouseLeave={(e) => (e.currentTarget.style.borderBottom = "1px solid transparent")}>
-							Wiki docs
-						</a>
-						{" • "}
-						<a
-							href="https://egovframework.github.io/egovframe-docs/"
-							style={linkStyle}
-							target="_blank"
-							rel="noopener noreferrer"
-							onMouseEnter={(e) => Object.assign(e.currentTarget.style, linkHoverStyle)}
-							onMouseLeave={(e) => (e.currentTarget.style.borderBottom = "1px solid transparent")}>
-							Github docs
+							eGovFrame docs
 						</a>
 					</div>
 					<div style={itemStyle}>
 						<a
-							href="#"
+							href="https://www.egovframe.go.kr/docs/5.0/egovframe-development/vscode-implementation-tool/"
 							style={linkStyle}
 							target="_blank"
 							rel="noopener noreferrer"
 							onMouseEnter={(e) => Object.assign(e.currentTarget.style, linkHoverStyle)}
 							onMouseLeave={(e) => (e.currentTarget.style.borderBottom = "1px solid transparent")}>
-							VSCode Extension Manual(later)
+							This extension's Manual
+						</a>
+					</div>
+					<div style={itemStyle}>
+						<a
+							href="https://www.egovframe.go.kr/docs/5.0/egovframe-development/development-etcdevtool-guide/vscode-usage/"
+							style={linkStyle}
+							target="_blank"
+							rel="noopener noreferrer"
+							onMouseEnter={(e) => Object.assign(e.currentTarget.style, linkHoverStyle)}
+							onMouseLeave={(e) => (e.currentTarget.style.borderBottom = "1px solid transparent")}>
+							VSCode usage guide
 						</a>
 					</div>
 				</div>
