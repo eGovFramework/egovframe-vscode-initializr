@@ -9,11 +9,12 @@
 		<relativePath/>
 	</parent>
 
-	<groupId>###GROUP_ID###</groupId>
-	<artifactId>###ARTIFACT_ID###</artifactId>
-	<version>###VERSION###</version>
-	<name>###NAME###</name>
-	<description>###URL###</description>
+    <groupId>###GROUP_ID###</groupId>
+    <artifactId>###ARTIFACT_ID###</artifactId>
+    <version>###VERSION###</version>
+    <name>###NAME###</name>
+    <url>###URL###</url>
+    <description>spring-ai-rag-redis</description>
 
     <properties>
         <java.version>17</java.version>

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>###GROUP_ID###</groupId>
@@ -16,11 +17,12 @@
 		</license>
 	</licenses>
 
-	<properties>
-		<java.version>17</java.version>
-		<egovframe.rte.version>5.0.0</egovframe.rte.version>
-		<spring.framework.version>6.2.11</spring.framework.version>
-	</properties>
+	<!-- eGovFramework Web Parent 설정 -->
+	<parent>
+		<groupId>org.egovframe.web</groupId>
+		<artifactId>egovframe-web-config-parent</artifactId>
+		<version>5.0.0</version>
+	</parent>
 
 	<repositories>
 		<repository>
@@ -50,27 +52,30 @@
 		</repository>
 	</repositories>
 
+	<properties>
+		<java.version>17</java.version>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+		<protobuf.java.version>3.25.5</protobuf.java.version>
+	</properties>
+
 	<dependencies>
 		<!-- 실행환경 라이브러리 -->
 		<dependency>
 			<groupId>org.egovframe.rte</groupId>
 			<artifactId>egovframe-rte-fdl-idgnr</artifactId>
-			<version>${egovframe.rte.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.egovframe.rte</groupId>
 			<artifactId>egovframe-rte-ptl-mvc</artifactId>
-			<version>${egovframe.rte.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.egovframe.rte</groupId>
 			<artifactId>egovframe-rte-fdl-property</artifactId>
-			<version>${egovframe.rte.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.egovframe.rte</groupId>
 			<artifactId>egovframe-rte-fdl-excel</artifactId>
-			<version>${egovframe.rte.version}</version>
 			<exclusions>
 				<exclusion>
 					<artifactId>commons-beanutils</artifactId>
@@ -81,12 +86,10 @@
 		<dependency>
 			<groupId>org.egovframe.rte</groupId>
 			<artifactId>egovframe-rte-fdl-xml</artifactId>
-			<version>${egovframe.rte.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.egovframe.rte</groupId>
 			<artifactId>egovframe-rte-fdl-crypto</artifactId>
-			<version>${egovframe.rte.version}</version>
 		</dependency>
 		<!-- 실행환경 라이브러리 끝 -->
 
@@ -94,56 +97,47 @@
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-api</artifactId>
-			<version>2.0.12</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.logging.log4j</groupId>
 			<artifactId>log4j-slf4j2-impl</artifactId>
-			<version>2.24.3</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.logging.log4j</groupId>
 			<artifactId>log4j-core</artifactId>
-			<version>2.25.2</version>
 		</dependency>
 
 		<!-- Jakarta -->
 		<dependency>
 			<groupId>jakarta.servlet</groupId>
 			<artifactId>jakarta.servlet-api</artifactId>
-			<version>5.0.0</version>
 			<scope>provided</scope>
 		</dependency>
 		<!-- JSP 구문을 지원하기 위한 표준 사양 -->
 		<dependency>
 			<groupId>jakarta.servlet.jsp</groupId>
 			<artifactId>jakarta.servlet.jsp-api</artifactId>
-			<version>4.0.0</version>
 			<scope>provided</scope>
 		</dependency>
 		<!-- JSTL 태그의 표준 사양 -->
 		<dependency>
 			<groupId>jakarta.servlet.jsp.jstl</groupId>
 			<artifactId>jakarta.servlet.jsp.jstl-api</artifactId>
-			<version>3.0.2</version>
 		</dependency>
 		<!-- JSTL 태그가 실제로 작동하게 하는 구현 -->
 		<dependency>
 			<groupId>org.glassfish.web</groupId>
 			<artifactId>jakarta.servlet.jsp.jstl</artifactId>
-			<version>3.0.1</version>
 		</dependency>
 
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-dbcp2</artifactId>
-			<version>2.13.0</version>
 		</dependency>
 
 		<dependency>
 			<groupId>com.googlecode.log4jdbc</groupId>
 			<artifactId>log4jdbc</artifactId>
-			<version>1.2</version>
 			<exclusions>
 				<exclusion>
 					<artifactId>slf4j-api</artifactId>
@@ -155,30 +149,25 @@
 		<dependency>
 			<groupId>org.jasypt</groupId>
 			<artifactId>jasypt</artifactId>
-			<version>1.9.3</version>
 		</dependency>
 		<dependency>
 			<groupId>cglib</groupId>
 			<artifactId>cglib</artifactId>
-			<version>3.3.0</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-compress</artifactId>
-			<version>1.27.1</version>
 		</dependency>
 
 		<dependency>
 			<groupId>org.hsqldb</groupId>
 			<artifactId>hsqldb</artifactId>
-			<version>2.7.4</version>
 		</dependency>
 
 		<!-- Scheduling -->
 		<dependency>
 			<groupId>org.quartz-scheduler</groupId>
 			<artifactId>quartz</artifactId>
-			<version>2.5.0</version>
 			<exclusions>
 				<exclusion>
 					<artifactId>slf4j-api</artifactId>
@@ -189,7 +178,6 @@
 		<dependency>
 			<groupId>org.quartz-scheduler</groupId>
 			<artifactId>quartz-jobs</artifactId>
-			<version>2.5.0</version>
 		</dependency>
 		<!-- Scheduling end-->
 
@@ -198,59 +186,50 @@
 		<dependency>
 			<groupId>org.antlr</groupId>
 			<artifactId>antlr4</artifactId>
-			<version>4.13.2</version>
 		</dependency>
 
 		<!-- 우편번호를 위한 라이브러리 -->
 		<dependency>
 			<groupId>oro</groupId>
 			<artifactId>oro</artifactId>
-			<version>2.0.8</version>
 		</dependency>
 
 		<!-- 요소기술 달력을 위한 라이브러리 -->
 		<dependency>
 			<groupId>com.ibm.icu</groupId>
 			<artifactId>icu4j</artifactId>
-			<version>77.1</version>
 		</dependency>
 
 		<!-- FTP용 3rd party 라이브러리 -->
 		<dependency>
 			<groupId>commons-net</groupId>
 			<artifactId>commons-net</artifactId>
-			<version>3.11.1</version>
 		</dependency>
 
-        <!-- Email -->
+		<!-- Email -->
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-email</artifactId>
-			<version>1.6.0</version>
 		</dependency>
 		<dependency>
 			<groupId>egovframework.com.ems</groupId>
 			<artifactId>sndng-mail</artifactId>
-			<version>1.0</version>
 		</dependency>
 		<dependency>
 			<groupId>com.sun.mail</groupId>
 			<artifactId>jakarta.mail</artifactId>
-			<version>2.0.1</version>
 		</dependency>
 
 		<!-- LDAP SDK -->
 		<dependency>
 			<groupId>ldapsdk</groupId>
 			<artifactId>ldapsdk</artifactId>
-			<version>4.1</version>
 		</dependency>
 
 		<!-- PDF변환용 라이브러리 -->
 		<dependency>
 			<groupId>com.artofsolving</groupId>
 			<artifactId>jodconverter</artifactId>
-			<version>2.2.1</version>
 			<exclusions>
 				<exclusion>
 					<artifactId>slf4j-api</artifactId>
@@ -267,14 +246,12 @@
 		<dependency>
 			<groupId>org.apache.xmlbeans</groupId>
 			<artifactId>xmlbeans</artifactId>
-			<version>2.6.0</version>
 		</dependency>
 
 		<!-- fileupload -->
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-fileupload2-jakarta-servlet6</artifactId>
-			<version>2.0.0-M2</version>
 			<exclusions>
 				<exclusion>
 					<artifactId>commons-io</artifactId>
@@ -287,7 +264,6 @@
 		<dependency>
 			<groupId>org.apache.xmlgraphics</groupId>
 			<artifactId>batik-ext</artifactId>
-			<version>1.17</version>
 		</dependency>
 
 		<!-- ajax json -->
@@ -295,33 +271,35 @@
 		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>
 			<artifactId>jackson-core</artifactId>
-			<version>2.18.2</version>
 		</dependency>
 		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>
 			<artifactId>jackson-annotations</artifactId>
-			<version>2.18.2</version>
 		</dependency>
 		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>
 			<artifactId>jackson-databind</artifactId>
-			<version>2.18.2</version>
 		</dependency>
 
 		<dependency>
 			<groupId>com.mysql</groupId>
 			<artifactId>mysql-connector-j</artifactId>
-			<version>8.4.0</version>
 		</dependency>
 		<dependency>
 			<groupId>org.mariadb.jdbc</groupId>
 			<artifactId>mariadb-java-client</artifactId>
-			<version>3.4.0</version>
 		</dependency>
 		<dependency>
 			<groupId>org.postgresql</groupId>
 			<artifactId>postgresql</artifactId>
-			<version>42.7.3</version>
+		</dependency>
+
+		<!-- CVE-2024-7254: mysql-connector-j에서 주입되는 protobuf-java 3.25.1 취약점
+		보완용 직접 주입 -->
+		<dependency>
+			<groupId>com.google.protobuf</groupId>
+			<artifactId>protobuf-java</artifactId>
+			<version>${protobuf.java.version}</version>
 		</dependency>
 
 		<!-- 3rd party 라이브러리로 별도의 설치 필요 -->
@@ -357,7 +335,6 @@
 		<dependency>
 			<groupId>net.sf.json-lib</groupId>
 			<artifactId>json-lib</artifactId>
-			<version>2.4</version>
 			<classifier>jdk15</classifier>
 			<exclusions>
 				<exclusion>
@@ -373,7 +350,6 @@
 		<dependency>
 			<groupId>org.apache.httpcomponents.client5</groupId>
 			<artifactId>httpclient5</artifactId>
-			<version>5.5.1</version>
 			<exclusions>
 				<exclusion>
 					<artifactId>commons-logging</artifactId>
@@ -384,37 +360,30 @@
 		<dependency>
 			<groupId>com.sun.xml.rpc</groupId>
 			<artifactId>jaxrpc-impl</artifactId>
-			<version>1.1.6</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.servicemix.specs</groupId>
 			<artifactId>org.apache.servicemix.specs.jaxws-api-2.2</artifactId>
-			<version>2.9.0</version>
 		</dependency>
 		<dependency>
 			<groupId>soap</groupId>
 			<artifactId>soap</artifactId>
-			<version>2.3.1</version>
 		</dependency>
 		<dependency>
 			<groupId>xalan</groupId>
 			<artifactId>xalan</artifactId>
-			<version>2.7.3</version>
 		</dependency>
 		<dependency>
 			<groupId>com.sun.xml.ws</groupId>
 			<artifactId>jaxws-rt</artifactId>
-			<version>4.0.2</version>
 		</dependency>
 		<dependency>
 			<groupId>javax.jms</groupId>
 			<artifactId>jms-api</artifactId>
-			<version>1.1-rev-1</version>
 		</dependency>
 		<dependency>
 			<groupId>javax.xml</groupId>
 			<artifactId>jaxrpc-api-osgi</artifactId>
-			<version>1.1-b01</version>
 		</dependency>
 
 		<!-- 대한민국정보포털 검색API -->
@@ -446,7 +415,6 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.14.0</version>
 				<configuration>
 					<release>${java.version}</release>
 				</configuration>
@@ -454,7 +422,6 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-war-plugin</artifactId>
-				<version>3.4.0</version>
 				<configuration>
 					<failOnMissingWebXml>false</failOnMissingWebXml>
 				</configuration>
@@ -463,13 +430,11 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-pmd-plugin</artifactId>
-				<version>3.26.0</version>
 			</plugin>
 			<!-- EMMA -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
-				<version>3.5.2</version>
 				<configuration>
 					<skipTests>true</skipTests>
 					<reportFormat>xml</reportFormat>
@@ -486,7 +451,6 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-javadoc-plugin</artifactId>
-				<version>3.11.2</version>
 				<configuration>
 					<doclint>none</doclint>
 				</configuration>

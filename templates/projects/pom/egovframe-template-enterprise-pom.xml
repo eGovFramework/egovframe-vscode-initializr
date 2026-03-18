@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>###GROUP_ID###</groupId>
@@ -16,11 +17,12 @@
 		</license>
 	</licenses>
 
-	<properties>
-		<java.version>17</java.version>
-		<egovframe.rte.version>5.0.0</egovframe.rte.version>
-		<spring.framework.version>6.2.11</spring.framework.version>
-	</properties>
+	<!-- eGovFramework Web Parent 설정 -->
+	<parent>
+		<groupId>org.egovframe.web</groupId>
+		<artifactId>egovframe-web-config-parent</artifactId>
+		<version>5.0.0</version>
+	</parent>
 
 	<repositories>
 		<repository>
@@ -43,275 +45,252 @@
 				<enabled>false</enabled>
 			</snapshots>
 		</repository>
-    	</repositories>
+	</repositories>
+
+	<properties>
+		<java.version>17</java.version>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+		<protobuf.java.version>3.25.5</protobuf.java.version>
+	</properties>
 
 	<dependencies>
 		<!-- 표준프레임워크 실행환경 -->
 		<dependency>
-		    <groupId>org.egovframe.rte</groupId>
-		    <artifactId>egovframe-rte-ptl-mvc</artifactId>
-		    <version>${egovframe.rte.version}</version>
+			<groupId>org.egovframe.rte</groupId>
+			<artifactId>egovframe-rte-ptl-mvc</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.egovframe.rte</groupId>
 			<artifactId>egovframe-rte-fdl-idgnr</artifactId>
-			<version>${egovframe.rte.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.egovframe.rte</groupId>
 			<artifactId>egovframe-rte-fdl-property</artifactId>
-			<version>${egovframe.rte.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.egovframe.rte</groupId>
 			<artifactId>egovframe-rte-psl-dataaccess</artifactId>
-			<version>${egovframe.rte.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.egovframe.rte</groupId>
 			<artifactId>egovframe-rte-fdl-excel</artifactId>
-			<version>${egovframe.rte.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.egovframe.rte</groupId>
 			<artifactId>egovframe-rte-fdl-security</artifactId>
-			<version>${egovframe.rte.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.egovframe.rte</groupId>
 			<artifactId>egovframe-rte-fdl-crypto</artifactId>
-			<version>${egovframe.rte.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.egovframe.rte</groupId>
 			<artifactId>egovframe-rte-ptl-reactive</artifactId>
-			<version>${egovframe.rte.version}</version>
 		</dependency>
 
 		<!-- Jakarta Bean Validation -->
 		<dependency>
 			<groupId>jakarta.validation</groupId>
 			<artifactId>jakarta.validation-api</artifactId>
-			<version>3.0.2</version>
 		</dependency>
 		<dependency>
 			<groupId>org.hibernate.validator</groupId>
 			<artifactId>hibernate-validator</artifactId>
-			<version>8.0.1.Final</version>
 		</dependency>
 
 		<!-- Jakarta -->
 		<dependency>
 			<groupId>jakarta.servlet</groupId>
 			<artifactId>jakarta.servlet-api</artifactId>
-			<version>5.0.0</version>
 			<scope>provided</scope>
 		</dependency>
 		<!-- JSP 구문을 지원하기 위한 표준 사양 -->
 		<dependency>
 			<groupId>jakarta.servlet.jsp</groupId>
 			<artifactId>jakarta.servlet.jsp-api</artifactId>
-			<version>4.0.0</version>
 			<scope>provided</scope>
 		</dependency>
 		<!-- JSTL 태그의 표준 사양 -->
 		<dependency>
 			<groupId>jakarta.servlet.jsp.jstl</groupId>
 			<artifactId>jakarta.servlet.jsp.jstl-api</artifactId>
-			<version>3.0.2</version>
 		</dependency>
 		<!-- JSTL 구현체 -->
 		<dependency>
 			<groupId>org.glassfish.web</groupId>
 			<artifactId>jakarta.servlet.jsp.jstl</artifactId>
-			<version>3.0.1</version>
 		</dependency>
 
 		<!-- SLF4J API 및 Log4j2 바인딩 -->
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-api</artifactId>
-			<version>2.0.12</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.logging.log4j</groupId>
 			<artifactId>log4j-slf4j2-impl</artifactId>
-			<version>2.24.3</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.logging.log4j</groupId>
 			<artifactId>log4j-core</artifactId>
-			<version>2.25.2</version>
 		</dependency>
 
 		<dependency>
-	            <groupId>com.googlecode.log4jdbc</groupId>
-	            <artifactId>log4jdbc</artifactId>
-	            <version>1.2</version>
-	            <exclusions>
-	                <exclusion>
-	                    <artifactId>slf4j-api</artifactId>
-	                    <groupId>org.slf4j</groupId>
-	                </exclusion>
-	            </exclusions>
-	        </dependency>
+			<groupId>com.googlecode.log4jdbc</groupId>
+			<artifactId>log4jdbc</artifactId>
+			<exclusions>
+				<exclusion>
+					<artifactId>slf4j-api</artifactId>
+					<groupId>org.slf4j</groupId>
+				</exclusion>
+			</exclusions>
+		</dependency>
 
 		<dependency>
-		    <groupId>org.apache.commons</groupId>
-		    <artifactId>commons-dbcp2</artifactId>
-			<version>2.13.0</version>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-dbcp2</artifactId>
 		</dependency>
 
 		<dependency>
 			<groupId>com.mysql</groupId>
 			<artifactId>mysql-connector-j</artifactId>
-			<version>8.4.0</version>
+		</dependency>
+
+		<!-- CVE-2024-7254: mysql-connector-j에서 주입되는 protobuf-java 3.25.1 취약점
+		보완용 직접 주입 -->
+		<dependency>
+			<groupId>com.google.protobuf</groupId>
+			<artifactId>protobuf-java</artifactId>
+			<version>${protobuf.java.version}</version>
 		</dependency>
 
 		<dependency>
 			<groupId>org.antlr</groupId>
 			<artifactId>antlr4</artifactId>
-			<version>4.13.2</version>
 		</dependency>
 
 		<dependency>
 			<groupId>cglib</groupId>
 			<artifactId>cglib</artifactId>
-			<version>3.3.0</version>
 		</dependency>
 
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-compress</artifactId>
-			<version>1.28.0</version>
 		</dependency>
 
 		<dependency>
 			<groupId>commons-codec</groupId>
 			<artifactId>commons-codec</artifactId>
-			<version>1.18.0</version>
 		</dependency>
 
 		<dependency>
 			<groupId>com.ibm.icu</groupId>
 			<artifactId>icu4j</artifactId>
-			<version>77.1</version>
 		</dependency>
 
 		<dependency>
 			<groupId>org.eclipse</groupId>
 			<artifactId>yasson</artifactId>
-			<version>3.0.4</version>
 		</dependency>
 
 		<dependency>
 			<groupId>org.glassfish</groupId>
 			<artifactId>jakarta.json</artifactId>
-			<version>2.0.1</version>
 		</dependency>
 
 		<!-- Scheduling -->
-	        <dependency>
-	            <groupId>org.quartz-scheduler</groupId>
-	            <artifactId>quartz</artifactId>
-	            <version>2.5.0</version>
-	        </dependency>
-	        <dependency>
-	            <groupId>org.quartz-scheduler</groupId>
-	            <artifactId>quartz-jobs</artifactId>
-	            <version>2.5.0</version>
-	        </dependency>
-	        <!-- Scheduling end-->
+		<dependency>
+			<groupId>org.quartz-scheduler</groupId>
+			<artifactId>quartz</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.quartz-scheduler</groupId>
+			<artifactId>quartz-jobs</artifactId>
+		</dependency>
+		<!-- Scheduling end-->
 
 		<dependency>
 			<groupId>org.junit.jupiter</groupId>
 			<artifactId>junit-jupiter-api</artifactId>
-			<version>5.12.1</version>
 			<scope>test</scope>
 		</dependency>
 
 		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
-			<version>1.18.38</version>
 			<scope>provided</scope>
 		</dependency>
 
 		<dependency>
 			<groupId>org.seleniumhq.selenium</groupId>
 			<artifactId>selenium-java</artifactId>
-			<version>4.13.0</version>
 			<scope>test</scope>
 		</dependency>
 
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-test</artifactId>
-			<version>${spring.framework.version}</version>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
 
-    <build>
+	<build>
 		<defaultGoal>install</defaultGoal>
 		<directory>${basedir}/target</directory>
 		<finalName>${project.artifactId}-${project.version}</finalName>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-				<version>3.14.0</version>
-                <configuration>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
 					<release>${java.version}</release>
-                </configuration>
-            </plugin>
-            <plugin>
-            	<groupId>org.apache.maven.plugins</groupId>
-            	<artifactId>maven-war-plugin</artifactId>
-				<version>3.4.0</version>
-            	<configuration>
-            		<failOnMissingWebXml>false</failOnMissingWebXml>
-            	</configuration>
-            </plugin>
-            <!-- PMD manven plugin -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-pmd-plugin</artifactId>
-				<version>3.26.0</version>
-            </plugin>
-            <!-- EMMA -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-				<version>3.5.2</version>
-                <configuration>
-                    <skipTests>true</skipTests>
-                    <reportFormat>xml</reportFormat>
-                    <excludes>
-                        <exclude>**/Abstract*.java</exclude>
-                        <exclude>**/*Suite.java</exclude>
-                    </excludes>
-                    <includes>
-                        <include>**/*Test.java</include>
-                    </includes>
-                </configuration>
-            </plugin>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-war-plugin</artifactId>
+				<configuration>
+					<failOnMissingWebXml>false</failOnMissingWebXml>
+				</configuration>
+			</plugin>
+			<!-- PMD manven plugin -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-pmd-plugin</artifactId>
+			</plugin>
+			<!-- EMMA -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<configuration>
+					<skipTests>true</skipTests>
+					<reportFormat>xml</reportFormat>
+					<excludes>
+						<exclude>**/Abstract*.java</exclude>
+						<exclude>**/*Suite.java</exclude>
+					</excludes>
+					<includes>
+						<include>**/*Test.java</include>
+					</includes>
+				</configuration>
+			</plugin>
 			<!--  JavaDoc -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-javadoc-plugin</artifactId>
-				<version>3.11.2</version>
 				<configuration>
-                    <doclint>none</doclint>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>attach-sources</id>
-                        <goals>
-                            <goal>jar</goal>
-                        </goals>
-                    </execution>
-                </executions>
+					<doclint>none</doclint>
+				</configuration>
+				<executions>
+					<execution>
+						<id>attach-sources</id>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+					</execution>
+				</executions>
 			</plugin>
 		</plugins>
 	</build>
