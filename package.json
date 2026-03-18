@@ -1,8 +1,8 @@
 {
 	"name": "egovframe-vscode-initializr",
-	"displayName": "eGovFrame Initializr in VSCode (Beta)",
-	"description": "eGovFrame project generator, CRUD code generator, and configuration tool for Visual Studio Code.",
-	"version": "5.0.2",
+	"displayName": "eGovFrame Initializr in VSCode",
+	"description": "eGovFrame project generatorion, code generation, and config generation tools for Visual Studio Code.",
+	"version": "5.0.3",
 	"icon": "assets/icons/icon.png",
 	"engines": {
 		"vscode": "^1.84.0"
