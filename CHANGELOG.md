@@ -20,6 +20,7 @@
   - 표준프레임워크 실행환경 5.0 정식버전이 적용된 템플릿으로 최신화
 - Code Generation
   - 기본적인 SQL Validation만 수행하는 "generic" dialect 옵션 추가
+  - Thymeleaf 핸들바 템플릿 2종 생성 경로 수정
   - PackageName 검증 기능 강화
   - 선택한 dialect에 따른 sample DDL 필터링 개선
 - Config Generation
