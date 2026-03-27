@@ -8,7 +8,7 @@ export const SAMPLE_DDLS = {
   title VARCHAR(200) NOT NULL COMMENT 'Title',
   content TEXT COMMENT 'Content',
   author VARCHAR(100) NOT NULL COMMENT 'Author',
-  view_count INT DEFAULT 0 COMMENT 'View Count',
+  view_count INT DEFAULT 0 COMMENT 'View Count'
 ) COMMENT 'Board Table';`,
 	},
 
@@ -41,7 +41,7 @@ COMMENT ON COLUMN board.view_count IS 'View Count';`,
   password VARCHAR(255) NOT NULL COMMENT 'Password',
   full_name VARCHAR(100) COMMENT 'Full Name',
   phone VARCHAR(20) COMMENT 'Phone',
-  is_active BOOLEAN DEFAULT TRUE COMMENT 'Active',
+  is_active BOOLEAN DEFAULT TRUE COMMENT 'Active'
 ) COMMENT 'User Table';`,
 	},
 
@@ -79,7 +79,7 @@ COMMENT ON COLUMN users.is_active IS 'Active';`,
   stock_quantity INT DEFAULT 0 COMMENT 'Stock Quantity',
   category VARCHAR(100) COMMENT 'Category',
   image_url VARCHAR(500) COMMENT 'Image URL',
-  is_active BOOLEAN DEFAULT TRUE COMMENT 'Sale Status',
+  is_active BOOLEAN DEFAULT TRUE COMMENT 'Sale Status'
 ) COMMENT 'Product Table';`,
 	},
 
