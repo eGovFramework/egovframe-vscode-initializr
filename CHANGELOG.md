@@ -12,7 +12,7 @@
 
 - sample-thymeleaf-register.hbs 핸들바 파싱 오류 수정
 
-## v5.0.3 (2026-03-XX)
+## v5.0.3 (2026-03-30)
 
 - v5.0.x Initial official Release
 - Project Generation

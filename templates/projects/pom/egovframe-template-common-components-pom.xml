@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" 
+<project xmlns="http://maven.apache.org/POM/4.0.0"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-    <modelVersion>4.0.0</modelVersion>
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
 	<groupId>###GROUP_ID###</groupId>
 	<artifactId>###ARTIFACT_ID###</artifactId>
 	<packaging>war</packaging>
@@ -51,13 +51,6 @@
 		</repository>
 	</repositories>
 
-	<properties>
-		<java.version>17</java.version>
-		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-		<protobuf.java.version>3.25.5</protobuf.java.version>
-	</properties>
-
 	<dependencies>
 		<!-- 실행환경 라이브러리 -->
 
@@ -81,7 +74,7 @@
 				<version>3.5.16</version>
 			</dependency>
 		-->
-	    <dependency>
+		<dependency>
 			<groupId>org.egovframe.rte</groupId>
 			<artifactId>egovframe-rte-psl-dataaccess</artifactId>
 		</dependency>
@@ -132,18 +125,32 @@
 		</dependency>
 		<!-- 실행환경 라이브러리 끝 -->
 
-		<!-- SLF4J API 및 Log4j2 바인딩 -->
+		<!-- Logging -->
+		<!-- CVE-2025-68161: 취약점 보완용 업데이트 -->
 		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-api</artifactId>
+			<groupId>org.apache.logging.log4j</groupId>
+			<artifactId>log4j-core</artifactId>
+			<version>2.25.3</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.logging.log4j</groupId>
 			<artifactId>log4j-slf4j2-impl</artifactId>
+			<version>2.25.3</version>
 		</dependency>
 		<dependency>
-			<groupId>org.apache.logging.log4j</groupId>
-			<artifactId>log4j-core</artifactId>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
+			<version>2.0.17</version>
+		</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>jcl-over-slf4j</artifactId>
+			<version>2.0.17</version>
+		</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>log4j-over-slf4j</artifactId>
+			<version>2.0.17</version>
 		</dependency>
 
 		<dependency>
@@ -162,14 +169,18 @@
 		</dependency>
 
 		<!-- Jakarta -->
-		<!-- Jakarta Servlet API 6.0 for Spring Framework 6.x compatibility in
-		tests -->
-		<!-- ServletConnection class is available in Jakarta Servlet API 6.0+ -->
 		<dependency>
 			<groupId>jakarta.servlet</groupId>
 			<artifactId>jakarta.servlet-api</artifactId>
 			<scope>provided</scope>
 		</dependency>
+		<!-- 테스트 환경(test classpath)에서는 반드시 Jakarta Servlet 6.0 API를 사용 -->
+		<!-- <dependency>
+			<groupId>jakarta.servlet</groupId>
+			<artifactId>jakarta.servlet-api</artifactId>
+			<version>6.0.0</version>
+		</dependency> -->
+
 		<!-- JSP 구문을 지원하기 위한 표준 사양 -->
 		<dependency>
 			<groupId>jakarta.servlet.jsp</groupId>
@@ -252,9 +263,11 @@
 			<groupId>egovframework.com.ems</groupId>
 			<artifactId>sndng-mail</artifactId>
 		</dependency>
+		<!-- CVE-2025-7962: 취약점 보완용 업데이트 -->
 		<dependency>
 			<groupId>com.sun.mail</groupId>
 			<artifactId>jakarta.mail</artifactId>
+			<version>2.0.2</version>
 		</dependency>
 
 		<!-- LDAP SDK -->
@@ -288,6 +301,12 @@
 					<groupId>commons-io</groupId>
 				</exclusion>
 			</exclusions>
+		</dependency>
+		<!-- CVE-2025-48976: 취약점 보완용 업데이트 -->
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-fileupload2-core</artifactId>
+			<version>2.0.0-M5</version>
 		</dependency>
 
 		<!-- Twitter -->
@@ -332,9 +351,11 @@
 	        </dependency> -->
 
 		<!-- WebSocket Messenger - Spring WebSocket 사용 -->
+		<!-- CVE-2025-41254: 취약점 보완용 업데이트 -->
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-websocket</artifactId>
+			<version>6.2.13</version>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework</groupId>
@@ -358,9 +379,11 @@
 			<artifactId>jakarta.json-api</artifactId>
 		</dependency>
 		<!-- Jakarta JSON Processing Implementation -->
+		<!-- CVE-2023-7272/CVE-2023-4043: 취약점 보완용 업데이트 -->
 		<dependency>
 			<groupId>org.eclipse.parsson</groupId>
 			<artifactId>parsson</artifactId>
+			<version>1.1.7</version>
 		</dependency>
 
 		<!-- ajax json -->
@@ -379,9 +402,11 @@
 		</dependency>
 
 		<!-- LDAP조직도관리 관련 라이브러리  -->
+		<!-- CVE-2024-38829: 취약점 보완용 업데이트 -->
 		<dependency>
 			<groupId>org.springframework.ldap</groupId>
 			<artifactId>spring-ldap-core</artifactId>
+			<version>2.4.4</version>
 			<exclusions>
 				<exclusion>
 					<groupId>org.springframework</groupId>
@@ -427,9 +452,11 @@
 			<groupId>com.github.javaparser</groupId>
 			<artifactId>javaparser-core</artifactId>
 		</dependency>
+		<!-- CVE-2021-23926: 취약점 보완용 업데이트 -->
 		<dependency>
 			<groupId>org.apache.xmlbeans</groupId>
 			<artifactId>xmlbeans</artifactId>
+			<version>5.3.0</version>
 		</dependency>
 
 		<!-- CVE-2024-7254: mysql-connector-j에서 주입되는 protobuf-java 3.25.1 취약점
@@ -437,7 +464,7 @@
 		<dependency>
 			<groupId>com.google.protobuf</groupId>
 			<artifactId>protobuf-java</artifactId>
-			<version>${protobuf.java.version}</version>
+			<version>3.25.5</version>
 		</dependency>
 
 		<!-- 3rd party 라이브러리로 별도의 설치 필요 끝 -->
@@ -465,6 +492,12 @@
 			<groupId>org.junit.jupiter</groupId>
 			<artifactId>junit-jupiter-params</artifactId>
 			<version>5.12.1</version>
+			<scope>test</scope>
+		</dependency>
+		<!-- HSQLDB(테스트용) -->
+		<dependency>
+			<groupId>org.hsqldb</groupId>
+			<artifactId>hsqldb</artifactId>
 			<scope>test</scope>
 		</dependency>
 
@@ -517,6 +550,20 @@
 		<dependency>
 			<groupId>jakarta.faces</groupId>
 			<artifactId>jakarta.faces-api</artifactId>
+		</dependency>
+
+		<!-- CVE-2025-48734: 취약점 보완용 업데이트 -->
+		<dependency>
+			<groupId>commons-beanutils</groupId>
+			<artifactId>commons-beanutils</artifactId>
+			<version>1.11.0</version>
+		</dependency>
+
+		<!-- CVE-2025-48924: 취약점 보완용 업데이트 -->
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-lang3</artifactId>
+			<version>3.18.0</version>
 		</dependency>
 	</dependencies>
 
@@ -602,5 +649,5 @@
 			</plugin>
 		</plugins>
 	</build>
-	
+
 </project>
