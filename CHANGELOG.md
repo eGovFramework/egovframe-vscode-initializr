@@ -12,7 +12,7 @@
 
 - sample-thymeleaf-register.hbs 핸들바 파싱 오류 수정
 
-## v5.0.3 (2026-03-30)
+## v5.0.3 (2026-03-31)
 
 - v5.0.x Initial official Release
 - Project Generation
@@ -30,3 +30,9 @@
   - **언어 선택 옵션** 추가
   - 입력값 검증 기능 추가
   - Save Settings 버튼 클릭 시 저장 성공 또는 실패 여부를 시각적으로 확인할 수 있도록 개선
+
+## v5.0.4 (2026-04-10)
+
+- Project Generation 
+    - egovframe-boot-simple-backend 템플릿 KISA 보안 취약점(KVE-2026-0588) 업데이트
+    - 기타 템플릿 오류 수정
