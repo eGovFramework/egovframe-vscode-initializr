@@ -159,6 +159,7 @@
 		"@typescript-eslint/eslint-plugin": "7.15.0",
 		"@typescript-eslint/parser": "7.15.0",
 		"@vscode/vsce": "3.7.1",
+		"ovsx": "0.10.12",
 		"esbuild": "0.25.0",
 		"eslint": "8.57.1",
 		"husky": "9.1.7",

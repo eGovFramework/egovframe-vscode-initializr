@@ -1,6 +1,6 @@
 {
 	"name": "webview-ui",
-	"version": "5.0.4",
+	"version": "5.0.x",
 	"private": true,
 	"type": "module",
 	"scripts": {

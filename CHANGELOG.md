@@ -36,3 +36,8 @@
 - Project Generation 
     - egovframe-boot-simple-backend 템플릿 KISA 보안 취약점(KVE-2026-0588) 업데이트
     - 기타 템플릿 오류 수정
+
+## v5.0.5 (2026-05-18)
+
+- Project Generation
+  - 템플릿 보안 취약점 업데이트: Common Components, Boot Simple Homepage (Backend/Frontend), MSA Portal (Backend)
