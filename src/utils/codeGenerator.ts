@@ -67,25 +67,25 @@ function getTemplateFilesConfig(context: any): TemplateFileInfo[] {
 		},
 		{
 			templateFile: "sample-thymeleaf-list.hbs",
-			outputPath: `src/main/resources/templates/${tableNameCamelCase}/${tableNameCamelCase}List.html`, // 생성 경로 고민해보기
+			outputPath: `src/main/resources/templates/thymeleaf/${tableNameCamelCase}/${tableNameCamelCase}List.html`,
 			fileName: `${tableNameCamelCase}List.html`,
 			language: "html",
 		},
 		{
-			templateFile: "sample-thymeleaf-register.hbs", // Todo : outputPath 수정
-			outputPath: `src/main/resources/templates/${tableNameCamelCase}/${tableNameCamelCase}Register.html`, // 생성 경로 고민해보기
+			templateFile: "sample-thymeleaf-register.hbs",
+			outputPath: `src/main/resources/templates/thymeleaf/${tableNameCamelCase}/${tableNameCamelCase}Register.html`,
 			fileName: `${tableNameCamelCase}Register.html`,
 			language: "html",
 		},
 		{
-			templateFile: "sample-jsp-list.hbs", // Todo : outputPath 수정
-			outputPath: `src/main/webapp/WEB-INF/jsp/${packagePath}/${tableNameCamelCase}List.jsp`, // 생성 경로 고민해보기
+			templateFile: "sample-jsp-list.hbs",
+			outputPath: `src/main/webapp/WEB-INF/jsp/${packagePath}/${tableNameCamelCase}List.jsp`,
 			fileName: `${tableNameCamelCase}List.jsp`,
 			language: "html",
 		},
 		{
-			templateFile: "sample-jsp-register.hbs", // Todo : outputPath 수정
-			outputPath: `src/main/webapp/WEB-INF/jsp/${packagePath}/${tableNameCamelCase}Register.jsp`, // 생성 경로 고민해보기
+			templateFile: "sample-jsp-register.hbs",
+			outputPath: `src/main/webapp/WEB-INF/jsp/${packagePath}/${tableNameCamelCase}Register.jsp`,
 			fileName: `${tableNameCamelCase}Register.jsp`,
 			language: "html",
 		},

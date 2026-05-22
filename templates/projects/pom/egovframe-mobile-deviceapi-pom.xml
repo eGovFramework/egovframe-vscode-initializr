@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>###GROUP_ID###</groupId>
@@ -25,11 +26,18 @@
 
 	<properties>
 		<java.version>17</java.version>
-		<jakarta.servlet.api.version>6.1.0</jakarta.servlet.api.version>
-		<jakarta.annotation.api.version>3.0.0</jakarta.annotation.api.version>
-		<jakarta.jakartaee.version>10.0.0</jakarta.jakartaee.version>
-		<mysql.version>8.4.0</mysql.version>
-		<springdoc.openapi.version>2.8.13</springdoc.openapi.version>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+		<jakarta.servlet.version>6.1.0</jakarta.servlet.version>
+		<jakarta.servlet.jsp.version>4.0.0</jakarta.servlet.jsp.version>
+		<protobuf.java.version>3.25.5</protobuf.java.version>
+		<springdoc.webmvc.ui.version>2.8.13</springdoc.webmvc.ui.version>
+		<javapns-jdk16.version>2.4.0</javapns-jdk16.version>
+		<json-simple.version>1.1.1</json-simple.version>
+		<google-api-client.version>2.8.1</google-api-client.version>
+		<google-oauth-client.version>1.39.0</google-oauth-client.version>
+		<google-http-client.version>2.0.2</google-http-client.version>
+		<guava.version>33.0.0-jre</guava.version>
 	</properties>
 
 	<repositories>
@@ -73,11 +81,22 @@
 			<groupId>org.egovframe.rte</groupId>
 			<artifactId>egovframe-rte-fdl-property</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>org.egovframe.boot</groupId>
+			<artifactId>egovframe-boot-starter-crypto</artifactId>
+		</dependency>
+
 		<!-- 실행환경 라이브러리 끝 -->
 
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
+			<exclusions>
+				<exclusion>
+					<groupId>org.springframework.boot</groupId>
+					<artifactId>spring-boot-starter-logging</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -100,39 +119,38 @@
 		<dependency>
 			<groupId>jakarta.servlet</groupId>
 			<artifactId>jakarta.servlet-api</artifactId>
-			<version>${jakarta.servlet.api.version}</version>
+			<version>${jakarta.servlet.version}</version>
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>jakarta.annotation</groupId>
 			<artifactId>jakarta.annotation-api</artifactId>
-			<version>${jakarta.annotation.api.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>jakarta.platform</groupId>
-			<artifactId>jakarta.jakartaee-api</artifactId>
-			<version>${jakarta.jakartaee.version}</version>
-			<scope>provided</scope>
 		</dependency>
 
 		<!-- mysql driver -->
-        <dependency>
-            <groupId>com.mysql</groupId>
-            <artifactId>mysql-connector-j</artifactId>
-            <version>${mysql.version}</version>
-        </dependency>
+		<dependency>
+			<groupId>com.mysql</groupId>
+			<artifactId>mysql-connector-j</artifactId>
+		</dependency>
 
-        <dependency>
-            <groupId>com.googlecode.log4jdbc</groupId>
-            <artifactId>log4jdbc</artifactId>
-            <version>1.2</version>
-            <exclusions>
-                <exclusion>
-                    <artifactId>slf4j-api</artifactId>
-                    <groupId>org.slf4j</groupId>
-                </exclusion>
-            </exclusions>
-        </dependency>
+		<!-- CVE-2024-7254: mysql-connector-j에서 주입되는 protobuf-java 3.25.1 취약점
+		보완용 직접 주입 -->
+		<dependency>
+			<groupId>com.google.protobuf</groupId>
+			<artifactId>protobuf-java</artifactId>
+			<version>${protobuf.java.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.googlecode.log4jdbc</groupId>
+			<artifactId>log4jdbc</artifactId>
+			<exclusions>
+				<exclusion>
+					<artifactId>slf4j-api</artifactId>
+					<groupId>org.slf4j</groupId>
+				</exclusion>
+			</exclusions>
+		</dependency>
 
 		<dependency>
 			<groupId>org.apache.commons</groupId>
@@ -142,40 +160,40 @@
 		<dependency>
 			<groupId>org.springdoc</groupId>
 			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
-			<version>${springdoc.openapi.version}</version>
+			<version>${springdoc.webmvc.ui.version}</version>
 		</dependency>
 
 		<!-- Apple APNS Push -->
 		<dependency>
 			<groupId>com.github.fernandospr</groupId>
 			<artifactId>javapns-jdk16</artifactId>
-			<version>2.4.0</version>
+			<version>${javapns-jdk16.version}</version>
 		</dependency>
 		<!-- FCM(Firebase Cloud Messaging) 구성 시작  -->
 		<dependency>
 			<groupId>com.googlecode.json-simple</groupId>
 			<artifactId>json-simple</artifactId>
-			<version>1.1.1</version>
+			<version>${json-simple.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>com.google.api-client</groupId>
 			<artifactId>google-api-client</artifactId>
-			<version>2.8.1</version>
+			<version>${google-api-client.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>com.google.oauth-client</groupId>
 			<artifactId>google-oauth-client</artifactId>
-			<version>1.39.0</version>
+			<version>${google-oauth-client.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>com.google.http-client</groupId>
 			<artifactId>google-http-client</artifactId>
-			<version>2.0.2</version>
+			<version>${google-http-client.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>com.google.guava</groupId>
 			<artifactId>guava</artifactId>
-			<version>33.5.0-jre</version>
+			<version>${guava.version}</version>
 		</dependency>
 		<!-- FCM(Firebase Cloud Messaging) 구성 끝  -->
 

@@ -1265,7 +1265,7 @@ const CodeView = () => {
 								}}>
 								<div>src/main/java/{packageName.replace(/\./g, "/")}/</div>
 								<div style={{ paddingLeft: "10px" }}>
-									├── service/impl/ - <b>Service Impl & Mapper Interface</b>
+									├── service/impl/ - <b>ServiceImpl & MapperInterface</b>
 								</div>
 								<div style={{ paddingLeft: "10px" }}>
 									├── service/ - <b>Service & VOs</b>
@@ -1278,12 +1278,12 @@ const CodeView = () => {
 									├── mapper/ - <b>MyBatis XML</b>
 								</div>
 								<div style={{ paddingLeft: "10px" }}>
-									└── templates/{parsedDDL?.tableName[0].toLowerCase()}
-									{parsedDDL?.tableName.slice(1)} - <b>Thymeleaf HTML</b>
+									└── templates/thymeleaf/{parsedDDL?.tableName[0].toLowerCase()}
+									{parsedDDL?.tableName.slice(1)}/ - <b>Thymeleaf</b>
 								</div>
 								<div>src/main/webapp/WEB-INF/jsp/</div>
 								<div style={{ paddingLeft: "10px" }}>
-									└── {packageName.replace(/\./g, "/")} - <b>JSP Views</b>
+									└── {packageName.replace(/\./g, "/")}/ - <b>JSP</b>
 								</div>
 							</div>
 						</div>

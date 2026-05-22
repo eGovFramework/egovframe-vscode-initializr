@@ -1,7 +1,7 @@
 {
 	"name": "egovframe-vscode-initializr",
 	"displayName": "eGovFrame Initializr in VSCode",
-	"description": "eGovFrame project generator, CRUD code generator, configuration gerator, and architecture check tool for Visual Studio Code.",
+	"description": "eGovFrame project generation, code generation, and config generation, and architecture check tools for Visual Studio Code.",
 	"version": "5.1.0-alpha.1",
 	"icon": "assets/icons/icon.png",
 	"engines": {
@@ -167,6 +167,7 @@
 		"@typescript-eslint/eslint-plugin": "7.15.0",
 		"@typescript-eslint/parser": "7.15.0",
 		"@vscode/vsce": "3.7.1",
+		"ovsx": "0.10.12",
 		"esbuild": "0.25.0",
 		"eslint": "8.57.1",
 		"husky": "9.1.7",

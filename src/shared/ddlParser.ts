@@ -54,7 +54,11 @@ export function parseDDL(ddl: string): ParsedDDL {
 		.map((column) => column.trim())
 		.filter(
 			(column) =>
-				column && !column.startsWith("UNIQUE KEY") && !column.startsWith("KEY") && !column.startsWith("CONSTRAINT"),
+				column &&
+				!column.toUpperCase().startsWith("UNIQUE KEY") &&
+				!column.toUpperCase().startsWith("KEY") &&
+				!column.toUpperCase().startsWith("CONSTRAINT") &&
+				!column.toUpperCase().startsWith("FOREIGN KEY"),
 		)
 
 	const attributes: Column[] = []
@@ -165,7 +169,8 @@ export function validateDDL(ddl: string): boolean {
 				!column.toUpperCase().startsWith("KEY") &&
 				!column.toUpperCase().startsWith("CONSTRAINT") &&
 				!column.toUpperCase().startsWith("PRIMARY KEY") &&
-				!column.toUpperCase().startsWith("COMMENT ON"),
+				!column.toUpperCase().startsWith("COMMENT ON") &&
+				!column.toUpperCase().startsWith("FOREIGN KEY"),
 		)
 
 	// 각 컬럼에 컬럼명과 자료형이 있는지 확인
