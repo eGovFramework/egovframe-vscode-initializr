@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react"
+import { useTranslation } from "react-i18next"
 import { Button, TextField, TextArea, Select, RadioGroup, ProgressRing, Link, Divider } from "../../ui"
 import { ConfigFormData, ConfigGenerationType, FormComponentProps } from "../types/templates"
 import { vscode } from "../../../utils/vscode"
@@ -11,6 +12,7 @@ import {
 } from "../../../utils/codeUtils"
 
 const PropertyForm: React.FC<FormComponentProps> = ({ onSubmit, onCancel, template, initialData }) => {
+	const { t } = useTranslation()
 	const [formData, setFormData] = useState<ConfigFormData>({
 		// 아래는 입력값들에 대한 초기값
 		generationType: ConfigGenerationType.XML,
@@ -183,23 +185,25 @@ const PropertyForm: React.FC<FormComponentProps> = ({ onSubmit, onCancel, templa
 					padding: "15px",
 					marginTop: "20px",
 				}}>
-				<h4 style={{ color: "var(--vscode-foreground)", marginBottom: "10px", marginTop: 0 }}>Guide:</h4>
+				<h4 style={{ color: "var(--vscode-foreground)", marginBottom: "10px", marginTop: 0 }}>
+					{t("forms.common.guide")}:
+				</h4>
 				<div style={{ marginBottom: "10px" }}>
 					<Link
 						href="https://www.egovframe.go.kr/docs/5.0/egovframe-runtime/foundation-layer/property/property-service/"
 						style={{ display: "inline", fontSize: "12px" }}>
-						Property Guide Here
+						{t("forms.property.guideLink")}
 					</Link>
 				</div>
 				<div style={{ fontSize: "11px", color: "var(--vscode-descriptionForeground)", marginTop: "8px" }}>
-					<strong>Requirements:</strong>
+					<strong>{t("forms.common.requirements")}:</strong>
 					<ul style={{ margin: "5px 0", paddingLeft: "20px" }}>
 						<li>Spring Framework 6.x</li>
 						<li>JDK 17+</li>
 					</ul>
 				</div>
 				<div style={{ fontSize: "11px", color: "var(--vscode-descriptionForeground)", marginTop: "8px" }}>
-					<strong>Required Dependencies:</strong>
+					<strong>{t("forms.common.requiredDependencies")}:</strong>
 					<ul style={{ margin: "5px 0", paddingLeft: "20px" }}>
 						<li>egovframework-rte-fdl-property (eGov Property Service)</li>
 						<li>spring-context (Spring Framework 6.x)</li>
@@ -351,10 +355,10 @@ const PropertyForm: React.FC<FormComponentProps> = ({ onSubmit, onCancel, templa
 
 				<div style={{ display: "flex", gap: "10px", justifyContent: "flex-end" }}>
 					<Button variant="secondary" onClick={onCancel}>
-						Cancel
+						{t("common.cancel")}
 					</Button>
 					<Button type="submit" variant="primary">
-						Generate
+						{t("common.generate")}
 					</Button>
 				</div>
 			</form>

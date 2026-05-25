@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react"
 import Editor from "@monaco-editor/react"
+import { useTranslation } from "react-i18next"
 
 // CSS 애니메이션 스타일
 const spinAnimation = `
@@ -38,6 +39,7 @@ const CodePreview: React.FC<CodePreviewProps> = ({
 	monacoTheme,
 	languages,
 }) => {
+	const { t } = useTranslation()
 	// 미리보기 가시성 상태 (자동 업데이트가 켜져 있으면 기본 표시)
 	const [isPreviewVisible, setIsPreviewVisible] = useState<boolean>(!!autoUpdatePreview)
 	// Monaco Editor 포커스 상태
@@ -83,7 +85,7 @@ const CodePreview: React.FC<CodePreviewProps> = ({
 					}}>
 					<div style={{ marginBottom: "10px" }}>
 						<h4 style={{ color: "var(--vscode-foreground)", marginBottom: "10px", marginTop: 0 }}>
-							Preview templates
+							{t("code.previewTemplates")}
 						</h4>
 
 						{/* 자동 업데이트 옵션 */}
@@ -113,7 +115,7 @@ const CodePreview: React.FC<CodePreviewProps> = ({
 										cursor: "pointer",
 										userSelect: "none",
 									}}>
-									Always open preview
+									{t("code.alwaysOpenPreview")}
 								</label>
 							</div>
 						)}
@@ -142,7 +144,7 @@ const CodePreview: React.FC<CodePreviewProps> = ({
 							onMouseOut={(e) => {
 								;(e.target as HTMLButtonElement).style.backgroundColor = "var(--vscode-button-background)"
 							}}>
-							Open Preview
+							{t("code.openPreview")}
 						</button>
 					</div>
 				</div>
@@ -236,7 +238,7 @@ const CodePreview: React.FC<CodePreviewProps> = ({
 										;(e.target as HTMLButtonElement).style.backgroundColor =
 											"var(--vscode-button-secondaryBackground)"
 									}}>
-									Close Preview
+									{t("code.closePreview")}
 								</button>
 							) : (
 								<button
@@ -264,7 +266,7 @@ const CodePreview: React.FC<CodePreviewProps> = ({
 									onMouseOut={(e) => {
 										;(e.target as HTMLButtonElement).style.backgroundColor = "var(--vscode-button-background)"
 									}}>
-									Open Preview
+									{t("code.openPreview")}
 								</button>
 							)}
 						</div>
@@ -317,7 +319,7 @@ const CodePreview: React.FC<CodePreviewProps> = ({
 								borderRadius: "50%",
 								animation: "spin 1s linear infinite",
 							}}></div>
-						<div style={{ marginTop: "10px" }}>Generating preview...</div>
+						<div style={{ marginTop: "10px" }}>{t("code.generatingPreview")}</div>
 					</div>
 				)}
 

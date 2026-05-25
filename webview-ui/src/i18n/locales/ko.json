@@ -1,6 +1,6 @@
 {
 	"common": {
-		"browse": "찾아보기",
+		"browse": "찾기",
 		"generate": "생성",
 		"generating": "생성 중...",
 		"loading": "로딩 중...",
@@ -16,7 +16,9 @@
 		"success": "성공",
 		"error": "오류",
 		"warning": "경고",
-		"info": "정보"
+		"info": "정보",
+		"previous": "이전",
+		"next": "다음"
 	},
 	"tabs": {
 		"projects": "프로젝트",
@@ -75,8 +77,8 @@
 		"generationFailed": "생성 실패:"
 	},
 	"code": {
-		"title": "CRUD 코드 생성기",
-		"description": "DDL 문으로부터 CRUD 코드를 생성합니다. MySQL과 PostgreSQL 문법을 지원합니다.",
+		"title": "DDL로 eGovFrame 코드 생성",
+		"description": "DDL(데이터 정의 언어)로부터 CRUD 연산 및 데이터베이스 관련 코드를 생성합니다. MySQL, PostgreSQL을 지원합니다. Handlebars 템플릿 엔진 사용. 자세한 내용은",
 		"ddlInput": "DDL 입력",
 		"ddlPlaceholder": "CREATE TABLE 문을 입력하세요...",
 		"sqlDialect": "SQL 방언",
@@ -90,11 +92,40 @@
 		"generateCode": "코드 생성",
 		"noPreview": "미리보기가 없습니다. 유효한 DDL을 입력하고 '미리보기 생성'을 클릭하세요.",
 		"invalidDDL": "잘못된 DDL 문법",
-		"parsingError": "DDL 파싱 오류"
+		"parsingError": "DDL 파싱 오류",
+		"enterDirectly": "직접 입력",
+		"sample": "샘플",
+		"valid": "유효",
+		"invalid": "유효하지 않음",
+		"genericSqlNotice": "'DDL 입력: Generic'은 기본 SQL 구문 검증만 지원합니다.",
+		"parsedTable": "파싱된 테이블",
+		"columns": "컬럼 ({{count}}개)",
+		"configuration": "설정",
+		"defaultButton": "기본값",
+		"packageNameHint": "Java 패키지 명명 규칙 (예: com.company.project)",
+		"outputPath": "출력 경로",
+		"outputPathHint": "생성된 파일이 저장될 위치:",
+		"generateCrudCode": "CRUD 코드 생성",
+		"generateWithCustomTemplates": "커스텀 템플릿으로 생성",
+		"downloadTemplateContext": "템플릿 컨텍스트 다운로드",
+		"generateCrudCodeDesc": "완성된 DAO, Service, Controller, JSP 파일을 생성합니다",
+		"customTemplatesDesc": "코드 생성에 사용할 커스텀 Handlebars 템플릿을 업로드하세요",
+		"templateContextDesc": "커스텀 템플릿 제작을 위한 JSON 컨텍스트를 다운로드하세요",
+		"generatedCodeIncludes": "생성되는 코드 목록",
+		"javaFiles": "Java 파일",
+		"configFiles": "설정 파일",
+		"viewTemplates": "뷰 템플릿",
+		"directoryStructure": "디렉토리 구조",
+		"handlebarsEngineDesc": "Handlebars 템플릿 엔진: eq, concat, lowercase, unless, setVar 등의 헬퍼와 오류 처리를 지원하는 커스텀 템플릿 제작 지원",
+		"previewTemplates": "코드 미리보기",
+		"alwaysOpenPreview": "항상 미리보기 열기",
+		"openPreview": "미리보기 열기",
+		"closePreview": "미리보기 닫기",
+		"generatingPreview": "미리보기 생성 중..."
 	},
 	"config": {
-		"title": "설정 생성기",
-		"description": "다양한 컴포넌트에 대한 Spring 설정 파일을 생성합니다.",
+		"title": "eGovFrame Configurations 생성",
+		"description": "eGovFrame 프로젝트를 위한 Configuration 파일을 생성합니다. 자세한 내용은",
 		"configType": "설정 유형",
 		"datasource": "데이터소스",
 		"transaction": "트랜잭션",
@@ -103,7 +134,35 @@
 		"idGeneration": "ID 생성",
 		"property": "프로퍼티",
 		"outputFormat": "출력 형식",
-		"generateConfig": "설정 생성"
+		"generateConfig": "설정 생성",
+		"selectCategory": "카테고리 선택",
+		"chooseCategoryPlaceholder": "카테고리를 선택하세요...",
+		"selectConfigType": "Configuration 타입 선택",
+		"chooseConfigTypePlaceholder": "Configuration 타입을 선택하세요...",
+		"selectedConfig": "선택한 Configuration",
+		"nameLabel": "이름",
+		"fileExtension": "파일 형식",
+		"descriptionLabel": "설명",
+		"configureButton": "구성",
+		"noTemplates": "사용 가능한 템플릿이 없습니다",
+		"retry": "다시 시도",
+		"loadingTemplates": "템플릿 로딩 중..."
+	},
+	"forms": {
+		"common": {
+			"guide": "안내",
+			"requirements": "요구사항",
+			"requiredDependencies": "필수 의존성"
+		},
+		"cache": { "guideLink": "캐시 설정 안내" },
+		"ehcache": { "guideLink": "캐시 설정 안내" },
+		"datasource": { "guideLink": "DataSource 설정 안내" },
+		"jndiDatasource": { "guideLink": "DataSource 설정 안내" },
+		"logging": { "guideLink": "로깅 설정 안내" },
+		"idGeneration": { "guideLink": "ID 생성 설정 안내" },
+		"property": { "guideLink": "프로퍼티 설정 안내" },
+		"scheduling": { "guideLink": "스케줄링 설정 안내" },
+		"transaction": { "guideLink": "트랜잭션 설정 안내" }
 	},
 	"settings": {
 		"title": "설정",
