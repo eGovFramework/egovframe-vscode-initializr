@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react"
+import { useTranslation } from "react-i18next"
 import { Button, TextField, RadioGroup, Link } from "../../ui"
 import { ConfigFormData, ConfigGenerationType, FormComponentProps } from "../types/templates"
 import { vscode } from "../../../utils/vscode"
@@ -11,6 +12,7 @@ import {
 } from "../../../utils/codeUtils"
 
 const EhcacheForm: React.FC<FormComponentProps> = ({ onSubmit, onCancel, template, initialData }) => {
+	const { t } = useTranslation()
 	const [formData, setFormData] = useState<ConfigFormData>({
 		// 아래는 입력값들에 대한 초기값
 		generationType: ConfigGenerationType.XML,
@@ -180,16 +182,18 @@ const EhcacheForm: React.FC<FormComponentProps> = ({ onSubmit, onCancel, templat
 					padding: "15px",
 					marginTop: "20px",
 				}}>
-				<h4 style={{ color: "var(--vscode-foreground)", marginBottom: "10px", marginTop: 0 }}>Guide:</h4>
+				<h4 style={{ color: "var(--vscode-foreground)", marginBottom: "10px", marginTop: 0 }}>
+					{t("forms.common.guide")}:
+				</h4>
 				<div style={{ marginBottom: "10px" }}>
 					<Link
 						href="https://www.egovframe.go.kr/docs/5.0/egovframe-runtime/foundation-layer/cache/ehCache/"
 						style={{ display: "inline", fontSize: "12px" }}>
-						Cache Guide Here
+						{t("forms.ehcache.guideLink")}
 					</Link>
 				</div>
 				<div style={{ fontSize: "11px", color: "var(--vscode-descriptionForeground)", marginTop: "8px" }}>
-					<strong>Requirements:</strong>
+					<strong>{t("forms.common.requirements")}:</strong>
 					<ul style={{ margin: "5px 0", paddingLeft: "20px" }}>
 						<li>Ehcache 3.x</li>
 						<li>Spring Framework 6.x with JCache (JSR-107)</li>
@@ -198,7 +202,7 @@ const EhcacheForm: React.FC<FormComponentProps> = ({ onSubmit, onCancel, templat
 					</ul>
 				</div>
 				<div style={{ fontSize: "11px", color: "var(--vscode-descriptionForeground)", marginTop: "8px" }}>
-					<strong>Required Dependencies:</strong>
+					<strong>{t("forms.common.requiredDependencies")}:</strong>
 					<ul style={{ margin: "5px 0", paddingLeft: "20px" }}>
 						<li>org.ehcache:ehcache:3.10.8</li>
 						<li>javax.cache:cache-api:1.1.1</li>
@@ -334,7 +338,7 @@ const EhcacheForm: React.FC<FormComponentProps> = ({ onSubmit, onCancel, templat
 							}}
 							onClick={handleSelectConfigFilePath}>
 							<span className="codicon codicon-folder-opened" style={{ marginRight: "6px" }}></span>
-							Browse
+							{t("common.browse")}
 						</button>
 					</div>
 					<div style={{ fontSize: "10px", color: "var(--vscode-descriptionForeground)", marginTop: "2px" }}>
@@ -346,10 +350,10 @@ const EhcacheForm: React.FC<FormComponentProps> = ({ onSubmit, onCancel, templat
 
 				<div style={{ display: "flex", gap: "10px", justifyContent: "flex-end" }}>
 					<Button variant="secondary" onClick={onCancel}>
-						Cancel
+						{t("common.cancel")}
 					</Button>
 					<Button type="submit" variant="primary">
-						Generate
+						{t("common.generate")}
 					</Button>
 				</div>
 			</form>

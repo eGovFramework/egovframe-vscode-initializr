@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react"
+import { useTranslation } from "react-i18next"
 import { Button, TextField, Select, RadioGroup, Link } from "../../ui"
 import { ConfigGenerationType, ConfigFormData, FormComponentProps } from "../types/templates"
 import { vscode } from "../../../utils/vscode"
@@ -10,6 +11,7 @@ import {
 } from "../../../utils/codeUtils"
 
 const DatasourceForm: React.FC<FormComponentProps> = ({ onSubmit, onCancel, template, initialData }) => {
+	const { t } = useTranslation()
 	const [formData, setFormData] = useState<ConfigFormData>({
 		generationType: ConfigGenerationType.XML,
 		txtConfigPackage: "egovframework.example.config",
@@ -160,16 +162,18 @@ const DatasourceForm: React.FC<FormComponentProps> = ({ onSubmit, onCancel, temp
 					padding: "15px",
 					marginTop: "20px",
 				}}>
-				<h4 style={{ color: "var(--vscode-foreground)", marginBottom: "10px", marginTop: 0 }}>Guide:</h4>
+				<h4 style={{ color: "var(--vscode-foreground)", marginBottom: "10px", marginTop: 0 }}>
+					{t("forms.common.guide")}:
+				</h4>
 				<div style={{ marginBottom: "10px" }}>
 					<Link
 						href="https://www.egovframe.go.kr/docs/5.0/egovframe-runtime/persistence-layer/data-source/"
 						style={{ display: "inline", fontSize: "12px" }}>
-						Datasource Guide Here
+						{t("forms.datasource.guideLink")}
 					</Link>
 				</div>
 				<div style={{ fontSize: "11px", color: "var(--vscode-descriptionForeground)", marginTop: "8px" }}>
-					<strong>Requirements:</strong>
+					<strong>{t("forms.common.requirements")}:</strong>
 					<ul style={{ margin: "5px 0", paddingLeft: "20px" }}>
 						<li>Spring Framework 6.x</li>
 						<li>JDK 17+</li>
@@ -177,7 +181,7 @@ const DatasourceForm: React.FC<FormComponentProps> = ({ onSubmit, onCancel, temp
 					</ul>
 				</div>
 				<div style={{ fontSize: "11px", color: "var(--vscode-descriptionForeground)", marginTop: "8px" }}>
-					<strong>Required Dependencies:</strong>
+					<strong>{t("forms.common.requiredDependencies")}:</strong>
 					<ul style={{ margin: "5px 0", paddingLeft: "20px" }}>
 						<li>DBCP: commons-dbcp2:2.13.0</li>
 						<li>C3P0: c3p0:0.10.1</li>
@@ -315,10 +319,10 @@ const DatasourceForm: React.FC<FormComponentProps> = ({ onSubmit, onCancel, temp
 
 				<div style={{ display: "flex", gap: "10px", justifyContent: "flex-end" }}>
 					<Button variant="secondary" onClick={onCancel}>
-						Cancel
+						{t("common.cancel")}
 					</Button>
 					<Button type="submit" variant="primary">
-						Generate
+						{t("common.generate")}
 					</Button>
 				</div>
 			</form>
