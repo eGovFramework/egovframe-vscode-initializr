@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Code Generation
+  - DDL 입력 내용을 기반으로 테이블, 컬럼, PK/FK, 1:N 관계를 표시하는 ERD Preview 추가
+
 ## v5.0.0 Beta (2025-12-04)
 
 - v5.0.x Initial Beta Release

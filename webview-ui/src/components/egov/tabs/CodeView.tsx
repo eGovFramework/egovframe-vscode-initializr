@@ -1,7 +1,8 @@
 import { Button, TextArea, Link, ProgressRing, TextField } from "../../ui"
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useMemo } from "react"
 import { useTranslation } from "react-i18next"
 import { parseDDL, validateDDL, ParsedDDL } from "@shared/ddlParser"
+import { parseErdModel } from "@shared/erdParser"
 import { getTemplateContext } from "@shared/templateContext"
 import { WebviewMessage, ExtensionResponse } from "../../../utils/messageTypes"
 import { createSelectOutputPathMessage } from "../../../utils/egovUtils"
@@ -9,6 +10,7 @@ import { vscode } from "../../../utils/vscode"
 import { validateCodeConfig, type CodeConfig } from "../../../utils/codeUtils"
 import { useCodeViewState } from "../../../context/EgovTabsStateContext"
 import CodePreview from "../CodePreview"
+import ErdDiagram from "../ErdDiagram"
 import Editor, { loader } from "@monaco-editor/react"
 import * as monaco from "monaco-editor"
 
@@ -83,6 +85,18 @@ const CodeView = () => {
 	const monacoRef = useRef<typeof monaco | null>(null)
 	// DDL 검증 디바운스 타이머
 	const ddlValidationTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+	const erdModel = useMemo(() => {
+		if (!isValid || !ddlContent.trim()) {
+			return null
+		}
+
+		try {
+			return parseErdModel(ddlContent)
+		} catch (error) {
+			console.warn("ERD parsing failed:", error)
+			return null
+		}
+	}, [ddlContent, isValid])
 
 	// Helper functions to update state
 	const setDdlContent = (value: string) => updateState({ ddlContent: value })
@@ -841,6 +855,9 @@ const CodeView = () => {
 						</div>
 					)}
 				</div>
+
+				{/* ERD Preview */}
+				<ErdDiagram model={erdModel} />
 
 				{/* Parsed DDL Preview */}
 				{parsedDDL && (

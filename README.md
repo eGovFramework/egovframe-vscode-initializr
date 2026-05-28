@@ -44,6 +44,7 @@
 - **DDL 문법 검증**: `monaco-sql-languages` 라이브러리를 통한 실시간 SQL 문법 검증 및 오류 표시
 - **11개 템플릿 미리보기**: VO, DefaultVO, Controller, Service, ServiceImpl, Mapper, Mapper Interface, JSP List/Register, Thymeleaf List/Register
 - **미리보기 선택적 자동 업데이트**: 사용자가 원할 때만 자동 미리보기 생성
+- **ERD 미리보기**: 입력된 `CREATE TABLE` DDL을 테이블/컬럼/PK/FK 관계 다이어그램으로 시각화
 - **병렬 렌더링**: 11개 템플릿을 동시에 처리하여 빠른 미리보기 생성
 - **Handlebars 바인딩**: 실제 데이터가 바인딩된 완성된 코드 미리보기
 
@@ -53,7 +54,8 @@
 3. **미리보기 생성**: "미리보기 생성" 버튼 클릭
 4. **템플릿 선택**: 드롭다운에서 원하는 템플릿 선택
 5. **코드 확인**: 실제 바인딩된 코드 미리보기
-6. **자동 업데이트**: 체크박스로 DDL 변경시 자동 미리보기 업데이트 설정
+6. **ERD 확인**: 유효한 DDL이면 Code Generator 화면에서 ERD Preview 확인
+7. **자동 업데이트**: 체크박스로 DDL 변경시 자동 미리보기 업데이트 설정
 
 ##### 성능 최적화
 - **지연 로딩**: 필요시에만 미리보기 생성 (기본 동작)
@@ -88,13 +90,22 @@ CREATE TABLE users (
   email VARCHAR(100) UNIQUE NOT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE TABLE orders (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  user_id INT NOT NULL,
+  total_amount DECIMAL(10, 2) NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_orders_user FOREIGN KEY (user_id) REFERENCES users(id)
+);
 ```
 
 #### 2. 미리보기 생성
 1. DDL 입력 후 500ms 디바운스로 유효성 검사 완료
-2. "미리보기 생성" 버튼 클릭
-3. 드롭다운에서 원하는 템플릿 선택 (예: VO, Controller, Service 등)
-4. 실제 바인딩된 코드 미리보기 확인
+2. Code Generator 화면의 "ERD Preview"에서 테이블과 FK 관계 다이어그램 확인
+3. "미리보기 생성" 버튼 클릭
+4. 드롭다운에서 원하는 템플릿 선택 (예: VO, Controller, Service 등)
+5. 실제 바인딩된 코드 미리보기 확인
 
 #### 3. 자동 업데이트 설정
 - "DDL 변경시 자동으로 미리보기 업데이트" 체크박스 활성화
