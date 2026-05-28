@@ -22,6 +22,7 @@
 │  │   └── ...                       │  │   │   ├── CodePreview.tsx        │
 │  ├── shared/                       │  │   │   ├── EgovSettingsView.tsx   │
 │  │   ├── dataTypes.ts              │  │   │   ├── EgovView.tsx           │
+│  │   ├── erdParser.ts              │  │   │   ├── ErdDiagram.tsx         │
 │  │   ├── ExtensionMessage.ts       │  │   ├── ui/                        │
 │  │   ├── WebviewMessage.ts         │  ├── context/                       │
 │  │   └── ...                       │  ├── shared/                        │
@@ -89,6 +90,7 @@ src/
 │   ├── AutoApprovalSettings.ts          # 자동 승인 설정 타입
 │   ├── dataTypes.ts                     # DB 타입 -> Java 타입 매핑
 │   ├── ddlParser.ts                     # DDL 검증 및 파싱
+│   ├── erdParser.ts                     # ERD Preview용 테이블/관계 파싱
 │   ├── ExtensionMessage.ts              # Extension -> Webview 메시지 타입
 │   ├── templateContext.ts               # CRUD 템플릿 컨텍스트 생성
 │   └── WebviewMessage.ts                # Webview -> Extension 메시지 타입
@@ -214,6 +216,7 @@ webview-ui/
     │   │   ├── types/               # types 설정 인터페이스
     │   │   │   └── templates.ts     # ConfigFormData 인터페이스
     │   │   ├── CodePreview.tsx      # 코드 생성 탭 내 프리뷰 화면
+    │   │   ├── ErdDiagram.tsx       # DDL 기반 ERD Preview 화면
     │   │   └── EgovSettingsView.tsx # Extension 설정 화면
     ├── context/
     │   ├── EgovTabsStateContext.tsx # egov 탭 상태 관리
