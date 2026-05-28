@@ -692,7 +692,7 @@ const TransactionForm: React.FC<FormComponentProps> = ({ onSubmit, onCancel, tem
 									isRequired
 									options={[
 										{ value: "DEFAULT", label: "DEFAULT" },
-										{ value: "REQD_UNCOMMITTED", label: "READ_UNCOMMITTED" },
+										{ value: "READ_UNCOMMITTED", label: "READ_UNCOMMITTED" },
 										{ value: "READ_COMMITTED", label: "READ_COMMITTED" },
 										{ value: "REPEATABLE_READ", label: "REPEATABLE_READ" },
 										{ value: "SERIALIZABLE", label: "SERIALIZABLE" },
