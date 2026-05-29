@@ -110,10 +110,10 @@ public class {{txtFileName}} {
 
     // TransactionAdvisor 설정
     @Bean
-    public Advisor txAdvisor(PlatformTransactionManager txManager) {
+    public Advisor txAdvisor(@Qualifier("{{txtAdviceName}}") TransactionInterceptor txAdvice) {
         AspectJExpressionPointcut pointcut = new AspectJExpressionPointcut();
         pointcut.setExpression("{{txtPointCutExpression}}");
-        return new DefaultPointcutAdvisor(pointcut, txAdvice(txManager));
+        return new DefaultPointcutAdvisor(pointcut, txAdvice);
     }
     {{/if}}
 }
