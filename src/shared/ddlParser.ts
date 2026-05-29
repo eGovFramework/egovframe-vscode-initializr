@@ -69,6 +69,21 @@ export function extractCreateTableStatements(ddl: string): CreateTableStatement[
 	return statements
 }
 
+// 컬럼 정의에서 제외할 항목 검사 함수
+function isValidColumnDefinition(column: string, includePrimaryKey = false): boolean {
+	const upper = column.toUpperCase()
+
+	return (
+		column.length > 0 &&
+		!upper.startsWith("UNIQUE KEY") &&
+		!upper.startsWith("KEY") &&
+		!upper.startsWith("CONSTRAINT") &&
+		!upper.startsWith("COMMENT ON") &&
+		!upper.startsWith("FOREIGN KEY") &&
+		(includePrimaryKey || !upper.startsWith("PRIMARY KEY"))
+	)
+}
+
 // DDL 파싱 함수
 export function parseDDL(ddl: string): ParsedDDL {
 	// 공백 정규화
@@ -86,14 +101,7 @@ export function parseDDL(ddl: string): ParsedDDL {
 	const columnsArray = columnDefinitions
 		.split(/,(?![^(]*\))/)
 		.map((column) => column.trim())
-		.filter(
-			(column) =>
-				column &&
-				!column.toUpperCase().startsWith("UNIQUE KEY") &&
-				!column.toUpperCase().startsWith("KEY") &&
-				!column.toUpperCase().startsWith("CONSTRAINT") &&
-				!column.toUpperCase().startsWith("FOREIGN KEY"),
-		)
+		.filter((column) => isValidColumnDefinition(column, true))
 
 	const attributes: Column[] = []
 	const pkAttributes: Column[] = []
@@ -106,8 +114,8 @@ export function parseDDL(ddl: string): ParsedDDL {
 
 	// 각 컬럼 파싱
 	columnsArray.forEach((columnDef) => {
-		if (columnDef.trim().toUpperCase().startsWith("PRIMARY KEY") || columnDef.trim().toUpperCase().startsWith("COMMENT ON")) {
-			return // PRIMARY KEY 정의 줄이나 COMMENT 줄은 건너뛰기
+		if (columnDef.trim().toUpperCase().startsWith("PRIMARY KEY")) {
+			return // PRIMARY KEY 정의 줄은 건너뛰기
 		}
 
 		// 기본 컬럼 정보 추출 (백틱 처리 추가)
@@ -194,16 +202,7 @@ export function validateDDL(ddl: string): boolean {
 	const columnsArray = columnDefinitions
 		.split(/,(?![^(]*\))/)
 		.map((column) => column.trim())
-		.filter(
-			(column) =>
-				column &&
-				!column.toUpperCase().startsWith("UNIQUE KEY") &&
-				!column.toUpperCase().startsWith("KEY") &&
-				!column.toUpperCase().startsWith("CONSTRAINT") &&
-				!column.toUpperCase().startsWith("PRIMARY KEY") &&
-				!column.toUpperCase().startsWith("COMMENT ON") &&
-				!column.toUpperCase().startsWith("FOREIGN KEY"),
-		)
+		.filter((column) => isValidColumnDefinition(column))
 
 	// 각 컬럼에 컬럼명과 자료형이 있는지 확인
 	for (const columnDef of columnsArray) {
