@@ -4,6 +4,7 @@ import { WebviewMessage } from "@shared/WebviewMessage"
 
 export class Controller {
 	private postMessage: (message: ExtensionMessage) => Thenable<boolean> | undefined
+	private themeChangeDisposable?: vscode.Disposable
 
 	constructor(
 		readonly context: vscode.ExtensionContext,
@@ -19,7 +20,7 @@ export class Controller {
 	// 테마 변경 이벤트 리스너
 	private setupThemeChangeListener() {
 		// 테마 변경 이벤트 감지
-		vscode.window.onDidChangeActiveColorTheme(async (colorTheme) => {
+		this.themeChangeDisposable = vscode.window.onDidChangeActiveColorTheme(async (colorTheme) => {
 			const themeName = vscode.workspace.getConfiguration("workbench").get<string>("colorTheme")
 			const monacoTheme = this.getMonacoThemeFromVSCodeTheme(colorTheme.kind)
 
@@ -48,6 +49,7 @@ export class Controller {
 
 	async dispose() {
 		this.outputChannel.appendLine("Disposing eGovFrame Controller...")
+		this.themeChangeDisposable?.dispose()
 	}
 
 	// Send any JSON serializable data to the react app
