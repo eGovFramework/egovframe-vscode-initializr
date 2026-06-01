@@ -8,10 +8,12 @@ export interface Column {
 	pcName: string // PascalCase name
 	dataType: string // SQL data type
 	javaType: string // Java type
+	comment: string // column comment (DDL COMMENT 절에서 추출, 없으면 columnName)
 }
 
 export interface ParsedDDL {
 	tableName: string
+	tableComment: string // table comment (DDL COMMENT 절에서 추출, 없으면 tableName)
 	attributes: Column[]
 	pkAttributes: Column[]
 }
@@ -70,6 +72,21 @@ export function parseDDL(ddl: string): ParsedDDL {
 		? pkConstraintMatch[1].split(",").map((col) => col.trim().replace(/[`"']/g, ""))
 		: []
 
+	// PostgreSQL: COMMENT ON COLUMN table.col IS 'comment' 파싱
+	const pgColumnComments: Record<string, string> = {}
+	const pgColumnCommentRegex = /COMMENT ON COLUMN\s+\w+\.(\w+)\s+IS\s+'([^']+)'/gi
+	let pgCommentMatch
+	while ((pgCommentMatch = pgColumnCommentRegex.exec(ddl)) !== null) {
+		pgColumnComments[pgCommentMatch[1]] = pgCommentMatch[2]
+	}
+
+	// 테이블 COMMENT 파싱
+	// MySQL: ) COMMENT 'table comment'
+	const mysqlTableCommentMatch = RegExp(/\)\s*COMMENT\s+'([^']+)'/i).exec(ddl)
+	// PostgreSQL: COMMENT ON TABLE tableName IS 'table comment'
+	const pgTableCommentMatch = RegExp(/COMMENT ON TABLE\s+\w+\s+IS\s+'([^']+)'/i).exec(ddl)
+	const tableComment = mysqlTableCommentMatch?.[1] ?? pgTableCommentMatch?.[1] ?? tableName
+
 	// 각 컬럼 파싱
 	columnsArray.forEach((columnDef) => {
 		if (columnDef.trim().toUpperCase().startsWith("PRIMARY KEY") || columnDef.trim().toUpperCase().startsWith("COMMENT ON")) {
@@ -100,6 +117,10 @@ export function parseDDL(ddl: string): ParsedDDL {
 		// camelCase 이름 생성
 		const ccName = convertToCamelCase(columnName)
 
+		// MySQL: 인라인 COMMENT 'text' 파싱
+		const mysqlCommentMatch = RegExp(/COMMENT\s+'([^']+)'/i).exec(columnDef)
+		const comment = mysqlCommentMatch?.[1] ?? pgColumnComments[columnName] ?? columnName
+
 		// Column 객체 생성
 		const column: Column = {
 			ccName,
@@ -108,6 +129,7 @@ export function parseDDL(ddl: string): ParsedDDL {
 			pcName: convertCamelcaseToPascalcase(ccName),
 			dataType,
 			javaType: getJavaClassName(dataType),
+			comment,
 		}
 
 		attributes.push(column)
@@ -121,7 +143,7 @@ export function parseDDL(ddl: string): ParsedDDL {
 		throw new Error("No valid columns found in DDL")
 	}
 
-	return { tableName, attributes, pkAttributes }
+	return { tableName, tableComment, attributes, pkAttributes }
 }
 
 // DDL 유효성 검사 함수

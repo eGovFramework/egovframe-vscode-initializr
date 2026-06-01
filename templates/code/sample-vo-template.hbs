@@ -23,7 +23,7 @@ public class {{className}}VO extends {{className}}DefaultVO {
 	private static final long serialVersionUID = 1L;
 
 {{#each attributes}}
-	/** {{columnName}} */
+	/** {{comment}} */
   {{#unless isPrimaryKey}}
 	// @EgovNullCheck(message="{{ccName}} is required") // egovframe-Todo: Null Check 적용시 좌측 주석 코드 참고
   {{/unless}}
