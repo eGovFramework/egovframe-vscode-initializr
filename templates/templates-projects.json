@@ -603,17 +603,36 @@
 			]
 		},
 		{
-			"templateId": "ai-rag",
-			"displayName": "AI > RAG Project",
+			"templateId": "ai-rag-springai",
+			"displayName": "AI > RAG Project (Spring AI)",
 			"description": "RAG Project Using Spring AI and Redis Stack",
 			"category": "AI",
-			"projectName": "egov-ai-rag",
+			"projectName": "egov-ai-rag-springai",
 			"latestVersion": "5.0.0",
 			"versions": [
 				{
 					"version": "5.0.0",
-					"fileName": "egovframe-ai-rag.zip",
-					"pomFile": "egovframe-ai-rag-pom.xml",
+					"fileName": "egovframe-ai-rag-springai.zip",
+					"pomFile": "egovframe-ai-rag-springai-pom.xml",
+					"releaseDate": "2025-01-01",
+					"isLatest": true,
+					"included": true,
+					"fileSize": "15MB"
+				}
+			]
+		},
+		{
+			"templateId": "ai-rag-langchain4j",
+			"displayName": "AI > RAG Project (Langchain4j)",
+			"description": "RAG Project Using Langchain4j and PostgreSQL",
+			"category": "AI",
+			"projectName": "egov-ai-rag-langchain4j",
+			"latestVersion": "5.0.0",
+			"versions": [
+				{
+					"version": "5.0.0",
+					"fileName": "egovframe-ai-rag-langchain4j.zip",
+					"pomFile": "egovframe-ai-rag-langchain4j-pom.xml",
 					"releaseDate": "2025-01-01",
 					"isLatest": true,
 					"included": true,
