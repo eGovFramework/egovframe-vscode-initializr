@@ -649,11 +649,11 @@ export const ProjectsView = () => {
 						<button
 							disabled={Boolean(
 								isGenerating ||
-									!selectedTemplate ||
-									!projectName ||
-									!outputPath ||
-									(selectedTemplate?.pomFile && (!groupId || groupId.trim() === "")) ||
-									(selectedTemplate?.pomFile && (!artifactId || artifactId.trim() === "")),
+								!selectedTemplate ||
+								!projectName ||
+								!outputPath ||
+								(selectedTemplate?.pomFile && (!groupId || groupId.trim() === "")) ||
+								(selectedTemplate?.pomFile && (!artifactId || artifactId.trim() === "")),
 							)}
 							onClick={handleGenerateProject}
 							style={{
