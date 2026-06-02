@@ -33,12 +33,16 @@
 
 			UPDATE {{tableName}}
 			SET
+			{{~setVar "isFirstSet" true~}}
 			{{#each attributes}}
-				{{#if @first}}
+				{{#unless isPrimaryKey}}
+				{{#if @root.isFirstSet}}
 				{{columnName}}={{concat "#{" ccName "}"}}
+				{{~setVar "isFirstSet" false~}}
 				{{else}}
 				, {{columnName}}={{concat "#{" ccName "}"}}
 				{{/if}}
+				{{/unless}}
 			{{/each}}
 			WHERE
 			{{#if pkAttributes.length}}
