@@ -81,8 +81,9 @@ export function parseDDL(ddl: string): ParsedDDL {
 	}
 
 	// 테이블 COMMENT 파싱
-	// MySQL: ) COMMENT 'table comment'
-	const mysqlTableCommentMatch = RegExp(/\)\s*COMMENT\s+'([^']+)'/i).exec(ddl)
+	// MySQL: 컬럼 정의 블록 이후의 테이블 옵션 COMMENT 'table comment'
+	const tableOptions = ddl.slice(columnDefinitionsMatch.index + columnDefinitionsMatch[0].length)
+	const mysqlTableCommentMatch = RegExp(/\bCOMMENT\s*=?\s*'([^']+)'/i).exec(tableOptions)
 	// PostgreSQL: COMMENT ON TABLE tableName IS 'table comment'
 	const pgTableCommentMatch = RegExp(/COMMENT ON TABLE\s+\w+\s+IS\s+'([^']+)'/i).exec(ddl)
 	const tableComment = mysqlTableCommentMatch?.[1] ?? pgTableCommentMatch?.[1] ?? tableName
