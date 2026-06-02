@@ -59,6 +59,10 @@ coverage
 
 # Claude
 CLAUDE.md
+.claude/
+
+# Serena
+.serena/
 
 *evals.env
 
