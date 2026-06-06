@@ -120,7 +120,7 @@ export async function generatePreviews(
 	packageName?: string,
 ): Promise<{ previews: { [key: string]: string }; languages: { [key: string]: string }; packageName: string }> {
 	// DDL 파싱
-	const { tableName, attributes, pkAttributes } = parseDDL(ddl)
+	const { tableName, dbTableName, attributes, pkAttributes } = parseDDL(ddl)
 
 	// 기본 패키지명 가져오기
 	const finalPackageName =
@@ -128,7 +128,7 @@ export async function generatePreviews(
 		vscode.workspace.getConfiguration("egovframeInitializr").get<string>("defaultPackageName", "egovframework.example.sample")
 
 	// 템플릿 컨텍스트 생성
-	const templateContext = getTemplateContext(tableName, attributes, pkAttributes)
+	const templateContext = getTemplateContext(tableName, attributes, pkAttributes, finalPackageName, dbTableName)
 	templateContext.packageName = finalPackageName
 
 	// 모든 템플릿 파일 경로들

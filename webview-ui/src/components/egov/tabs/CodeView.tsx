@@ -471,6 +471,7 @@ const CodeView = () => {
 				currentParsedDDL.attributes,
 				currentParsedDDL.pkAttributes,
 				packageName,
+				currentParsedDDL.dbTableName,
 			)
 			vscode.postMessage({
 				type: "downloadTemplateContext",

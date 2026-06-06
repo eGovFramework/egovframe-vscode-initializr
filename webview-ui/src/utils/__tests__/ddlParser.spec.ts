@@ -95,6 +95,7 @@ describe("ddlParser", () => {
 		`)
 
 		expect(result.tableName).toBe("UserProfiles")
+		expect(result.dbTableName).toBe("user_profiles")
 		expect(result.attributes[0]).toMatchObject({
 			columnName: "profile_id",
 			ccName: "profileId",
