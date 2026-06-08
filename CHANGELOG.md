@@ -4,6 +4,8 @@
 
 - Code Generation
   - DDL 입력 내용을 기반으로 테이블, 컬럼, PK/FK, 1:N 관계를 표시하는 ERD Preview 추가
+- Refactoring
+  - 불필요한 try/catch(no-useless-catch) 제거 (codeGenerator.ts)
 
 ## v5.0.0 Beta (2025-12-04)
 

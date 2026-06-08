@@ -343,25 +343,21 @@ export async function uploadTemplates(ddl: string, packageName: string): Promise
 		const templatePath = file.fsPath
 		const outputPath = path.join(selectedFolderPath, path.basename(file.fsPath, ".hbs") + ".generated")
 
-		try {
-			const currentParsedDDL = parseDDL(ddl)
-			const context = getTemplateContext(
-				currentParsedDDL.tableName,
-				currentParsedDDL.attributes,
-				currentParsedDDL.pkAttributes,
-				packageName,
-				currentParsedDDL.dbTableName,
-			)
-			const renderedContent = await renderTemplate(templatePath, context)
-			await fs.writeFile(outputPath, renderedContent)
-			vscode.window.showInformationMessage(`Custom template saved successfully to ${outputPath}`)
+		const currentParsedDDL = parseDDL(ddl)
+		const context = getTemplateContext(
+			currentParsedDDL.tableName,
+			currentParsedDDL.attributes,
+			currentParsedDDL.pkAttributes,
+			packageName,
+			currentParsedDDL.dbTableName,
+		)
+		const renderedContent = await renderTemplate(templatePath, context)
+		await fs.writeFile(outputPath, renderedContent)
+		vscode.window.showInformationMessage(`Custom template saved successfully to ${outputPath}`)
 
-			// Open the newly created file in the editor
-			const document = await vscode.workspace.openTextDocument(outputPath)
-			await vscode.window.showTextDocument(document)
-		} catch (error) {
-			throw error
-		}
+		// Open the newly created file in the editor
+		const document = await vscode.workspace.openTextDocument(outputPath)
+		await vscode.window.showTextDocument(document)
 	}
 }
 
@@ -384,17 +380,13 @@ export async function downloadTemplateContext(ddl: string, context: any): Promis
 
 	const folderPath = selectedFolder[0].fsPath
 
-	try {
-		const { tableName } = parseDDL(ddl)
-		const jsonContent = JSON.stringify(context, null, 2)
-		const outputPath = path.join(folderPath, `${tableName}_TemplateContext.json`)
-		await fs.writeFile(outputPath, jsonContent)
-		vscode.window.showInformationMessage(`TemplateContext JSON saved successfully to ${outputPath}`)
+	const { tableName } = parseDDL(ddl)
+	const jsonContent = JSON.stringify(context, null, 2)
+	const outputPath = path.join(folderPath, `${tableName}_TemplateContext.json`)
+	await fs.writeFile(outputPath, jsonContent)
+	vscode.window.showInformationMessage(`TemplateContext JSON saved successfully to ${outputPath}`)
 
-		// Open the newly created file in the editor
-		const document = await vscode.workspace.openTextDocument(outputPath)
-		await vscode.window.showTextDocument(document)
-	} catch (error) {
-		throw error
-	}
+	// Open the newly created file in the editor
+	const document = await vscode.workspace.openTextDocument(outputPath)
+	await vscode.window.showTextDocument(document)
 }
