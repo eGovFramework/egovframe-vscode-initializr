@@ -122,6 +122,63 @@ describe("ddlParser", () => {
 			javaType: "java.lang.Object",
 		})
 	})
+
+	it("should map MySQL text types to java.lang.String", () => {
+		const result = parseDDL(`
+			CREATE TABLE articles (
+				id INT PRIMARY KEY,
+				summary TINYTEXT,
+				body LONGTEXT
+			);
+		`)
+
+		expect(result.attributes[1]).toMatchObject({
+			columnName: "summary",
+			dataType: "TINYTEXT",
+			javaType: "java.lang.String",
+		})
+		expect(result.attributes[2]).toMatchObject({
+			columnName: "body",
+			dataType: "LONGTEXT",
+			javaType: "java.lang.String",
+		})
+	})
+
+	it("should map MySQL blob and binary types to byte[]", () => {
+		const result = parseDDL(`
+			CREATE TABLE blobs (
+				id INT PRIMARY KEY,
+				tiny TINYBLOB,
+				medium MEDIUMBLOB,
+				large LONGBLOB,
+				data BLOB,
+				fixed BINARY(16),
+				variable VARBINARY(255)
+			);
+		`)
+
+		expect(result.attributes[1]).toMatchObject({ columnName: "tiny", dataType: "TINYBLOB", javaType: "byte[]" })
+		expect(result.attributes[2]).toMatchObject({ columnName: "medium", dataType: "MEDIUMBLOB", javaType: "byte[]" })
+		expect(result.attributes[3]).toMatchObject({ columnName: "large", dataType: "LONGBLOB", javaType: "byte[]" })
+		expect(result.attributes[4]).toMatchObject({ columnName: "data", dataType: "BLOB", javaType: "byte[]" })
+		expect(result.attributes[5]).toMatchObject({ columnName: "fixed", dataType: "BINARY", javaType: "byte[]" })
+		expect(result.attributes[6]).toMatchObject({ columnName: "variable", dataType: "VARBINARY", javaType: "byte[]" })
+	})
+
+	it("should map PostgreSQL BYTEA type to byte[]", () => {
+		const result = parseDDL(`
+			CREATE TABLE pg_files (
+				id INT PRIMARY KEY,
+				content BYTEA
+			);
+		`)
+
+		expect(result.attributes[1]).toMatchObject({
+			columnName: "content",
+			dataType: "BYTEA",
+			javaType: "byte[]",
+		})
+	})
 })
 
 describe("validateDDL", () => {
