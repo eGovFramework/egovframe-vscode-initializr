@@ -144,13 +144,13 @@ git commit # 자동으로 커밋 메시지가 설정됨
 # - (또는) 리베이스
 git rebase --continue
 
-# 기여자님의 origin 레포지토리에 push
-git push origin main
+# 기여자님의 origin 레포지토리에 작업 브랜치를 push
+git push origin feat/something
 ```
 
 ### 6. PR 생성
 
-- Github에서 기여자님의 개인 레포지토리(egovframe-docs를 포크한 레포지토리) 페이지로 이동합니다.
+- Github에서 기여자님의 개인 레포지토리(egovframe-vscode-initializr를 포크한 레포지토리) 페이지로 이동합니다.
 - “Compare & pull request” 버튼을 클릭합니다.
 - 제목과 설명 입력 후 “Create pull request” 버튼을 클릭합니다.
 

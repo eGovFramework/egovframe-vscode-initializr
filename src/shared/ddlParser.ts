@@ -18,6 +18,12 @@ export interface ParsedDDL {
 	pkAttributes: Column[]
 }
 
+export interface CreateTableStatement {
+	tableName: string
+	body: string
+	statement: string
+}
+
 // snake_case를 camelCase로 변환하는 함수
 function convertToCamelCase(str: string): string {
 	return str.toLowerCase().replace(/_([a-z])/g, (match, letter) => letter.toUpperCase())
@@ -31,43 +37,79 @@ function convertCamelcaseToPascalcase(name: string): string {
 	return name.charAt(0).toUpperCase() + name.slice(1)
 }
 
+export function extractCreateTableStatements(ddl: string): CreateTableStatement[] {
+	const statements: CreateTableStatement[] = []
+	const createTableRegex = /CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?[`"]?(\w+)[`"]?\s*\(/gi
+	let match: RegExpExecArray | null
+
+	while ((match = createTableRegex.exec(ddl)) !== null) {
+		const bodyStart = createTableRegex.lastIndex
+		let depth = 1
+		let currentIndex = bodyStart
+
+		while (currentIndex < ddl.length && depth > 0) {
+			const char = ddl[currentIndex]
+			if (char === "(") {
+				depth += 1
+			} else if (char === ")") {
+				depth -= 1
+			}
+			currentIndex += 1
+		}
+
+		if (depth === 0) {
+			const bodyEnd = currentIndex - 1
+			statements.push({
+				tableName: match[1],
+				body: ddl.slice(bodyStart, bodyEnd),
+				statement: ddl.slice(match.index, currentIndex),
+			})
+			createTableRegex.lastIndex = currentIndex
+		}
+	}
+
+	return statements
+}
+
+// 컬럼 정의에서 제외할 항목 검사 함수
+function isValidColumnDefinition(column: string, includePrimaryKey = false): boolean {
+	const upper = column.toUpperCase()
+
+	return (
+		column.length > 0 &&
+		!upper.startsWith("UNIQUE KEY") &&
+		!upper.startsWith("KEY") &&
+		!upper.startsWith("CONSTRAINT") &&
+		!upper.startsWith("COMMENT ON") &&
+		!upper.startsWith("FOREIGN KEY") &&
+		(includePrimaryKey || !upper.startsWith("PRIMARY KEY"))
+	)
+}
+
 // DDL 파싱 함수
 export function parseDDL(ddl: string): ParsedDDL {
 	// 공백 정규화
-	ddl = ddl.replace(/\s+/g, " ").trim()
+	const normalizedDdl = ddl.replace(/\s+/g, " ").trim()
+	const createTableStatement = extractCreateTableStatements(normalizedDdl)[0]
 
 	// 테이블 이름 추출 (백틱 처리 추가) - DDL 시작 부분에서만 매칭
-	const tableNameMatch = RegExp(/^\s*CREATE\s+TABLE\s+[`]?(\w+)[`]?/i).exec(ddl)
-	if (!tableNameMatch) {
+	if (!createTableStatement) {
 		throw new Error("Unable to parse table name from DDL")
 	}
-	const tableName = convertCamelcaseToPascalcase(convertToCamelCase(tableNameMatch[1]))
+	const tableName = convertCamelcaseToPascalcase(convertToCamelCase(createTableStatement.tableName))
 
 	// 컬럼 정의 추출
-	const columnDefinitionsMatch = RegExp(/\((.*)\)/s).exec(ddl)
-	if (!columnDefinitionsMatch) {
-		throw new Error("Unable to parse column definitions from DDL")
-	}
-
-	// 컬럼 정의를 개별 컬럼으로 분리
-	const columnDefinitions = columnDefinitionsMatch[1]
+	const columnDefinitions = createTableStatement.body
 	const columnsArray = columnDefinitions
 		.split(/,(?![^(]*\))/)
 		.map((column) => column.trim())
-		.filter(
-			(column) =>
-				column &&
-				!column.toUpperCase().startsWith("UNIQUE KEY") &&
-				!column.toUpperCase().startsWith("KEY") &&
-				!column.toUpperCase().startsWith("CONSTRAINT") &&
-				!column.toUpperCase().startsWith("FOREIGN KEY"),
-		)
+		.filter((column) => isValidColumnDefinition(column, true))
 
 	const attributes: Column[] = []
 	const pkAttributes: Column[] = []
 
 	// PRIMARY KEY 제약조건 찾기
-	const pkConstraintMatch = RegExp(/PRIMARY KEY\s*\(([^)]+)\)/i).exec(ddl)
+	const pkConstraintMatch = RegExp(/PRIMARY KEY\s*\(([^)]+)\)/i).exec(createTableStatement.statement)
 	const primaryKeyColumns = pkConstraintMatch
 		? pkConstraintMatch[1].split(",").map((col) => col.trim().replace(/[`"']/g, ""))
 		: []
@@ -90,8 +132,8 @@ export function parseDDL(ddl: string): ParsedDDL {
 
 	// 각 컬럼 파싱
 	columnsArray.forEach((columnDef) => {
-		if (columnDef.trim().toUpperCase().startsWith("PRIMARY KEY") || columnDef.trim().toUpperCase().startsWith("COMMENT ON")) {
-			return // PRIMARY KEY 정의 줄이나 COMMENT 줄은 건너뛰기
+		if (columnDef.trim().toUpperCase().startsWith("PRIMARY KEY")) {
+			return // PRIMARY KEY 정의 줄은 건너뛰기
 		}
 
 		// 기본 컬럼 정보 추출 (백틱 처리 추가)
@@ -159,14 +201,14 @@ export function validateDDL(ddl: string): boolean {
 		return false
 	}
 
-	// CREATE TABLE 테이블명 ( ... ) 형식 확인 - 테이블명 뒤에 괄호가 있어야 함
-	if (!/CREATE\s+TABLE\s+[^\s(]+\s*\(/i.test(ddl)) {
+	const createTableStatement = extractCreateTableStatements(ddl)[0]
+	if (!createTableStatement) {
 		return false
 	}
 
 	// 괄호 쌍 확인
-	const openParens = (ddl.match(/\(/g) || []).length
-	const closeParens = (ddl.match(/\)/g) || []).length
+	const openParens = (createTableStatement.statement.match(/\(/g) || []).length
+	const closeParens = (createTableStatement.statement.match(/\)/g) || []).length
 
 	// 괄호 개수가 맞지 않으면 유효하지 않음
 	if (openParens !== closeParens) {
@@ -174,27 +216,16 @@ export function validateDDL(ddl: string): boolean {
 	}
 
 	// 최소한의 컬럼 정의 확인
-	const columnRegex = /\((.*)\)/s
-	const columnMatch = columnRegex.exec(ddl)
-	if (!columnMatch?.[1]?.trim()) {
+	if (!createTableStatement.body.trim()) {
 		return false
 	}
 
 	// 각 컬럼 정의 검증
-	const columnDefinitions = columnMatch[1]
+	const columnDefinitions = createTableStatement.body
 	const columnsArray = columnDefinitions
 		.split(/,(?![^(]*\))/)
 		.map((column) => column.trim())
-		.filter(
-			(column) =>
-				column &&
-				!column.toUpperCase().startsWith("UNIQUE KEY") &&
-				!column.toUpperCase().startsWith("KEY") &&
-				!column.toUpperCase().startsWith("CONSTRAINT") &&
-				!column.toUpperCase().startsWith("PRIMARY KEY") &&
-				!column.toUpperCase().startsWith("COMMENT ON") &&
-				!column.toUpperCase().startsWith("FOREIGN KEY"),
-		)
+		.filter((column) => isValidColumnDefinition(column))
 
 	// 각 컬럼에 컬럼명과 자료형이 있는지 확인
 	for (const columnDef of columnsArray) {

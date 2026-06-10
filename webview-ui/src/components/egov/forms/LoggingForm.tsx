@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react"
+import { useTranslation } from "react-i18next"
 import { Button, TextField, TextArea, Select, RadioGroup, Checkbox, ProgressRing, Link, Divider } from "../../ui"
 import { ConfigGenerationType, ConfigFormData, FormComponentProps } from "../types/templates"
 import { vscode } from "../../../utils/vscode"
@@ -11,6 +12,7 @@ import {
 } from "../../../utils/codeUtils"
 
 const LoggingForm: React.FC<FormComponentProps> = ({ onSubmit, onCancel, template, initialData, formType }) => {
+	const { t } = useTranslation()
 	const getDefaultFileName = (type: ConfigGenerationType) => {
 		switch (formType) {
 			case "console":
@@ -300,16 +302,18 @@ const LoggingForm: React.FC<FormComponentProps> = ({ onSubmit, onCancel, templat
 					padding: "15px",
 					marginTop: "20px",
 				}}>
-				<h4 style={{ color: "var(--vscode-foreground)", marginBottom: "10px", marginTop: 0 }}>Guide:</h4>
+				<h4 style={{ color: "var(--vscode-foreground)", marginBottom: "10px", marginTop: 0 }}>
+					{t("forms.common.guide")}:
+				</h4>
 				<div style={{ marginBottom: "10px" }}>
 					<Link
 						href="https://www.egovframe.go.kr/docs/5.0/egovframe-runtime/foundation-layer/logging/logging-log4j2/logging-log4j2-configuration_file/"
 						style={{ display: "inline", fontSize: "12px" }}>
-						Logging Guide Here
+						{t("forms.logging.guideLink")}
 					</Link>
 				</div>
 				<div style={{ fontSize: "11px", color: "var(--vscode-descriptionForeground)", marginTop: "8px" }}>
-					<strong>Requirements:</strong>
+					<strong>{t("forms.common.requirements")}:</strong>
 					<ul style={{ margin: "5px 0", paddingLeft: "20px" }}>
 						<li>Spring Framework 6.x</li>
 						<li>JDK 17+</li>
@@ -318,7 +322,7 @@ const LoggingForm: React.FC<FormComponentProps> = ({ onSubmit, onCancel, templat
 					</ul>
 				</div>
 				<div style={{ fontSize: "11px", color: "var(--vscode-descriptionForeground)", marginTop: "8px" }}>
-					<strong>Required Dependencies:</strong>
+					<strong>{t("forms.common.requiredDependencies")}:</strong>
 					<ul style={{ margin: "5px 0", paddingLeft: "20px" }}>
 						<li>log4j-api (Log4j 2.x)</li>
 						<li>log4j-core (Log4j 2.x)</li>
@@ -638,10 +642,10 @@ const LoggingForm: React.FC<FormComponentProps> = ({ onSubmit, onCancel, templat
 
 				<div style={{ display: "flex", gap: "10px", justifyContent: "flex-end" }}>
 					<Button variant="secondary" onClick={onCancel}>
-						Cancel
+						{t("common.cancel")}
 					</Button>
 					<Button type="submit" variant="primary">
-						Generate
+						{t("common.generate")}
 					</Button>
 				</div>
 			</form>

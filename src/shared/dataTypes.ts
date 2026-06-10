@@ -43,6 +43,17 @@ const predefinedDataTypes: { [key: string]: string } = {
 	// MySQL specific types
 	ENUM: "java.lang.String",
 	SET: "java.lang.String",
+	TINYTEXT: "java.lang.String",
+	LONGTEXT: "java.lang.String",
+	TINYBLOB: "byte[]",
+	MEDIUMBLOB: "byte[]",
+	LONGBLOB: "byte[]",
+	BLOB: "byte[]",
+	BINARY: "byte[]",
+	VARBINARY: "byte[]",
+
+	// PostgreSQL specific types
+	BYTEA: "byte[]",
 }
 
 /**

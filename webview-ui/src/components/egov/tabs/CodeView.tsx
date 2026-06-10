@@ -1,6 +1,8 @@
 import { Button, TextArea, Link, ProgressRing, TextField } from "../../ui"
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useMemo } from "react"
+import { useTranslation } from "react-i18next"
 import { parseDDL, validateDDL, ParsedDDL } from "@shared/ddlParser"
+import { parseErdModel } from "@shared/erdParser"
 import { getTemplateContext } from "@shared/templateContext"
 import { WebviewMessage, ExtensionResponse } from "../../../utils/messageTypes"
 import { createSelectOutputPathMessage } from "../../../utils/egovUtils"
@@ -8,6 +10,7 @@ import { vscode } from "../../../utils/vscode"
 import { validateCodeConfig, type CodeConfig } from "../../../utils/codeUtils"
 import { useCodeViewState } from "../../../context/EgovTabsStateContext"
 import CodePreview from "../CodePreview"
+import ErdDiagram from "../ErdDiagram"
 import Editor, { loader } from "@monaco-editor/react"
 import * as monaco from "monaco-editor"
 
@@ -48,6 +51,7 @@ if (typeof window !== "undefined") {
 const CodeView = () => {
 	console.log("CodeView component rendering...")
 
+	const { t } = useTranslation()
 	const { state, updateState } = useCodeViewState()
 	const {
 		ddlContent,
@@ -81,6 +85,18 @@ const CodeView = () => {
 	const monacoRef = useRef<typeof monaco | null>(null)
 	// DDL 검증 디바운스 타이머
 	const ddlValidationTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+	const erdModel = useMemo(() => {
+		if (!isValid || !ddlContent.trim()) {
+			return null
+		}
+
+		try {
+			return parseErdModel(ddlContent)
+		} catch (error) {
+			console.warn("ERD parsing failed:", error)
+			return null
+		}
+	}, [ddlContent, isValid])
 
 	// Helper functions to update state
 	const setDdlContent = (value: string) => updateState({ ddlContent: value })
@@ -563,9 +579,7 @@ const CodeView = () => {
 						marginBottom: "16px",
 						marginTop: "5px",
 					}}>
-					<h3 style={{ color: "var(--vscode-foreground)", marginTop: 0, marginBottom: "8px" }}>
-						Generate eGovFrame Code from DDL
-					</h3>
+					<h3 style={{ color: "var(--vscode-foreground)", marginTop: 0, marginBottom: "8px" }}>{t("code.title")}</h3>
 					<p
 						style={{
 							fontSize: "12px",
@@ -573,8 +587,7 @@ const CodeView = () => {
 							margin: 0,
 							marginTop: "5px",
 						}}>
-						Generate CRUD operations and database-related code from DDL (Data Definition Language) statements.
-						Supports MySQL, PostgreSQL. Uses Handlebars template engine. Learn more at{" "}
+						{t("code.description")}{" "}
 						<Link
 							href="https://github.com/eGovFramework/egovframe-vscode-initializr"
 							style={{ display: "inline", fontSize: "12px" }}>
@@ -594,7 +607,7 @@ const CodeView = () => {
 						}}>
 						{/* 왼쪽: DDL Input 제목, SQL 방언 선택, 검증 상태 */}
 						<div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-							<h4 style={{ color: "var(--vscode-foreground)", margin: 0 }}>DDL Input</h4>
+							<h4 style={{ color: "var(--vscode-foreground)", margin: 0 }}>{t("code.ddlInput")}</h4>
 
 							{/* SQL 방언 선택 */}
 							<div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
@@ -640,7 +653,7 @@ const CodeView = () => {
 											: "var(--vscode-testing-iconFailed)",
 										color: "white",
 									}}>
-									{isValid ? "Valid" : "Invalid"}
+									{isValid ? t("code.valid") : t("code.invalid")}
 								</div>
 							)}
 						</div>
@@ -654,7 +667,7 @@ const CodeView = () => {
 									color: "var(--vscode-foreground)",
 									userSelect: "none",
 								}}>
-								Sample:
+								{t("code.sample")}:
 							</label>
 							<select
 								id="sample-ddl-select"
@@ -676,7 +689,7 @@ const CodeView = () => {
 								onBlur={(e) => {
 									e.target.style.border = "1px solid var(--vscode-dropdown-border)"
 								}}>
-								<option value="">Enter directly</option>
+								<option value="">{t("code.enterDirectly")}</option>
 								{sqlDialect !== "generic" &&
 									sampleDDLs &&
 									Object.entries(sampleDDLs)
@@ -838,16 +851,19 @@ const CodeView = () => {
 					)}
 					{sqlDialect === "generic" && (
 						<div style={{ fontSize: "12px", color: "var(--vscode-foreground)", marginTop: "5px" }}>
-							'DDL Input: Generic' supports basic SQL validation only.
+							{t("code.genericSqlNotice")}
 						</div>
 					)}
 				</div>
+
+				{/* ERD Preview */}
+				<ErdDiagram model={erdModel} />
 
 				{/* Parsed DDL Preview */}
 				{parsedDDL && (
 					<div style={{ marginBottom: "20px" }}>
 						<h4 style={{ color: "var(--vscode-foreground)", marginBottom: "10px" }}>
-							Parsed Table: {parsedDDL.tableName}
+							{t("code.parsedTable")}: {parsedDDL.tableName}
 						</h4>
 						<div
 							style={{
@@ -857,7 +873,7 @@ const CodeView = () => {
 								fontSize: "12px",
 							}}>
 							<div style={{ marginBottom: "8px" }}>
-								<strong>Columns ({parsedDDL.attributes.length}):</strong>
+								<strong>{t("code.columns", { count: parsedDDL.attributes.length })}:</strong>
 							</div>
 							{parsedDDL.attributes.map((col, index) => (
 								<div key={index} style={{ marginLeft: "10px", marginBottom: "2px" }}>
@@ -890,14 +906,14 @@ const CodeView = () => {
 				{/* Configuration Section */}
 				{isValid && parsedDDL && (
 					<div style={{ marginBottom: "20px" }}>
-						<h4 style={{ color: "var(--vscode-foreground)", marginBottom: "10px" }}>Configuration</h4>
+						<h4 style={{ color: "var(--vscode-foreground)", marginBottom: "10px" }}>{t("code.configuration")}</h4>
 
 						{/* Package Name */}
 						<div style={{ marginBottom: "15px" }}>
 							<div style={{ display: "flex", gap: "10px", alignItems: "end" }}>
 								<div style={{ flex: 1, marginRight: "10px" }}>
 									<TextField
-										label="Package Name"
+										label={t("code.packageName")}
 										value={packageName}
 										onChange={(e: any) => {
 											setPackageName(e.target.value)
@@ -937,11 +953,11 @@ const CodeView = () => {
 									}}
 									onClick={handleResetToDefaultPackageName}>
 									<span className="codicon codicon-settings-gear" style={{ marginRight: "6px" }}></span>
-									Default
+									{t("code.defaultButton")}
 								</button>
 							</div>
 							<div style={{ fontSize: "10px", color: "var(--vscode-descriptionForeground)", marginTop: "2px" }}>
-								Java package naming convention (e.g., com.company.project)
+								{t("code.packageNameHint")}
 							</div>
 						</div>
 
@@ -950,7 +966,7 @@ const CodeView = () => {
 							<div style={{ display: "flex", gap: "10px", alignItems: "end" }}>
 								<div style={{ flex: 1, marginRight: "10px" }}>
 									<TextField
-										label="Output Path"
+										label={t("code.outputPath")}
 										value={outputPath}
 										onChange={(e: any) => {
 											setOutputPath(e.target.value)
@@ -990,11 +1006,11 @@ const CodeView = () => {
 									}}
 									onClick={handleSelectOutputPath}>
 									<span className="codicon codicon-folder-opened" style={{ marginRight: "6px" }}></span>
-									Browse
+									{t("common.browse")}
 								</button>
 							</div>
 							<div style={{ fontSize: "10px", color: "var(--vscode-descriptionForeground)", marginTop: "2px" }}>
-								Generated files will be saved to: {outputPath || "Not selected"}
+								{t("code.outputPathHint")} {outputPath || t("projects.notSelected")}
 							</div>
 						</div>
 					</div>
@@ -1002,7 +1018,7 @@ const CodeView = () => {
 
 				{/* Generation Options */}
 				<div style={{ marginBottom: "20px" }}>
-					<h4 style={{ color: "var(--vscode-foreground)", marginBottom: "10px" }}>Code Generation</h4>
+					<h4 style={{ color: "var(--vscode-foreground)", marginBottom: "10px" }}>{t("code.generateCode")}</h4>
 
 					{/* Validation Errors */}
 					{validationErrors.length > 0 && (
@@ -1015,7 +1031,7 @@ const CodeView = () => {
 									padding: "10px",
 									borderRadius: "3px",
 								}}>
-								<div style={{ fontWeight: "bold", marginBottom: "5px" }}>Validation Errors:</div>
+								<div style={{ fontWeight: "bold", marginBottom: "5px" }}>{t("projects.validationErrors")}</div>
 								<ul style={{ margin: 0, paddingLeft: "20px" }}>
 									{validationErrors.map((error, index) => (
 										<li key={index} style={{ fontSize: "12px" }}>
@@ -1070,12 +1086,12 @@ const CodeView = () => {
 							{isLoading ? (
 								<>
 									<ProgressRing className="mr-2 w-4 h-4" />
-									Generating...
+									{t("common.generating")}
 								</>
 							) : (
 								<>
 									<span className="codicon codicon-gear" style={{ marginRight: "6px" }}></span>
-									Generate CRUD Code
+									{t("code.generateCrudCode")}
 								</>
 							)}
 						</button>
@@ -1118,7 +1134,7 @@ const CodeView = () => {
 							onClick={handleUploadTemplates}
 							disabled={!isValid || isLoading}>
 							<span className="codicon codicon-file-code" style={{ marginRight: "6px" }}></span>
-							Generate with Custom Templates
+							{t("code.generateWithCustomTemplates")}
 						</button>
 
 						<button
@@ -1159,19 +1175,19 @@ const CodeView = () => {
 							onClick={handleDownloadTemplateContext}
 							disabled={!isValid || isLoading}>
 							<span className="codicon codicon-json" style={{ marginRight: "6px" }}></span>
-							Download Template Context
+							{t("code.downloadTemplateContext")}
 						</button>
 					</div>
 
 					<div style={{ fontSize: "12px", color: "var(--vscode-descriptionForeground)", marginTop: "10px" }}>
 						<div>
-							• <strong>Generate CRUD Code:</strong> Creates complete DAO, Service, Controller, and JSP files
+							• <strong>{t("code.generateCrudCode")}:</strong> {t("code.generateCrudCodeDesc")}
 						</div>
 						<div>
-							• <strong>Custom Templates:</strong> Upload your own Handlebars templates for code generation
+							• <strong>{t("code.generateWithCustomTemplates")}:</strong> {t("code.customTemplatesDesc")}
 						</div>
 						<div>
-							• <strong>Template Context:</strong> Download JSON context for creating custom templates
+							• <strong>{t("code.downloadTemplateContext")}:</strong> {t("code.templateContextDesc")}
 						</div>
 					</div>
 				</div>
@@ -1185,12 +1201,12 @@ const CodeView = () => {
 						marginTop: "20px",
 					}}>
 					<h4 style={{ color: "var(--vscode-foreground)", marginBottom: "10px", marginTop: 0 }}>
-						Generated Code Includes
+						{t("code.generatedCodeIncludes")}
 					</h4>
 
 					{/* Java Files */}
 					<div style={{ marginBottom: "12px" }}>
-						<strong style={{ fontSize: "13px", color: "var(--vscode-foreground)" }}>Java Files:</strong>
+						<strong style={{ fontSize: "13px", color: "var(--vscode-foreground)" }}>{t("code.javaFiles")}:</strong>
 						<ul
 							style={{
 								fontSize: "12px",
@@ -1216,7 +1232,7 @@ const CodeView = () => {
 
 					{/* Configuration Files */}
 					<div style={{ marginBottom: "12px" }}>
-						<strong style={{ fontSize: "13px", color: "var(--vscode-foreground)" }}>Configuration Files:</strong>
+						<strong style={{ fontSize: "13px", color: "var(--vscode-foreground)" }}>{t("code.configFiles")}:</strong>
 						<ul
 							style={{
 								fontSize: "12px",
@@ -1232,7 +1248,9 @@ const CodeView = () => {
 
 					{/* View Files */}
 					<div style={{ marginBottom: "12px" }}>
-						<strong style={{ fontSize: "13px", color: "var(--vscode-foreground)" }}>View Templates:</strong>
+						<strong style={{ fontSize: "13px", color: "var(--vscode-foreground)" }}>
+							{t("code.viewTemplates")}:
+						</strong>
 						<ul
 							style={{
 								fontSize: "12px",
@@ -1254,7 +1272,9 @@ const CodeView = () => {
 					{/* Directory Structure */}
 					{parsedDDL && (
 						<div style={{ marginBottom: "12px" }}>
-							<strong style={{ fontSize: "13px", color: "var(--vscode-foreground)" }}>Directory Structure:</strong>
+							<strong style={{ fontSize: "13px", color: "var(--vscode-foreground)" }}>
+								{t("code.directoryStructure")}:
+							</strong>
 							<div
 								style={{
 									fontSize: "11px",
@@ -1290,8 +1310,7 @@ const CodeView = () => {
 					)}
 
 					<div style={{ marginTop: "12px", fontSize: "12px", color: "var(--vscode-descriptionForeground)" }}>
-						<strong>Handlebars Template Engine:</strong> Supports custom template creation with helpers like eq,
-						concat, lowercase, unless, setVar, and error handling.
+						{t("code.handlebarsEngineDesc")}
 					</div>
 				</div>
 			</div>

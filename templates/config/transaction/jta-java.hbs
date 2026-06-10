@@ -21,6 +21,7 @@ import org.springframework.transaction.interceptor.NoRollbackRuleAttribute;
 import org.springframework.transaction.interceptor.RuleBasedTransactionAttribute;
 import org.springframework.transaction.interceptor.TransactionAttribute;
 import org.springframework.transaction.interceptor.TransactionInterceptor;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.transaction.jta.JtaTransactionManager;
 
 import com.atomikos.icatch.jta.UserTransactionImp;
@@ -110,10 +111,10 @@ public class {{txtFileName}} {
 
     // TransactionAdvisor 설정
     @Bean
-    public Advisor txAdvisor(PlatformTransactionManager txManager) {
+    public Advisor txAdvisor(@Qualifier("{{txtAdviceName}}") TransactionInterceptor txAdvice) {
         AspectJExpressionPointcut pointcut = new AspectJExpressionPointcut();
         pointcut.setExpression("{{txtPointCutExpression}}");
-        return new DefaultPointcutAdvisor(pointcut, txAdvice(txManager));
+        return new DefaultPointcutAdvisor(pointcut, txAdvice);
     }
     {{/if}}
 }

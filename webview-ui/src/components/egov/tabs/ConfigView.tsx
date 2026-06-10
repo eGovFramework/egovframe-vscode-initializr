@@ -5,8 +5,10 @@ import { groupTemplates } from "../../../utils/templateUtils"
 import FormFactory from "../forms/FormFactory"
 import { vscode } from "../../../utils/vscode"
 import { useConfigViewState } from "../../../context/EgovTabsStateContext"
+import { useTranslation } from "react-i18next"
 
 const ConfigView: React.FC = () => {
+	const { t } = useTranslation()
 	const { state, updateState } = useConfigViewState()
 	const { configTemplates, isTemplatesLoading, selectedTemplate } = state
 
@@ -120,7 +122,7 @@ const ConfigView: React.FC = () => {
 	if (isTemplatesLoading) {
 		return (
 			<div style={{ padding: "20px", textAlign: "center" }}>
-				<p style={{ color: "var(--vscode-foreground)" }}>Loading templates...</p>
+				<p style={{ color: "var(--vscode-foreground)" }}>{t("config.loadingTemplates")}</p>
 			</div>
 		)
 	}
@@ -130,7 +132,7 @@ const ConfigView: React.FC = () => {
 		return (
 			<div style={{ padding: "20px", textAlign: "center" }}>
 				<p style={{ color: "var(--vscode-errorForeground)" }}>{error}</p>
-				<Button onClick={() => window.location.reload()}>Retry</Button>
+				<Button onClick={() => window.location.reload()}>{t("config.retry")}</Button>
 			</div>
 		)
 	}
@@ -142,9 +144,7 @@ const ConfigView: React.FC = () => {
 		<div style={{ padding: "20px", maxWidth: "800px" }}>
 			{/* Header */}
 			<div style={{ marginBottom: "20px" }}>
-				<h3 style={{ color: "var(--vscode-foreground)", marginTop: 0, marginBottom: "8px" }}>
-					Generate eGovFrame Configurations
-				</h3>
+				<h3 style={{ color: "var(--vscode-foreground)", marginTop: 0, marginBottom: "8px" }}>{t("config.title")}</h3>
 				<p
 					style={{
 						fontSize: "12px",
@@ -152,7 +152,7 @@ const ConfigView: React.FC = () => {
 						margin: 0,
 						marginTop: "5px",
 					}}>
-					Generate configuration files for eGovFrame projects. Learn more at{" "}
+					{t("config.description")}{" "}
 					<Link
 						href="https://github.com/eGovFramework/egovframe-vscode-initializr"
 						style={{ display: "inline", fontSize: "12px" }}>
@@ -164,7 +164,7 @@ const ConfigView: React.FC = () => {
 			<div style={{ marginBottom: "20px" }}>
 				<div style={{ marginBottom: "15px" }}>
 					<label style={{ display: "block", marginBottom: "5px", color: "var(--vscode-foreground)" }}>
-						Select Category
+						{t("config.selectCategory")}
 					</label>
 					<select
 						value={selectedCategory}
@@ -189,7 +189,7 @@ const ConfigView: React.FC = () => {
 						onBlur={(e) => {
 							;(e.target as HTMLSelectElement).style.border = "1px solid var(--vscode-dropdown-border)"
 						}}>
-						<option value="">Choose a category...</option>
+						<option value="">{t("config.chooseCategoryPlaceholder")}</option>
 						{categories.map((category) => (
 							<option key={category} value={category}>
 								{category}
@@ -201,7 +201,7 @@ const ConfigView: React.FC = () => {
 				{selectedCategory && (
 					<div style={{ marginBottom: "15px" }}>
 						<label style={{ display: "block", marginBottom: "5px", color: "var(--vscode-foreground)" }}>
-							Select Configuration Type
+							{t("config.selectConfigType")}
 						</label>
 						<select
 							value={selectedSubcategory}
@@ -226,7 +226,7 @@ const ConfigView: React.FC = () => {
 							onBlur={(e) => {
 								;(e.target as HTMLSelectElement).style.border = "1px solid var(--vscode-dropdown-border)"
 							}}>
-							<option value="">Choose a configuration type...</option>
+							<option value="">{t("config.chooseConfigTypePlaceholder")}</option>
 							{subcategories.map((subcategory) => (
 								<option key={subcategory} value={subcategory}>
 									{subcategory}
@@ -246,22 +246,24 @@ const ConfigView: React.FC = () => {
 								border: "1px solid var(--vscode-panel-border)",
 								borderRadius: "4px",
 							}}>
-							<h3 style={{ color: "var(--vscode-foreground)", marginBottom: "10px" }}>Selected Configuration</h3>
+							<h3 style={{ color: "var(--vscode-foreground)", marginBottom: "10px" }}>
+								{t("config.selectedConfig")}
+							</h3>
 							<p style={{ color: "var(--vscode-foreground)", marginBottom: "15px" }}>
-								<strong>Name:</strong> {selectedTemplate.displayName}
+								<strong>{t("config.nameLabel")}:</strong> {selectedTemplate.displayName}
 							</p>
 							<p style={{ color: "var(--vscode-foreground)", marginBottom: "15px" }}>
-								<strong>File extension : </strong>
+								<strong>{t("config.fileExtension")} : </strong>
 								{selectedTemplate.templateFile !== "" ? "XML" : ""}
 								{selectedTemplate.javaConfigTemplate !== "" ? ", Java" : ""}
 								{selectedTemplate.yamlTemplate !== "" ? ", Yaml" : ""}
 								{selectedTemplate.propertiesTemplate !== "" ? ", Properties" : ""}
 							</p>
 							<p style={{ color: "var(--vscode-foreground)", marginBottom: "15px" }}>
-								<strong>Description : </strong> {selectedTemplate.description}
+								<strong>{t("config.descriptionLabel")} : </strong> {selectedTemplate.description}
 							</p>
 							<Button onClick={handleConfigureClick} variant="primary">
-								Configure
+								{t("config.configureButton")}
 							</Button>
 						</div>
 					</div>
@@ -270,7 +272,7 @@ const ConfigView: React.FC = () => {
 
 			{configTemplates.length === 0 && !isTemplatesLoading && (
 				<div style={{ textAlign: "center", padding: "40px" }}>
-					<p style={{ color: "var(--vscode-foreground)" }}>No templates available</p>
+					<p style={{ color: "var(--vscode-foreground)" }}>{t("config.noTemplates")}</p>
 				</div>
 			)}
 		</div>

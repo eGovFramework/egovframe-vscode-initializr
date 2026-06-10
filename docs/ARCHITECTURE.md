@@ -22,6 +22,7 @@
 │  │   └── ...                       │  │   │   ├── CodePreview.tsx        │
 │  ├── shared/                       │  │   │   ├── EgovSettingsView.tsx   │
 │  │   ├── dataTypes.ts              │  │   │   ├── EgovView.tsx           │
+│  │   ├── erdParser.ts              │  │   │   ├── ErdDiagram.tsx         │
 │  │   ├── ExtensionMessage.ts       │  │   ├── ui/                        │
 │  │   ├── WebviewMessage.ts         │  ├── context/                       │
 │  │   └── ...                       │  ├── shared/                        │
@@ -81,22 +82,29 @@ egovframe-vscode-initializr/
 src/
 ├── extension.ts                # Extension 진입점
 ├── core/
-│   ├── webview/                # 웹뷰 라이프사이클 관리
-│   │   └── index.ts            # WebviewProvider 클래스
-│   └── controller/             # 웹뷰 메시지 처리 및 작업 관리
-│       └── index.ts            # Controller 클래스
-├── utils/                      # 핵심 생성 유틸리티
-│   ├── projectGenerator.ts     # eGovFrame 프로젝트 생성
-│   ├── codeGenerator.ts        # CRUD 코드 생성
-│   ├── configGenerator.ts      # 설정 파일 생성
-│   ├── ddlParser.ts            # DDL 파싱
-│   ├── previewGenerator.ts     # 코드 미리보기 생성
-│   └── codeGeneratorUtils.ts   # 공통 코드 생성 유틸
-├── services/                   # 보조 서비스
-└── shared/                     # 공유 타입 및 유틸리티
-    ├── api.ts
-    ├── ExtensionMessage.ts
-    └── WebviewMessage.ts
+│   ├── controller/
+│   │   └── index.ts                     # Webview 메시지 처리와 생성 작업 조율
+│   └── webview/                         # 웹뷰 라이프사이클 관리
+│       └── index.ts                     # WebviewProvider 구현
+├── shared/
+│   ├── AutoApprovalSettings.ts          # 자동 승인 설정 타입
+│   ├── dataTypes.ts                     # DB 타입 -> Java 타입 매핑
+│   ├── ddlParser.ts                     # DDL 검증 및 파싱
+│   ├── erdParser.ts                     # ERD Preview용 테이블/관계 파싱
+│   ├── ExtensionMessage.ts              # Extension -> Webview 메시지 타입
+│   ├── templateContext.ts               # CRUD 템플릿 컨텍스트 생성
+│   └── WebviewMessage.ts                # Webview -> Extension 메시지 타입
+└── utils/
+    ├── codeGenerator.ts                 # DDL 기반 CRUD 파일 생성
+    ├── codeGeneratorUtils.ts            # 템플릿 렌더링/파일 선택 공통 유틸
+    ├── configGenerator.ts               # Spring 설정 파일 생성
+    ├── fs.ts                            # 파일 시스템 유틸
+    ├── git.ts                           # Git 상태/변경 확인 유틸
+    ├── path.ts                          # 경로 유틸
+    ├── previewGenerator.ts              # CRUD 코드 미리보기 생성
+    ├── projectGenerator.ts              # eGovFrame 프로젝트 생성
+    ├── SampleDDLs.ts                    # 샘플 DDL
+    └── shell.ts                         # 셸 실행 유틸
 ```
 
 ### Templates 디렉토리 (`templates/`)
@@ -208,6 +216,7 @@ webview-ui/
     │   │   ├── types/               # types 설정 인터페이스
     │   │   │   └── templates.ts     # ConfigFormData 인터페이스
     │   │   ├── CodePreview.tsx      # 코드 생성 탭 내 프리뷰 화면
+    │   │   ├── ErdDiagram.tsx       # DDL 기반 ERD Preview 화면
     │   │   └── EgovSettingsView.tsx # Extension 설정 화면
     ├── context/
     │   ├── EgovTabsStateContext.tsx # egov 탭 상태 관리
