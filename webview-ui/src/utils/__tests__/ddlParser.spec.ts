@@ -179,6 +179,48 @@ describe("ddlParser", () => {
 			javaType: "byte[]",
 		})
 	})
+
+	it("should parse MySQL column and table comments", () => {
+		const result = parseDDL(`
+			CREATE TABLE users (
+				id INT PRIMARY KEY COMMENT 'User ID',
+				display_name VARCHAR(100) COMMENT 'User''s display name'
+			) ENGINE=InnoDB COMMENT='Users; table';
+		`)
+
+		expect(result.tableComment).toBe("Users; table")
+		expect(result.attributes[0].comment).toBe("User ID")
+		expect(result.attributes[1].comment).toBe("User's display name")
+	})
+
+	it("should parse PostgreSQL column and table comments for the target table", () => {
+		const result = parseDDL(`
+			CREATE TABLE users (
+				id INT PRIMARY KEY,
+				display_name VARCHAR(100)
+			);
+			COMMENT ON TABLE other_table IS 'Other table';
+			COMMENT ON COLUMN other_table.id IS 'Other ID';
+			COMMENT ON TABLE users IS 'Users table';
+			COMMENT ON COLUMN users.id IS 'User ID';
+			COMMENT ON COLUMN users.display_name IS 'User''s display name';
+		`)
+
+		expect(result.tableComment).toBe("Users table")
+		expect(result.attributes[0].comment).toBe("User ID")
+		expect(result.attributes[1].comment).toBe("User's display name")
+	})
+
+	it("should fall back to generated names when comments are absent", () => {
+		const result = parseDDL(`
+			CREATE TABLE user_profiles (
+				profile_id INT PRIMARY KEY
+			);
+		`)
+
+		expect(result.tableComment).toBe("UserProfiles")
+		expect(result.attributes[0].comment).toBe("profile_id")
+	})
 })
 
 describe("validateDDL", () => {

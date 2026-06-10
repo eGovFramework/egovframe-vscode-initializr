@@ -37,6 +37,30 @@ function convertCamelcaseToPascalcase(name: string): string {
 	return name.charAt(0).toUpperCase() + name.slice(1)
 }
 
+function escapeRegExp(str: string): string {
+	return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+}
+
+function decodeSqlComment(comment: string): string {
+	return comment.replace(/''/g, "'")
+}
+
+function extractStatementOptions(ddl: string, startIndex: number): string {
+	let inString = false
+
+	for (let index = startIndex; index < ddl.length; index += 1) {
+		if (ddl[index] === "'" && inString && ddl[index + 1] === "'") {
+			index += 1
+		} else if (ddl[index] === "'") {
+			inString = !inString
+		} else if (ddl[index] === ";" && !inString) {
+			return ddl.slice(startIndex, index)
+		}
+	}
+
+	return ddl.slice(startIndex)
+}
+
 export function extractCreateTableStatements(ddl: string): CreateTableStatement[] {
 	const statements: CreateTableStatement[] = []
 	const createTableRegex = /CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?[`"]?(\w+)[`"]?\s*\(/gi
@@ -116,19 +140,28 @@ export function parseDDL(ddl: string): ParsedDDL {
 
 	// PostgreSQL: COMMENT ON COLUMN table.col IS 'comment' 파싱
 	const pgColumnComments: Record<string, string> = {}
-	const pgColumnCommentRegex = /COMMENT ON COLUMN\s+\w+\.(\w+)\s+IS\s+'([^']+)'/gi
+	const escapedTableName = escapeRegExp(createTableStatement.tableName)
+	const pgColumnCommentRegex = new RegExp(
+		`COMMENT ON COLUMN\\s+(?:"?\\w+"?\\.)?"?${escapedTableName}"?\\."?(\\w+)"?\\s+IS\\s+'((?:''|[^'])*)'`,
+		"gi",
+	)
 	let pgCommentMatch
-	while ((pgCommentMatch = pgColumnCommentRegex.exec(ddl)) !== null) {
-		pgColumnComments[pgCommentMatch[1]] = pgCommentMatch[2]
+	while ((pgCommentMatch = pgColumnCommentRegex.exec(normalizedDdl)) !== null) {
+		pgColumnComments[pgCommentMatch[1]] = decodeSqlComment(pgCommentMatch[2])
 	}
 
 	// 테이블 COMMENT 파싱
 	// MySQL: 컬럼 정의 블록 이후의 테이블 옵션 COMMENT 'table comment'
-	const tableOptions = ddl.slice(columnDefinitionsMatch.index + columnDefinitionsMatch[0].length)
-	const mysqlTableCommentMatch = RegExp(/\bCOMMENT\s*=?\s*'([^']+)'/i).exec(tableOptions)
+	const createTableEnd = normalizedDdl.indexOf(createTableStatement.statement) + createTableStatement.statement.length
+	const tableOptions = extractStatementOptions(normalizedDdl, createTableEnd)
+	const mysqlTableCommentMatch = RegExp(/\bCOMMENT\s*=?\s*'((?:''|[^'])*)'/i).exec(tableOptions)
 	// PostgreSQL: COMMENT ON TABLE tableName IS 'table comment'
-	const pgTableCommentMatch = RegExp(/COMMENT ON TABLE\s+\w+\s+IS\s+'([^']+)'/i).exec(ddl)
-	const tableComment = mysqlTableCommentMatch?.[1] ?? pgTableCommentMatch?.[1] ?? tableName
+	const pgTableCommentMatch = new RegExp(
+		`COMMENT ON TABLE\\s+(?:"?\\w+"?\\.)?"?${escapedTableName}"?\\s+IS\\s+'((?:''|[^'])*)'`,
+		"i",
+	).exec(normalizedDdl)
+	const tableCommentMatch = mysqlTableCommentMatch?.[1] ?? pgTableCommentMatch?.[1]
+	const tableComment = tableCommentMatch === undefined ? tableName : decodeSqlComment(tableCommentMatch)
 
 	// 각 컬럼 파싱
 	columnsArray.forEach((columnDef) => {
@@ -161,8 +194,11 @@ export function parseDDL(ddl: string): ParsedDDL {
 		const ccName = convertToCamelCase(columnName)
 
 		// MySQL: 인라인 COMMENT 'text' 파싱
-		const mysqlCommentMatch = RegExp(/COMMENT\s+'([^']+)'/i).exec(columnDef)
-		const comment = mysqlCommentMatch?.[1] ?? pgColumnComments[columnName] ?? columnName
+		const mysqlCommentMatch = RegExp(/COMMENT\s+'((?:''|[^'])*)'/i).exec(columnDef)
+		const comment =
+			mysqlCommentMatch?.[1] === undefined
+				? (pgColumnComments[columnName] ?? columnName)
+				: decodeSqlComment(mysqlCommentMatch[1])
 
 		// Column 객체 생성
 		const column: Column = {
