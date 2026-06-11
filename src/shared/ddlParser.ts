@@ -8,10 +8,12 @@ export interface Column {
 	pcName: string // PascalCase name
 	dataType: string // SQL data type
 	javaType: string // Java type
+	comment: string // column comment (DDL COMMENT 절에서 추출, 없으면 columnName)
 }
 
 export interface ParsedDDL {
 	tableName: string
+	tableComment: string // table comment (DDL COMMENT 절에서 추출, 없으면 tableName)
 	attributes: Column[]
 	pkAttributes: Column[]
 }
@@ -33,6 +35,30 @@ function convertCamelcaseToPascalcase(name: string): string {
 		return name
 	}
 	return name.charAt(0).toUpperCase() + name.slice(1)
+}
+
+function escapeRegExp(str: string): string {
+	return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+}
+
+function decodeSqlComment(comment: string): string {
+	return comment.replace(/''/g, "'")
+}
+
+function extractStatementOptions(ddl: string, startIndex: number): string {
+	let inString = false
+
+	for (let index = startIndex; index < ddl.length; index += 1) {
+		if (ddl[index] === "'" && inString && ddl[index + 1] === "'") {
+			index += 1
+		} else if (ddl[index] === "'") {
+			inString = !inString
+		} else if (ddl[index] === ";" && !inString) {
+			return ddl.slice(startIndex, index)
+		}
+	}
+
+	return ddl.slice(startIndex)
 }
 
 export function extractCreateTableStatements(ddl: string): CreateTableStatement[] {
@@ -112,6 +138,31 @@ export function parseDDL(ddl: string): ParsedDDL {
 		? pkConstraintMatch[1].split(",").map((col) => col.trim().replace(/[`"']/g, ""))
 		: []
 
+	// PostgreSQL: COMMENT ON COLUMN table.col IS 'comment' 파싱
+	const pgColumnComments: Record<string, string> = {}
+	const escapedTableName = escapeRegExp(createTableStatement.tableName)
+	const pgColumnCommentRegex = new RegExp(
+		`COMMENT ON COLUMN\\s+(?:"?\\w+"?\\.)?"?${escapedTableName}"?\\."?(\\w+)"?\\s+IS\\s+'((?:''|[^'])*)'`,
+		"gi",
+	)
+	let pgCommentMatch
+	while ((pgCommentMatch = pgColumnCommentRegex.exec(normalizedDdl)) !== null) {
+		pgColumnComments[pgCommentMatch[1]] = decodeSqlComment(pgCommentMatch[2])
+	}
+
+	// 테이블 COMMENT 파싱
+	// MySQL: 컬럼 정의 블록 이후의 테이블 옵션 COMMENT 'table comment'
+	const createTableEnd = normalizedDdl.indexOf(createTableStatement.statement) + createTableStatement.statement.length
+	const tableOptions = extractStatementOptions(normalizedDdl, createTableEnd)
+	const mysqlTableCommentMatch = RegExp(/\bCOMMENT\s*=?\s*'((?:''|[^'])*)'/i).exec(tableOptions)
+	// PostgreSQL: COMMENT ON TABLE tableName IS 'table comment'
+	const pgTableCommentMatch = new RegExp(
+		`COMMENT ON TABLE\\s+(?:"?\\w+"?\\.)?"?${escapedTableName}"?\\s+IS\\s+'((?:''|[^'])*)'`,
+		"i",
+	).exec(normalizedDdl)
+	const tableCommentMatch = mysqlTableCommentMatch?.[1] ?? pgTableCommentMatch?.[1]
+	const tableComment = tableCommentMatch === undefined ? tableName : decodeSqlComment(tableCommentMatch)
+
 	// 각 컬럼 파싱
 	columnsArray.forEach((columnDef) => {
 		if (columnDef.trim().toUpperCase().startsWith("PRIMARY KEY")) {
@@ -142,6 +193,13 @@ export function parseDDL(ddl: string): ParsedDDL {
 		// camelCase 이름 생성
 		const ccName = convertToCamelCase(columnName)
 
+		// MySQL: 인라인 COMMENT 'text' 파싱
+		const mysqlCommentMatch = RegExp(/COMMENT\s+'((?:''|[^'])*)'/i).exec(columnDef)
+		const comment =
+			mysqlCommentMatch?.[1] === undefined
+				? (pgColumnComments[columnName] ?? columnName)
+				: decodeSqlComment(mysqlCommentMatch[1])
+
 		// Column 객체 생성
 		const column: Column = {
 			ccName,
@@ -150,6 +208,7 @@ export function parseDDL(ddl: string): ParsedDDL {
 			pcName: convertCamelcaseToPascalcase(ccName),
 			dataType,
 			javaType: getJavaClassName(dataType),
+			comment,
 		}
 
 		attributes.push(column)
@@ -163,7 +222,7 @@ export function parseDDL(ddl: string): ParsedDDL {
 		throw new Error("No valid columns found in DDL")
 	}
 
-	return { tableName, attributes, pkAttributes }
+	return { tableName, tableComment, attributes, pkAttributes }
 }
 
 // DDL 유효성 검사 함수
