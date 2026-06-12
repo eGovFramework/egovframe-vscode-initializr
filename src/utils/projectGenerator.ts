@@ -2,6 +2,7 @@ import * as vscode from "vscode"
 import * as fs from "fs-extra"
 import * as path from "path"
 import extractZip from "extract-zip"
+import { replacePlaceholders } from "../shared/placeholderUtil"
 
 export interface EgovProjectTemplate {
 	id: string
@@ -250,9 +251,7 @@ async function generatePomFile(
 			//"{{DESCRIPTION}}": config.description || `eGovFrame project: ${config.projectName}`,
 			//"{{FRAMEWORK_VERSION}}": config.template.frameworkVersion || "4.3.0",
 		}
-		for (const [placeholder, value] of Object.entries(placeholders)) {
-			content = content.replace(new RegExp(placeholder, "g"), value)
-		}
+		content = replacePlaceholders(content, placeholders)
 
 		// Write POM file
 		await fs.writeFile(outputPath, content, "utf8")
