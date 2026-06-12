@@ -246,4 +246,13 @@ describe("validateDDL", () => {
 			`),
 		).toBe(false)
 	})
+
+	it("should reject empty or whitespace-only input", () => {
+		expect(validateDDL("")).toBe(false)
+		expect(validateDDL("   \n\t ")).toBe(false)
+	})
+
+	it("should reject statements with an unclosed parenthesis", () => {
+		expect(validateDDL("CREATE TABLE sample (id INT")).toBe(false)
+	})
 })
