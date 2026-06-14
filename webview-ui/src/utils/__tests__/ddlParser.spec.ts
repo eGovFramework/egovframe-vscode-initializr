@@ -221,6 +221,56 @@ describe("ddlParser", () => {
 		expect(result.tableComment).toBe("UserProfiles")
 		expect(result.attributes[0].comment).toBe("profile_id")
 	})
+
+	it("should map Oracle NUMBER to Java type by precision and scale", () => {
+		const result = parseDDL(`
+			CREATE TABLE payment (
+				pay_id NUMBER(19) PRIMARY KEY,
+				amount NUMBER(15,2),
+				rate NUMBER(5,4),
+				seq NUMBER(5),
+				big_seq NUMBER(12),
+				qty NUMBER
+			);
+		`)
+
+		expect(result.attributes.map((attribute) => [attribute.columnName, attribute.javaType])).toEqual([
+			["pay_id", "java.math.BigDecimal"],
+			["amount", "java.math.BigDecimal"],
+			["rate", "java.math.BigDecimal"],
+			["seq", "java.lang.Integer"],
+			["big_seq", "java.lang.Long"],
+			["qty", "java.math.BigDecimal"],
+		])
+	})
+
+	it("should map newly added Oracle and MySQL types", () => {
+		const result = parseDDL(`
+			CREATE TABLE extra_types (
+				id INT PRIMARY KEY,
+				name NVARCHAR(100),
+				uname NVARCHAR2(100),
+				code NCHAR(2),
+				doc CLOB,
+				ndoc NCLOB,
+				raw_data RAW(16),
+				cnt MEDIUMINT,
+				flag BOOL
+			);
+		`)
+
+		expect(result.attributes.map((attribute) => [attribute.columnName, attribute.javaType])).toEqual([
+			["id", "java.lang.Integer"],
+			["name", "java.lang.String"],
+			["uname", "java.lang.String"],
+			["code", "java.lang.String"],
+			["doc", "java.lang.String"],
+			["ndoc", "java.lang.String"],
+			["raw_data", "byte[]"],
+			["cnt", "java.lang.Integer"],
+			["flag", "java.lang.Boolean"],
+		])
+	})
 })
 
 describe("validateDDL", () => {
