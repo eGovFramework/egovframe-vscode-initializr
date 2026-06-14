@@ -207,7 +207,8 @@ export function parseDDL(ddl: string): ParsedDDL {
 			isPrimaryKey,
 			pcName: convertCamelcaseToPascalcase(ccName),
 			dataType,
-			javaType: getJavaClassName(dataType),
+			// NUMBER(15,2)처럼 크기 정보가 매핑에 필요하므로 원본 타입을 넘긴다
+			javaType: getJavaClassName(rawDataType),
 			comment,
 		}
 
