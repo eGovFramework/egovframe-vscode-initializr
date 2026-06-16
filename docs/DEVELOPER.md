@@ -184,6 +184,34 @@ monacoInstance.editor.onDidChangeMarkers()
 - **지연 검증**: 입력 후 500ms 디바운스로 불필요한 검증 방지
 - **백그라운드 처리**: Web Worker를 통한 비동기 문법 분석
 
+##### 보안: CSP와 Web Worker
+
+웹뷰는 `enableScripts: true`로 스크립트 실행이 켜져 있고, `postMessage`를 통해 파일 생성·명령 실행 등 권한 있는 Extension Host에 닿습니다. 따라서 웹뷰 HTML(`src/core/webview/index.ts`의 `getHtmlForWebview()`)에 **Content-Security-Policy(CSP)** 를 설정해 방어 계층을 둡니다.
+
+```typescript
+// inline script 허용을 위한 보안용 랜덤 nonce 생성
+const nonce = Array.from(crypto.getRandomValues(new Uint8Array(16)))
+  .map((b) => b.toString(16).padStart(2, "0"))
+  .join("")
+
+const csp = [
+  `default-src 'none'`,                              // 기본 전면 차단(deny-by-default)
+  `script-src 'nonce-${nonce}' ${webview.cspSource}`, // nonce 부여 inline script + 로컬 번들만
+  `style-src ${webview.cspSource} 'unsafe-inline'`,   // 다수 inline style + Monaco 동적 주입 <style>
+  `worker-src ${webview.cspSource} blob:`,            // ★ 인라인 Worker(blob:) 동적 생성 허용
+  `font-src ${webview.cspSource} data:`,              // codicon 폰트·data: 인라인
+  `img-src ${webview.cspSource} data:`,               // 아이콘·data: 인라인
+].join("; ")
+// <meta http-equiv="Content-Security-Policy" content="${csp};"> 로 삽입
+// 두 <script> 에는 nonce 부여
+```
+
+- **`worker-src ... blob:` 가 핵심**: `monaco-sql-languages`의 방언별 Worker는 `?worker&inline` 번들링으로 **base64 → `blob:` URL**에서 동적 생성됩니다. CSP에 `worker-src`가 없으면 `default-src 'none'`으로 폴백되어 **Worker 생성이 차단**되고, 그 결과 SQL 문법 강조·실시간 검증이 동작하지 않습니다. 반드시 `worker-src`에 `blob:`을 허용해야 합니다.
+- **nonce**: `default-src 'none'` 하에서 `window.__EGOV_INIT_LANGUAGE__` 부트스트랩 inline script가 실행되려면 매 렌더마다 생성한 nonce를 `<script nonce="...">`로 부여해야 합니다.
+- **이력 참고**: 과거 워커가 뜨지 않아 CSP를 통째로 제거한 적이 있으나(보안 봉쇄 전부 상실), 실제 원인은 `worker-src` 누락이었습니다. CSP를 유지한 채 `worker-src blob:`만 허용하면 워커도 동작하고 보안도 지킬 수 있습니다.
+
+> ⚠️ 브라우저/Electron 버전에 따라 Worker 스크립트를 `script-src`로도 검사하는 경우, 워커가 여전히 차단되면 `worker-src`에 `data:`를 추가하거나 `script-src`에 `blob:`을 추가합니다. 사양상 정석은 `worker-src blob:`입니다.
+
 ## 빌드 시스템
 
 ### Extension 빌드 (ESBuild)
