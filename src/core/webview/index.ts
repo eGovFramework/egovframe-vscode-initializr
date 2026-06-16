@@ -121,19 +121,39 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
 		const language = vscode.workspace.getConfiguration("egovframeInitializr").get<string>("language", "en")
 		// XSS 방지: enum 검증
 		const safeLanguage = language === "ko" ? "ko" : "en"
+		// CSP(Content Security Policy)의 inline script 허용을 위한 보안용 랜덤 nonce 생성
+		const nonce = Array.from(crypto.getRandomValues(new Uint8Array(16)))
+			.map((b) => b.toString(16).padStart(2, "0"))
+			.join("")
+		// CSP 지시문
+		// - default-src 'none' : 기본 전면 차단(deny-by-default)
+		// - script-src         : nonce가 부여된 inline script + 로컬 번들 스크립트(webview.cspSource)만 허용
+		// - style-src          : 다수의 inline style 및 Monaco가 동적으로 주입하는 <style> 허용을 위해 'unsafe-inline'
+		// - worker-src blob:   : monaco-sql-languages의 방언별 Worker(mysql/pgsql/editor)가 Vite ?worker&inline 번들링으로
+		//                        base64 → blob: URL에서 동적 생성되므로 반드시 blob: 허용이 필요(이 한 줄이 워커 차단 문제의 핵심)
+		// - font-src / img-src : codicon 폰트 및 data: 인라인 아이콘 허용
+		const csp = [
+			`default-src 'none'`,
+			`script-src 'nonce-${nonce}' ${webview.cspSource}`,
+			`style-src ${webview.cspSource} 'unsafe-inline'`,
+			`worker-src ${webview.cspSource} blob:`,
+			`font-src ${webview.cspSource} data:`,
+			`img-src ${webview.cspSource} data:`,
+		].join("; ")
 		return `
 			<!DOCTYPE html>
 			<html lang="en">
 			<head>
 				<meta charset="UTF-8">
 				<meta name="viewport" content="width=device-width, initial-scale=1.0">
+				<meta http-equiv="Content-Security-Policy" content="${csp};">
 				<title>eGovFrame Initializr</title>
 				<link rel="stylesheet" type="text/css" href="${styleUri}">
 			</head>
 			<body>
 				<div id="root"></div>
-				<script>window.__EGOV_INIT_LANGUAGE__ = "${safeLanguage}";</script>
-				<script type="module" src="${scriptUri}"></script>
+				<script nonce="${nonce}">window.__EGOV_INIT_LANGUAGE__ = "${safeLanguage}";</script>
+				<script type="module" src="${scriptUri}" nonce="${nonce}"></script>
 			</body>
 			</html>
 		`
