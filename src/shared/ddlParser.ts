@@ -19,7 +19,9 @@ export interface ParsedDDL {
 
 // snake_case를 camelCase로 변환하는 함수
 function convertToCamelCase(str: string): string {
-	return str.toLowerCase().replace(/_([a-z])/g, (match, letter) => letter.toUpperCase())
+	// 언더스코어 뒤의 영문/숫자를 모두 처리한다. 숫자만 오는 경우(addr_1 등)에도
+	// 언더스코어를 제거해 addr1처럼 일관된 camelCase 식별자를 생성한다.
+	return str.toLowerCase().replace(/_([a-z0-9])/g, (match, ch) => ch.toUpperCase())
 }
 
 // camelCase를 PascalCase로 변환하는 함수
