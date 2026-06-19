@@ -272,6 +272,24 @@ describe("ddlParser", () => {
 			["flag", "java.lang.Boolean"],
 		])
 	})
+
+	it("should not treat a column as primary key when only its comment mentions primary key", () => {
+		const result = parseDDL(`
+			CREATE TABLE notes (
+				id INT PRIMARY KEY,
+				note VARCHAR(200) COMMENT 'this is the primary key column'
+			);
+		`)
+
+		expect(result.pkAttributes).toHaveLength(1)
+		expect(result.pkAttributes[0].columnName).toBe("id")
+
+		const noteColumn = result.attributes.find((attribute) => attribute.columnName === "note")
+		expect(noteColumn?.isPrimaryKey).toBe(false)
+		expect(noteColumn?.comment).toBe("this is the primary key column")
+
+		expect(result.attributes[0].isPrimaryKey).toBe(true)
+	})
 })
 
 describe("validateDDL", () => {
