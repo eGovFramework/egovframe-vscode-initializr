@@ -290,6 +290,28 @@ describe("ddlParser", () => {
 
 		expect(result.attributes[0].isPrimaryKey).toBe(true)
 	})
+
+	it("should convert underscore followed by a digit into a clean camelCase name", () => {
+		const result = parseDDL(`
+			CREATE TABLE addresses (
+				id INT PRIMARY KEY,
+				addr_1 VARCHAR(200),
+				zip_no_1 VARCHAR(10)
+			);
+		`)
+
+		const addr = result.attributes.find((attribute) => attribute.columnName === "addr_1")
+		expect(addr?.ccName).toBe("addr1")
+		expect(addr?.pcName).toBe("Addr1")
+
+		const zip = result.attributes.find((attribute) => attribute.columnName === "zip_no_1")
+		expect(zip?.ccName).toBe("zipNo1")
+		expect(zip?.pcName).toBe("ZipNo1")
+
+		// 기존 영문 변환 동작은 유지된다
+		const id = result.attributes.find((attribute) => attribute.columnName === "id")
+		expect(id?.ccName).toBe("id")
+	})
 })
 
 describe("validateDDL", () => {
