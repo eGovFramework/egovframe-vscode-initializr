@@ -4,6 +4,7 @@
 
 - Code Generation
   - DDL 입력 내용을 기반으로 테이블, 컬럼, PK/FK, 1:N 관계를 표시하는 ERD Preview 추가
+  - 컬럼 COMMENT 본문에 "primary key" 문구가 있을 때 해당 컬럼이 PK로 오분류되어 생성 SQL의 WHERE 절이 잘못되던 문제 수정
 - Project Generation
   - POM 생성 시 입력값(프로젝트명·groupId 등)에 `$`가 포함되면 `String.replace`의 치환 특수 시퀀스로 해석되어 pom.xml이 손상되던 문제 수정
 - Refactoring
