@@ -105,13 +105,13 @@ export const ProjectsView = () => {
 				case "projectGenerationResult":
 					setIsGenerating(false)
 					if (message.success) {
-						setGenerationStatus(`✅ Project generated successfully at: ${message.projectPath}`)
+						setGenerationStatus(`✅ ${t("projects.generationSuccess")} ${message.projectPath}`)
 						// Reset form
 						setSelectedTemplate(null)
 						setProjectName("")
 						setValidationErrors([])
 					} else {
-						setGenerationStatus(`❌ Generation failed: ${message.error}`)
+						setGenerationStatus(`❌ ${t("projects.generationFailed")} ${message.error}`)
 					}
 					break
 				case "projectGenerationProgress":
@@ -151,7 +151,7 @@ export const ProjectsView = () => {
 
 	const validateForm = (): boolean => {
 		if (!selectedTemplate) {
-			setValidationErrors(["Please select a project template"])
+			setValidationErrors([t("projects.selectTemplate")])
 			return false
 		}
 
@@ -175,7 +175,7 @@ export const ProjectsView = () => {
 		}
 
 		setIsGenerating(true)
-		setGenerationStatus("🚀 Starting project generation...")
+		setGenerationStatus(`🚀 ${t("projects.generationStarted")}`)
 
 		try {
 			const config: ProjectConfig = {
@@ -194,7 +194,7 @@ export const ProjectsView = () => {
 		} catch (error) {
 			console.error("Error generating project:", error)
 			setIsGenerating(false)
-			setGenerationStatus(`❌ Error: ${error}`)
+			setGenerationStatus(`❌ ${t("common.error")}: ${error}`)
 		}
 	}
 
@@ -297,14 +297,16 @@ export const ProjectsView = () => {
 
 			{/* Generation Method Selection - Hide 처리 - Command-based Generation 제외 목적 */}
 			<div style={{ display: "none", marginBottom: "20px" }}>
-				<h4 style={{ color: "var(--vscode-foreground)", marginBottom: "10px", marginTop: 0 }}>Generation Method</h4>
+				<h4 style={{ color: "var(--vscode-foreground)", marginBottom: "10px", marginTop: 0 }}>
+					{t("projects.generationMethod")}
+				</h4>
 				<RadioGroup
 					name="generationMethod"
 					value={generationMethod}
 					onChange={(value: string) => setGenerationMethod(value as "form" | "command")}
 					options={[
-						{ value: "form", label: "Form-based Generation (Recommended)" },
-						{ value: "command", label: "Command-based Generation" },
+						{ value: "form", label: t("projects.formBased") },
+						{ value: "command", label: t("projects.commandBased") },
 					]}
 				/>
 			</div>
@@ -314,11 +316,10 @@ export const ProjectsView = () => {
 				<div>
 					<div style={{ marginBottom: "20px" }}>
 						<h4 style={{ color: "var(--vscode-foreground)", marginBottom: "10px", marginTop: 0 }}>
-							Interactive Project Generation
+							{t("projects.interactiveGeneration")}
 						</h4>
 						<p style={{ fontSize: "12px", color: "var(--vscode-descriptionForeground)", marginBottom: "15px" }}>
-							Follow step-by-step prompts to generate your eGovFrame project. This mode provides guided assistance
-							and validation at each step.
+							{t("projects.interactiveDescription")}
 						</p>
 
 						<div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
@@ -351,7 +352,7 @@ export const ProjectsView = () => {
 								}}
 								onClick={handleGenerateByCommand}>
 								<span className="codicon codicon-debug-step-over" style={{ marginRight: "6px" }}></span>
-								Start Interactive Generation
+								{t("projects.startInteractive")}
 							</button>
 						</div>
 
@@ -364,13 +365,13 @@ export const ProjectsView = () => {
 								marginTop: "15px",
 								fontSize: "12px",
 							}}>
-							<div style={{ fontWeight: "bold", marginBottom: "8px" }}>Interactive Generation Features:</div>
+							<div style={{ fontWeight: "bold", marginBottom: "8px" }}>{t("projects.interactiveFeatures")}</div>
 							<ul style={{ margin: 0, paddingLeft: "20px" }}>
-								<li>Step-by-step category and template selection</li>
-								<li>Real-time validation and suggestions</li>
-								<li>Workspace integration and path recommendations</li>
-								<li>Preview generated project structure</li>
-								<li>Rollback capability if generation fails</li>
+								<li>{t("projects.feature1")}</li>
+								<li>{t("projects.feature2")}</li>
+								<li>{t("projects.feature3")}</li>
+								<li>{t("projects.feature4")}</li>
+								<li>{t("projects.feature5")}</li>
 							</ul>
 						</div>
 					</div>

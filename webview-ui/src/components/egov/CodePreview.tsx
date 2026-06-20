@@ -168,7 +168,7 @@ const CodePreview: React.FC<CodePreviewProps> = ({
 				}}>
 				<div style={{ marginBottom: "10px" }}>
 					<h4 style={{ color: "var(--vscode-foreground)", marginBottom: "10px", marginTop: 0 }}>
-						Preview templates
+						{t("code.previewTemplates")}
 						{packageName && (
 							<span
 								style={{
@@ -177,7 +177,7 @@ const CodePreview: React.FC<CodePreviewProps> = ({
 									marginLeft: "10px",
 									fontWeight: "normal",
 								}}>
-								(Package: {packageName})
+								{t("code.previewPackageName", { packageName })}
 							</span>
 						)}
 					</h4>
@@ -209,7 +209,7 @@ const CodePreview: React.FC<CodePreviewProps> = ({
 									cursor: "pointer",
 									userSelect: "none",
 								}}>
-								Always open preview
+								{t("code.alwaysOpenPreview")}
 							</label>
 						</div>
 					)}

@@ -43,7 +43,7 @@ const ConfigView: React.FC = () => {
 					}
 					break
 				case "error":
-					setError(message.message || "Failed to load templates. Please try again.")
+					setError(message.message || t("config.failedToLoadTemplates"))
 					updateState({ isTemplatesLoading: false })
 					break
 			}
