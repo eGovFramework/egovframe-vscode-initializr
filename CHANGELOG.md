@@ -8,6 +8,7 @@
   - 컬럼명에서 언더스코어 뒤에 숫자가 오는 경우(addr_1 등) camelCase 변환이 누락되어 언더스코어가 남던 문제 수정
 - Project Generation
   - POM 생성 시 입력값(프로젝트명·groupId 등)에 `$`가 포함되면 `String.replace`의 치환 특수 시퀀스로 해석되어 pom.xml이 손상되던 문제 수정
+  - Group ID 검증이 연속된 점(com..example)과 숫자로 시작하는 세그먼트(com.123)를 허용해 잘못된 Maven groupId가 생성되던 문제 수정
 - Refactoring
   - 불필요한 try/catch(no-useless-catch) 제거 (codeGenerator.ts)
 

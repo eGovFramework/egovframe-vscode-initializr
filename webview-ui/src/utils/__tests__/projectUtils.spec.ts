@@ -9,6 +9,9 @@ const makeTemplate = (overrides: Partial<ProjectTemplate> = {}): ProjectTemplate
 	...overrides,
 })
 
+const groupIdError =
+	"Group ID must consist of dot-separated segments, where each segment starts with a lowercase letter and contains only lowercase letters or numbers"
+
 describe("validateProjectConfig", () => {
 	it("projectName이 없으면 오류를 반환한다", () => {
 		const errors = validateProjectConfig({
@@ -72,7 +75,7 @@ describe("validateProjectConfig", () => {
 			groupId: "Invalid.Group",
 			artifactId: "my-project",
 		})
-		expect(errors.some((e) => e.includes("Group ID must start"))).toBe(true)
+		expect(errors).toContain(groupIdError)
 	})
 
 	it("groupId가 점으로 끝나면 오류를 반환한다", () => {
@@ -83,7 +86,53 @@ describe("validateProjectConfig", () => {
 			groupId: "egovframework.",
 			artifactId: "my-project",
 		})
-		expect(errors.some((e) => e.includes("Group ID must start"))).toBe(true)
+		expect(errors).toContain(groupIdError)
+	})
+
+	it("groupId 세그먼트가 소문자/숫자 규칙을 지키면 통과한다", () => {
+		for (const groupId of ["com.example", "org.egovframe.test", "a.b", "org.egovframe", "com.example2"]) {
+			const errors = validateProjectConfig({
+				projectName: "my-project",
+				template: makeTemplate({ pomFile: "pom.xml" }),
+				outputPath: "/tmp",
+				groupId,
+				artifactId: "my-project",
+			})
+			expect(errors, `expected no groupId error for "${groupId}"`).not.toContain(groupIdError)
+		}
+	})
+
+	it("연속된 점(빈 세그먼트)이 있으면 오류를 반환한다", () => {
+		const errors = validateProjectConfig({
+			projectName: "my-project",
+			template: makeTemplate({ pomFile: "pom.xml" }),
+			outputPath: "/tmp",
+			groupId: "com..example",
+			artifactId: "my-project",
+		})
+		expect(errors).toContain(groupIdError)
+	})
+
+	it("숫자로 시작하는 세그먼트가 있으면 오류를 반환한다", () => {
+		const errors = validateProjectConfig({
+			projectName: "my-project",
+			template: makeTemplate({ pomFile: "pom.xml" }),
+			outputPath: "/tmp",
+			groupId: "com.123",
+			artifactId: "my-project",
+		})
+		expect(errors).toContain(groupIdError)
+	})
+
+	it("점으로 시작하면 오류를 반환한다", () => {
+		const errors = validateProjectConfig({
+			projectName: "my-project",
+			template: makeTemplate({ pomFile: "pom.xml" }),
+			outputPath: "/tmp",
+			groupId: ".com",
+			artifactId: "my-project",
+		})
+		expect(errors).toContain(groupIdError)
 	})
 
 	it("pomFile이 있는 템플릿에서 artifactId가 없으면 오류를 반환한다", () => {
@@ -113,9 +162,11 @@ describe("validateProjectConfig", () => {
 			projectName: "my-project",
 			template: makeTemplate({ pomFile: "" }),
 			outputPath: "/tmp",
+			groupId: "com..example",
 		})
 		expect(errors).not.toContain("Group ID is required for this template")
 		expect(errors).not.toContain("Artifact ID is required for this template")
+		expect(errors).not.toContain(groupIdError)
 	})
 
 	it("모든 필드가 유효하면 빈 배열을 반환한다", () => {
