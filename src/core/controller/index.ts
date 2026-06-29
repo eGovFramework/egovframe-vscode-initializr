@@ -19,10 +19,7 @@ export class Controller {
 
 	// 테마 변경 이벤트 리스너
 	private setupThemeChangeListener() {
-<<<<<<< HEAD
 		// 테마 변경 이벤트 감지
-=======
->>>>>>> 78403282f8dddb209e758d047516a7e8f6df5b5b
 		this.themeChangeDisposable = vscode.window.onDidChangeActiveColorTheme(async (colorTheme) => {
 			const themeName = vscode.workspace.getConfiguration("workbench").get<string>("colorTheme")
 			const monacoTheme = this.getMonacoThemeFromVSCodeTheme(colorTheme.kind)
