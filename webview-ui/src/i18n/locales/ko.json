@@ -132,7 +132,7 @@
 		"generatingPreview": "미리보기 생성 중...",
 		"importSuccess": "✅ 채팅에서 DDL을 성공적으로 가져왔습니다!",
 		"enterValidDdlFirst": "먼저 유효한 DDL 구문을 입력해 주세요.",
-		"failedToSendMessage": "익스텐션으로 메시지를 보내는 데 실패했습니다: ",
+		"failedToSendMessage": "익스텐션으로 메시지를 보내는 데 실패했습니다",
 		"contextGenerationError": "컨텍스트 생성 오류",
 		"vscodeApiNotAvailable": "VSCode API를 사용할 수 없습니다.",
 		"vscodePostMessageNotAvailable": "VSCode postMessage를 사용할 수 없습니다.",

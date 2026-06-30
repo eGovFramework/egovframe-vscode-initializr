@@ -510,7 +510,7 @@ const CodeView = () => {
 			vscode.postMessage(message)
 		} catch (err) {
 			console.error("Error sending selectOutputPath message:", err)
-			setError(`${t("code.failedToSendMessage")} ${err instanceof Error ? err.message : String(err)}`)
+			setError(`${t("code.failedToSendMessage")}: ${err instanceof Error ? err.message : String(err)}`)
 		}
 	}
 

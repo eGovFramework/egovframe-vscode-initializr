@@ -132,7 +132,7 @@
 		"generatingPreview": "Generating preview...",
 		"importSuccess": "✅ DDL successfully imported from chat!",
 		"enterValidDdlFirst": "Please enter a valid DDL statement first",
-		"failedToSendMessage": "Failed to send message to extension: ",
+		"failedToSendMessage": "Failed to send message to extension",
 		"contextGenerationError": "Context generation error",
 		"vscodeApiNotAvailable": "VSCode API not available",
 		"vscodePostMessageNotAvailable": "VSCode postMessage not available",
