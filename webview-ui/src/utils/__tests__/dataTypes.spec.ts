@@ -13,10 +13,24 @@ describe("getJavaClassName", () => {
 	it("정수 타입을 적절한 Java 타입으로 변환한다", () => {
 		expect(getJavaClassName("INT")).toBe("java.lang.Integer")
 		expect(getJavaClassName("INTEGER")).toBe("java.lang.Integer")
-		expect(getJavaClassName("NUMBER")).toBe("java.lang.Integer")
 		expect(getJavaClassName("BIGINT")).toBe("java.lang.Long")
 		expect(getJavaClassName("SMALLINT")).toBe("java.lang.Short")
 		expect(getJavaClassName("TINYINT")).toBe("java.lang.Byte")
+	})
+
+	it("Oracle NUMBER 타입을 정밀도/스케일에 따라 변환한다", () => {
+		// 크기 정보가 없으면 임의 정밀도로 보아 BigDecimal
+		expect(getJavaClassName("NUMBER")).toBe("java.math.BigDecimal")
+		// 스케일이 있으면 BigDecimal
+		expect(getJavaClassName("NUMBER(10,2)")).toBe("java.math.BigDecimal")
+		// 정수이고 정밀도 ≤ 9이면 Integer
+		expect(getJavaClassName("NUMBER(5)")).toBe("java.lang.Integer")
+		expect(getJavaClassName("NUMBER(9)")).toBe("java.lang.Integer")
+		// 정수이고 정밀도 ≤ 18이면 Long
+		expect(getJavaClassName("NUMBER(10)")).toBe("java.lang.Long")
+		expect(getJavaClassName("NUMBER(18)")).toBe("java.lang.Long")
+		// 정수이고 정밀도 > 18이면 BigDecimal
+		expect(getJavaClassName("NUMBER(20)")).toBe("java.math.BigDecimal")
 	})
 
 	it("소수 타입을 적절한 Java 타입으로 변환한다", () => {
