@@ -2,6 +2,7 @@ import * as vscode from "vscode"
 import * as path from "path"
 import * as fs from "fs-extra"
 import * as Handlebars from "handlebars"
+import { sanitizeFileName, resolveWithinBase } from "./pathSafety"
 
 // Template configuration interface
 export interface TemplateConfig {
@@ -183,12 +184,14 @@ export async function generateFile(
 		const content = await renderTemplate(templatePath, data)
 		console.log("- template rendered, content length:", content.length)
 
-		let fileName = data[fileNameProperty] || "default_filename"
+		// Reduce the user-supplied name to a plain file name to block path traversal (CWE-22)
+		let fileName = sanitizeFileName(data[fileNameProperty] || "default_filename")
 		if (!fileName.endsWith(`.${fileExtension}`)) {
 			fileName += `.${fileExtension}`
 		}
 
-		const outputPath = path.join(outputFolderPath, fileName)
+		// Defense in depth: ensure the resolved path stays inside the output folder
+		const outputPath = resolveWithinBase(outputFolderPath, fileName)
 		console.log("- output path:", outputPath)
 
 		// Ensure output directory exists
