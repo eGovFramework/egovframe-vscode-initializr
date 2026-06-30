@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Project Generation
+  - Group ID 검증이 연속된 점(com..example)과 숫자로 시작하는 세그먼트(com.123)를 허용해 잘못된 Maven groupId가 생성되던 문제 수정
+
 ## v5.0.0 Beta (2025-12-04)
 
 - v5.0.x Initial Beta Release
