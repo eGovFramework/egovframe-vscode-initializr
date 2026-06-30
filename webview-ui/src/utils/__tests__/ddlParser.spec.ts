@@ -297,4 +297,17 @@ describe("validateDDL", () => {
 			`),
 		).toBe(false)
 	})
+
+	it("should reject empty input", () => {
+		expect(validateDDL("")).toBe(false)
+	})
+
+	it("should reject input that does not start with CREATE TABLE", () => {
+		expect(validateDDL("   \n\t ")).toBe(false)
+		expect(validateDDL("SELECT * FROM users")).toBe(false)
+	})
+
+	it("should reject CREATE TABLE with no closing parenthesis (statement extraction fails)", () => {
+		expect(validateDDL("CREATE TABLE sample (id INT")).toBe(false)
+	})
 })
