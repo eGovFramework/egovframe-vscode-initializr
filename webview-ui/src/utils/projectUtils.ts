@@ -66,9 +66,9 @@ export function validateProjectConfig(config: Partial<ProjectConfig>): string[] 
 	if (config.template?.pomFile) {
 		if (!config.groupId || config.groupId.trim() === "") {
 			errors.push("Group ID is required for this template")
-		} else if (!/^[a-z]([a-z0-9.]*[a-z0-9])?$/.test(config.groupId)) {
+		} else if (!/^[a-z][a-z0-9]*(\.[a-z][a-z0-9]*)*$/.test(config.groupId)) {
 			errors.push(
-				"Group ID must start with a lowercase letter, contain only lowercase letters, numbers, or dots, and cannot end with a dot",
+				"Group ID must consist of dot-separated segments, where each segment starts with a lowercase letter and contains only lowercase letters or numbers",
 			)
 		}
 	}
