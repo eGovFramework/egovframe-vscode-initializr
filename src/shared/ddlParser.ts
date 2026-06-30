@@ -246,15 +246,6 @@ export function validateDDL(ddl: string): boolean {
 		return false
 	}
 
-	// 괄호 쌍 확인
-	const openParens = (createTableStatement.statement.match(/\(/g) || []).length
-	const closeParens = (createTableStatement.statement.match(/\)/g) || []).length
-
-	// 괄호 개수가 맞지 않으면 유효하지 않음
-	if (openParens !== closeParens) {
-		return false
-	}
-
 	// 최소한의 컬럼 정의 확인
 	if (!createTableStatement.body.trim()) {
 		return false
