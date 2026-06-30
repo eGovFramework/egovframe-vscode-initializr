@@ -8,6 +8,7 @@ export interface TemplateContext {
 	//parameterType: string
 	//resultType: string
 	tableName: string
+	dbTableName: string
 	attributes: Column[]
 	pkAttributes: Column[]
 	//sortOrder: string
@@ -27,6 +28,7 @@ export function getTemplateContext(
 	attributes: Column[],
 	pkAttributes: Column[],
 	packageName: string = "egovframework.example.sample", // vscode.workspace.getConfiguration("egovframeInitializr").get<string>("defaultPackageName", "egovframework.example.sample")
+	dbTableName: string = tableName,
 ): TemplateContext {
 	return {
 		// MyBatis 설정
@@ -38,6 +40,7 @@ export function getTemplateContext(
 
 		// 테이블 및 컬럼 정보
 		tableName, // 테이블명
+		dbTableName, // 실제 DB 테이블명
 		attributes, // 전체 컬럼 정보
 		pkAttributes, // 기본키 컬럼 정보
 

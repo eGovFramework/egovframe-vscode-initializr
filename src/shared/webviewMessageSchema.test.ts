@@ -63,6 +63,7 @@ const validColumn = {
 
 const validTemplateContext = {
 	tableName: "User",
+	dbTableName: "user",
 	attributes: [validColumn],
 	pkAttributes: [validColumn],
 	packageName: "com.example.sample",

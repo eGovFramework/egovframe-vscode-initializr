@@ -12,6 +12,7 @@ export interface Column {
 
 export interface ParsedDDL {
 	tableName: string
+	dbTableName: string // 실제 DB 테이블명 (DDL 원본 테이블명, Java 클래스명 변환 전)
 	attributes: Column[]
 	pkAttributes: Column[]
 }
@@ -39,7 +40,9 @@ export function parseDDL(ddl: string): ParsedDDL {
 	if (!tableNameMatch) {
 		throw new Error("Unable to parse table name from DDL")
 	}
-	const tableName = convertCamelcaseToPascalcase(convertToCamelCase(tableNameMatch[1]))
+
+	const dbTableName = tableNameMatch[1]
+	const tableName = convertCamelcaseToPascalcase(convertToCamelCase(dbTableName))
 
 	// 컬럼 정의 추출
 	const columnDefinitionsMatch = RegExp(/\((.*)\)/s).exec(ddl)
@@ -121,7 +124,7 @@ export function parseDDL(ddl: string): ParsedDDL {
 		throw new Error("No valid columns found in DDL")
 	}
 
-	return { tableName, attributes, pkAttributes }
+	return { tableName, dbTableName, attributes, pkAttributes }
 }
 
 // DDL 유효성 검사 함수

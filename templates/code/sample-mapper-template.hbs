@@ -10,7 +10,7 @@
 
 	<insert id="insert{{className}}">
 
-			INSERT INTO {{tableName}} (
+			INSERT INTO {{dbTableName}} (
 			{{#each attributes}}
 				{{#if @first}}
 				{{columnName}}
@@ -31,7 +31,7 @@
 
 	<update id="update{{className}}">
 
-			UPDATE {{tableName}}
+			UPDATE {{dbTableName}}
 			SET
 			{{~setVar "isFirstSet" true~}}
 			{{#each attributes}}
@@ -61,7 +61,7 @@
 
 	<delete id="delete{{className}}">
 
-			DELETE FROM {{tableName}}
+			DELETE FROM {{dbTableName}}
 			WHERE
 			{{#if pkAttributes.length}}
 				{{#each pkAttributes}}
@@ -83,7 +83,7 @@
 			{{#each attributes}}
 				{{#if @first}}{{columnName}}{{else}}, {{columnName}}{{/if}}
 			{{/each}}
-			FROM {{tableName}}
+			FROM {{dbTableName}}
 			WHERE
 			{{#if pkAttributes.length}}
 				{{#each pkAttributes}}
@@ -105,7 +105,7 @@
 			{{#each attributes}}
 				{{#if @first}}{{columnName}}{{else}}, {{columnName}}{{/if}}
 			{{/each}}
-			FROM {{tableName}}
+			FROM {{dbTableName}}
 			WHERE 1=1
 			<if test="searchKeyword != null and searchKeyword != ''">
 		        <choose>
@@ -145,7 +145,7 @@
 	<select id="select{{className}}ListTotCnt" resultType="int">
 
 			SELECT COUNT(*) totcnt
-			FROM {{tableName}}
+			FROM {{dbTableName}}
 			WHERE 1=1
 			<if test="searchKeyword != null and searchKeyword != ''">
 		        <choose>

@@ -75,6 +75,7 @@ const columnSchema = z.object({
 
 const templateContextSchema = z.object({
 	tableName: z.string(),
+	dbTableName: z.string(),
 	attributes: z.array(columnSchema),
 	pkAttributes: z.array(columnSchema),
 	packageName: z.string(),
