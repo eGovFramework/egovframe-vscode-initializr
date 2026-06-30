@@ -1,5 +1,6 @@
 import React from "react"
 import type { ErdModel } from "@shared/erdParser"
+import { useTranslation } from "react-i18next"
 
 interface ErdDiagramProps {
 	model: ErdModel | null
@@ -86,6 +87,7 @@ function getRelationPoints(
 }
 
 const ErdDiagram: React.FC<ErdDiagramProps> = ({ model }) => {
+	const { t } = useTranslation()
 	if (!model || model.tables.length === 0) {
 		return null
 	}
@@ -123,7 +125,7 @@ const ErdDiagram: React.FC<ErdDiagramProps> = ({ model }) => {
 
 	return (
 		<div style={{ marginBottom: "20px" }}>
-			<h4 style={{ color: "var(--vscode-foreground)", marginBottom: "10px" }}>ERD Preview</h4>
+			<h4 style={{ color: "var(--vscode-foreground)", marginBottom: "10px" }}>{t("code.erdPreview")}</h4>
 			<div
 				style={{
 					backgroundColor: "var(--vscode-editor-inactiveSelectionBackground)",
@@ -271,7 +273,7 @@ const ErdDiagram: React.FC<ErdDiagramProps> = ({ model }) => {
 							color: "var(--vscode-descriptionForeground)",
 							fontSize: "12px",
 						}}>
-						No foreign key relationships found.
+						{t("code.noRelationships")}
 					</div>
 				)}
 			</div>

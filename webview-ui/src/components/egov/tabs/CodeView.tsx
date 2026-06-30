@@ -160,7 +160,7 @@ const CodeView = () => {
 							// 파싱 실패 시 isValid도 false로 설정
 							setParsedDDL(null)
 							setIsValid(false)
-							setError(parseError instanceof Error ? parseError.message : "DDL parsing failed")
+							setError(parseError instanceof Error ? parseError.message : t("code.parsingError"))
 							setPreviews(null)
 							setPreviewError("")
 						}
@@ -170,7 +170,11 @@ const CodeView = () => {
 						// 첫 번째 에러 메시지 표시
 						const firstError = errors[0]
 						setError(
-							`SQL Syntax Error (Line ${firstError.startLineNumber}, Col ${firstError.startColumn}): ${firstError.message}`,
+							t("code.sqlSyntaxError", {
+								line: firstError.startLineNumber,
+								col: firstError.startColumn,
+								message: firstError.message,
+							}),
 						)
 						setPreviews(null)
 						setPreviewError("")
@@ -198,13 +202,13 @@ const CodeView = () => {
 				} catch (parseError) {
 					setParsedDDL(null)
 					setIsValid(false)
-					setError(parseError instanceof Error ? parseError.message : "DDL parsing failed")
+					setError(parseError instanceof Error ? parseError.message : t("code.parsingError"))
 					setPreviews(null)
 				}
 			} else {
 				setParsedDDL(null)
 				setIsValid(false)
-				setError("Invalid DDL format")
+				setError(t("code.invalidDdlFormat"))
 				setPreviews(null)
 				setPreviewError("")
 			}
@@ -212,7 +216,7 @@ const CodeView = () => {
 			console.error("DDL parsing error:", err)
 			setIsValid(false)
 			setParsedDDL(null)
-			setError(err instanceof Error ? err.message : "Parsing error")
+			setError(err instanceof Error ? err.message : t("code.parsingError"))
 			setPreviews(null)
 			setPreviewError("")
 		}
@@ -299,7 +303,7 @@ const CodeView = () => {
 				switch (message.type) {
 					case "error":
 						console.error("Extension error:", message.message)
-						setError(message.message || "Unknown error occurred")
+						setError(message.message || t("common.unknownError"))
 						break
 					case "success":
 						console.log("Extension success:", message.message)
@@ -332,7 +336,7 @@ const CodeView = () => {
 							// Show a temporary success message
 							setTimeout(() => {
 								console.log("[CodeView] Showing success message")
-								setError("✅ DDL successfully imported from chat!")
+								setError(t("code.importSuccess"))
 								setTimeout(() => {
 									console.log("[CodeView] Clearing success message")
 									setError("")
@@ -427,7 +431,7 @@ const CodeView = () => {
 			})
 		} catch (err) {
 			console.error("Error sending generateCode message:", err)
-			setError("Failed to send message to extension")
+			setError(t("code.failedToSendMessage"))
 			setIsLoading(false)
 		}
 	}
@@ -449,7 +453,7 @@ const CodeView = () => {
 			})
 		} catch (err) {
 			console.error("Error sending uploadTemplates message:", err)
-			setError("Failed to send message to extension")
+			setError(t("code.failedToSendMessage"))
 			setIsLoading(false)
 		}
 	}
@@ -460,7 +464,7 @@ const CodeView = () => {
 			// State의 parsedDDL을 사용하지 않고 현재 DDL을 직접 파싱
 			// (React state 업데이트는 비동기이므로 최신 상태가 아닐 수 있음)
 			if (!isValid || !ddlContent.trim()) {
-				setError("Please enter a valid DDL statement first")
+				setError(t("code.enterValidDdlFirst"))
 				return
 			}
 
@@ -480,7 +484,7 @@ const CodeView = () => {
 			})
 		} catch (err) {
 			console.error("Error in downloadTemplateContext:", err)
-			setError(err instanceof Error ? err.message : "Context generation error")
+			setError(err instanceof Error ? err.message : t("code.contextGenerationError"))
 		}
 	}
 
@@ -491,13 +495,13 @@ const CodeView = () => {
 		try {
 			if (typeof vscode === "undefined") {
 				console.error("vscode object is undefined")
-				setError("VSCode API not available")
+				setError(t("code.vscodeApiNotAvailable"))
 				return
 			}
 
 			if (typeof vscode.postMessage !== "function") {
 				console.error("vscode.postMessage is not a function")
-				setError("VSCode postMessage not available")
+				setError(t("code.vscodePostMessageNotAvailable"))
 				return
 			}
 
@@ -506,7 +510,7 @@ const CodeView = () => {
 			vscode.postMessage(message)
 		} catch (err) {
 			console.error("Error sending selectOutputPath message:", err)
-			setError(`Failed to send message to extension: ${err instanceof Error ? err.message : String(err)}`)
+			setError(`${t("code.failedToSendMessage")} ${err instanceof Error ? err.message : String(err)}`)
 		}
 	}
 
@@ -920,7 +924,7 @@ const CodeView = () => {
 											setPackageName(e.target.value)
 											setValidationErrors([]) // Clear validation errors
 										}}
-										placeholder="e.g., com.example.project"
+										placeholder={t("code.packageNamePlaceholder")}
 										isRequired
 									/>
 								</div>
@@ -973,7 +977,7 @@ const CodeView = () => {
 											setOutputPath(e.target.value)
 											setValidationErrors([]) // Clear validation errors
 										}}
-										placeholder="Select output directory"
+										placeholder={t("projects.outputPathPlaceholder")}
 										isRequired
 									/>
 								</div>

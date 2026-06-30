@@ -3,6 +3,7 @@ import { Button, TextField, useVSCodeTheme, ResponsiveMenuButton, LanguageSelect
 import { vscode } from "../../utils/vscode"
 import { validateEgovSettings } from "../../utils/settingsUtils"
 import i18n, { changeLanguage } from "../../i18n"
+import { useTranslation } from "react-i18next"
 
 interface EgovSettingsViewProps {
 	onDone: () => void
@@ -35,6 +36,7 @@ interface ExtensionInfo {
 // 기존 EgovView 화면 복원 → 원래의 탭 화면으로 돌아감
 
 const EgovSettingsView = memo(({ onDone }: EgovSettingsViewProps) => {
+	const { t } = useTranslation()
 	const theme = useVSCodeTheme()
 	const [activeTab, setActiveTab] = useState<SettingsTab>("vscode-settings")
 	const [settings, setSettings] = useState<EgovSettings>({
@@ -98,7 +100,7 @@ const EgovSettingsView = memo(({ onDone }: EgovSettingsViewProps) => {
 			if (message.type === "success") {
 				setSaveStatus({
 					isSaving: false,
-					message: message.message || "설정이 성공적으로 저장되었습니다.",
+					message: message.message || t("common.settingsSaved"),
 					type: "success",
 				})
 				// 3초 후 메시지 숨기기
@@ -113,7 +115,7 @@ const EgovSettingsView = memo(({ onDone }: EgovSettingsViewProps) => {
 			if (message.type === "error") {
 				setSaveStatus({
 					isSaving: false,
-					message: message.message || "설정 저장에 실패했습니다.",
+					message: message.message || t("common.settingsSaveFailed"),
 					type: "error",
 				})
 				// 5초 후 에러 메시지 숨기기
@@ -196,7 +198,7 @@ const EgovSettingsView = memo(({ onDone }: EgovSettingsViewProps) => {
 						style={{ color: theme.colors.foreground }}>
 						<path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" />
 					</svg>
-					VSCode Settings
+					{t("settings.vscodeSettings")}
 				</h3>
 			</div>
 
@@ -209,11 +211,11 @@ const EgovSettingsView = memo(({ onDone }: EgovSettingsViewProps) => {
 						fontSize: theme.fontSize.md,
 						fontWeight: "600",
 					}}>
-					Language Settings
+					{t("settings.languageSettings")}
 				</h4>
 				<LanguageSelector value={pendingLanguage} onChange={setPendingLanguage} />
 				<p className="text-sm" style={{ color: theme.colors.descriptionForeground }}>
-					Currently, only applied to the "Projects" tab.
+					{t("settings.languageSettingsDesc")}
 				</p>
 			</div>
 
@@ -226,27 +228,27 @@ const EgovSettingsView = memo(({ onDone }: EgovSettingsViewProps) => {
 						fontSize: theme.fontSize.md,
 						fontWeight: "600",
 					}}>
-					Generate Projects Settings
+					{t("settings.generateProjectsSettings")}
 				</h4>
 
 				<div style={{ display: "flex", flexDirection: "column", gap: "0px" }}>
 					<div style={{ width: "calc(100% - 24px)", marginBottom: "15px" }}>
 						<TextField
-							label="Group ID"
+							label={t("projects.groupId")}
 							value={settings.defaultGroupId}
 							onChange={(e) => handleSettingChange("defaultGroupId", e.target.value)}
 							placeholder="egovframework.com"
-							hint="Default maven groupId"
+							hint={t("projects.groupIdHint")}
 						/>
 					</div>
 
 					<div style={{ width: "calc(100% - 24px)", marginBottom: "15px" }}>
 						<TextField
-							label="Artifact ID"
+							label={t("projects.artifactId")}
 							value={settings.defaultArtifactId}
 							onChange={(e) => handleSettingChange("defaultArtifactId", e.target.value)}
 							placeholder="egovframe-project"
-							hint="Default maven artifactId"
+							hint={t("projects.artifactIdHint")}
 						/>
 					</div>
 				</div>
@@ -261,16 +263,16 @@ const EgovSettingsView = memo(({ onDone }: EgovSettingsViewProps) => {
 						fontSize: theme.fontSize.md,
 						fontWeight: "600",
 					}}>
-					Generate CRUD Code Settings
+					{t("settings.generateCrudCodeSettings")}
 				</h4>
 
 				<div style={{ width: "calc(100% - 24px)", marginBottom: "15px" }}>
 					<TextField
-						label="Package Name"
+						label={t("code.packageName")}
 						value={settings.defaultPackageName}
 						onChange={(e) => handleSettingChange("defaultPackageName", e.target.value)}
 						placeholder="egovframework.example.sample"
-						hint="Default package name"
+						hint={t("code.packageNameHint")}
 					/>
 				</div>
 			</div>
@@ -286,7 +288,7 @@ const EgovSettingsView = memo(({ onDone }: EgovSettingsViewProps) => {
 							padding: "10px",
 							borderRadius: "3px",
 						}}>
-						<div style={{ fontWeight: "bold", marginBottom: "5px" }}>Validation Errors:</div>
+						<div style={{ fontWeight: "bold", marginBottom: "5px" }}>{t("projects.validationErrors")}</div>
 						<ul style={{ margin: 0, paddingLeft: "20px" }}>
 							{validationErrors.map((error, index) => (
 								<li key={index} style={{ fontSize: "12px" }}>
@@ -301,7 +303,7 @@ const EgovSettingsView = memo(({ onDone }: EgovSettingsViewProps) => {
 			{/* 저장 버튼 및 상태 메시지 */}
 			<div style={{ marginTop: "24px" }}>
 				<Button onClick={handleSaveSettings} variant="primary" disabled={saveStatus.isSaving}>
-					{saveStatus.isSaving ? "저장 중..." : "Save Settings"}
+					{saveStatus.isSaving ? t("common.saving") : t("common.saveSettings")}
 				</Button>
 
 				{/* 저장 상태 메시지 */}
@@ -342,7 +344,7 @@ const EgovSettingsView = memo(({ onDone }: EgovSettingsViewProps) => {
 							color: theme.colors.descriptionForeground,
 							fontSize: theme.fontSize.sm,
 						}}>
-						Loading extension information...
+						{t("settings.loadingExtensionInfo")}
 					</div>
 				</div>
 			)
@@ -404,7 +406,7 @@ const EgovSettingsView = memo(({ onDone }: EgovSettingsViewProps) => {
 							<path d="M12 16v-4" />
 							<path d="M12 8h.01" />
 						</svg>
-						About
+						{t("common.about")}
 					</h3>
 					<div
 						style={{
@@ -436,7 +438,7 @@ const EgovSettingsView = memo(({ onDone }: EgovSettingsViewProps) => {
 							rel="noopener noreferrer"
 							onMouseEnter={(e) => Object.assign(e.currentTarget.style, linkHoverStyle)}
 							onMouseLeave={(e) => (e.currentTarget.style.borderBottom = "1px solid transparent")}>
-							Repository
+							{t("settings.repository")}
 						</a>
 						{" • "}
 						<a
@@ -446,7 +448,7 @@ const EgovSettingsView = memo(({ onDone }: EgovSettingsViewProps) => {
 							rel="noopener noreferrer"
 							onMouseEnter={(e) => Object.assign(e.currentTarget.style, linkHoverStyle)}
 							onMouseLeave={(e) => (e.currentTarget.style.borderBottom = "1px solid transparent")}>
-							Pull Requests
+							{t("settings.pullRequests")}
 						</a>
 						{" • "}
 						<a
@@ -456,7 +458,7 @@ const EgovSettingsView = memo(({ onDone }: EgovSettingsViewProps) => {
 							rel="noopener noreferrer"
 							onMouseEnter={(e) => Object.assign(e.currentTarget.style, linkHoverStyle)}
 							onMouseLeave={(e) => (e.currentTarget.style.borderBottom = "1px solid transparent")}>
-							Issues
+							{t("settings.issues")}
 						</a>
 					</div>
 				</div>
@@ -472,7 +474,7 @@ const EgovSettingsView = memo(({ onDone }: EgovSettingsViewProps) => {
 							rel="noopener noreferrer"
 							onMouseEnter={(e) => Object.assign(e.currentTarget.style, linkHoverStyle)}
 							onMouseLeave={(e) => (e.currentTarget.style.borderBottom = "1px solid transparent")}>
-							Portal
+							{t("settings.portal")}
 						</a>
 					</div>
 				</div>
@@ -488,7 +490,7 @@ const EgovSettingsView = memo(({ onDone }: EgovSettingsViewProps) => {
 							rel="noopener noreferrer"
 							onMouseEnter={(e) => Object.assign(e.currentTarget.style, linkHoverStyle)}
 							onMouseLeave={(e) => (e.currentTarget.style.borderBottom = "1px solid transparent")}>
-							eGovFrame docs
+							{t("settings.egovDocs")}
 						</a>
 					</div>
 					<div style={itemStyle}>
@@ -499,7 +501,7 @@ const EgovSettingsView = memo(({ onDone }: EgovSettingsViewProps) => {
 							rel="noopener noreferrer"
 							onMouseEnter={(e) => Object.assign(e.currentTarget.style, linkHoverStyle)}
 							onMouseLeave={(e) => (e.currentTarget.style.borderBottom = "1px solid transparent")}>
-							This extension's Manual
+							{t("settings.extensionManual")}
 						</a>
 					</div>
 					<div style={itemStyle}>
@@ -510,7 +512,7 @@ const EgovSettingsView = memo(({ onDone }: EgovSettingsViewProps) => {
 							rel="noopener noreferrer"
 							onMouseEnter={(e) => Object.assign(e.currentTarget.style, linkHoverStyle)}
 							onMouseLeave={(e) => (e.currentTarget.style.borderBottom = "1px solid transparent")}>
-							VSCode usage guide
+							{t("settings.vscodeUsageGuide")}
 						</a>
 					</div>
 				</div>
@@ -518,14 +520,14 @@ const EgovSettingsView = memo(({ onDone }: EgovSettingsViewProps) => {
 				{/* Additional Info */}
 				{extensionInfo.author && (
 					<div style={sectionStyle}>
-						<span style={sectionTitleStyle}>Author</span>
+						<span style={sectionTitleStyle}>{t("settings.author")}</span>
 						<div style={itemStyle}>{extensionInfo.author}</div>
 					</div>
 				)}
 
 				{extensionInfo.license && (
 					<div style={sectionStyle}>
-						<span style={sectionTitleStyle}>License</span>
+						<span style={sectionTitleStyle}>{t("settings.license")}</span>
 						<div style={itemStyle}>{extensionInfo.license}</div>
 					</div>
 				)}
@@ -547,7 +549,7 @@ const EgovSettingsView = memo(({ onDone }: EgovSettingsViewProps) => {
 					justifyContent: "center",
 					color: theme.colors.descriptionForeground,
 				}}>
-				Loading settings...
+				{t("common.loadingSettings")}
 			</div>
 		)
 	}
@@ -573,9 +575,9 @@ const EgovSettingsView = memo(({ onDone }: EgovSettingsViewProps) => {
 					padding: "10px 17px 5px 20px",
 					borderBottom: `1px solid ${theme.colors.panelBorder}`,
 				}}>
-				<h3 style={{ color: theme.colors.foreground, margin: 0 }}>eGovFrame Settings</h3>
+				<h3 style={{ color: theme.colors.foreground, margin: 0 }}>eGovFrame {t("settings.title")}</h3>
 				<Button onClick={onDone} variant="secondary" size="sm">
-					Done
+					{t("common.done")}
 				</Button>
 			</div>
 
@@ -606,19 +608,19 @@ const EgovSettingsView = memo(({ onDone }: EgovSettingsViewProps) => {
 						active={activeTab === "vscode-settings"}
 						onClick={() => setActiveTab("vscode-settings")}
 						icon="edit"
-						title="eGovFrame VSCode Settings"
+						title={`eGovFrame ${t("settings.vscodeSettings")}`}
 						isCompact={isCompact}
 						dataValue="vscode-settings">
-						VSCode Settings
+						{t("settings.vscodeSettings")}
 					</ResponsiveMenuButton>
 					<ResponsiveMenuButton
 						active={activeTab === "about"}
 						onClick={() => setActiveTab("about")}
 						icon="info"
-						title="About eGovFrame Initializr"
+						title={t("settings.aboutTitle")}
 						isCompact={isCompact}
 						dataValue="about">
-						About
+						{t("common.about")}
 					</ResponsiveMenuButton>
 				</div>
 

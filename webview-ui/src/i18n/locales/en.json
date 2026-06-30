@@ -18,7 +18,15 @@
 		"warning": "Warning",
 		"info": "Info",
 		"previous": "Previous",
-		"next": "Next"
+		"next": "Next",
+		"saveSettings": "Save Settings",
+		"saving": "Saving...",
+		"settingsSaved": "Settings saved successfully.",
+		"settingsSaveFailed": "Failed to save settings.",
+		"loadingSettings": "Loading settings...",
+		"done": "Done",
+		"about": "About",
+		"unknownError": "Unknown error occurred."
 	},
 	"tabs": {
 		"projects": "Projects",
@@ -121,7 +129,18 @@
 		"alwaysOpenPreview": "Always open preview",
 		"openPreview": "Open Preview",
 		"closePreview": "Close Preview",
-		"generatingPreview": "Generating preview..."
+		"generatingPreview": "Generating preview...",
+		"importSuccess": "✅ DDL successfully imported from chat!",
+		"enterValidDdlFirst": "Please enter a valid DDL statement first",
+		"failedToSendMessage": "Failed to send message to extension: ",
+		"contextGenerationError": "Context generation error",
+		"vscodeApiNotAvailable": "VSCode API not available",
+		"vscodePostMessageNotAvailable": "VSCode postMessage not available",
+		"previewPackageName": "(Package: {{packageName}})",
+		"sqlSyntaxError": "SQL Syntax Error (Line {{line}}, Col {{col}}): {{message}}",
+		"invalidDdlFormat": "Invalid DDL format",
+		"erdPreview": "ERD Preview",
+		"noRelationships": "No foreign key relationships found."
 	},
 	"config": {
 		"title": "Generate eGovFrame Configurations",
@@ -146,7 +165,8 @@
 		"configureButton": "Configure",
 		"noTemplates": "No templates available",
 		"retry": "Retry",
-		"loadingTemplates": "Loading templates..."
+		"loadingTemplates": "Loading templates...",
+		"failedToLoadTemplates": "Failed to load templates. Please try again."
 	},
 	"forms": {
 		"common": {
@@ -170,7 +190,23 @@
 		"defaultGroupId": "Default Group ID",
 		"defaultArtifactId": "Default Artifact ID",
 		"theme": "Theme",
-		"autoSave": "Auto Save"
+		"autoSave": "Auto Save",
+		"vscodeSettings": "VSCode Settings",
+		"languageSettings": "Language Settings",
+		"languageSettingsDesc": "Currently, only applied to the \"Projects\" tab.",
+		"generateProjectsSettings": "Generate Projects Settings",
+		"generateCrudCodeSettings": "Generate CRUD Code Settings",
+		"aboutTitle": "About eGovFrame Initializr",
+		"loadingExtensionInfo": "Loading extension information...",
+		"repository": "Repository",
+		"pullRequests": "Pull Requests",
+		"issues": "Issues",
+		"portal": "Portal",
+		"egovDocs": "eGovFrame docs",
+		"extensionManual": "This extension's Manual",
+		"vscodeUsageGuide": "VSCode usage guide",
+		"author": "Author",
+		"license": "License"
 	},
 	"language": {
 		"select": "Lang",
