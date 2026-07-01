@@ -10,11 +10,12 @@ import * as path from "path"
 
 /**
  * Allowed character set for an eGovFrame project name.
- * Letters, digits, hyphen and underscore only — separators and dots are
- * intentionally excluded so that no path component (e.g. `..`, `/`, `\`)
- * can appear in the name.
+ * Alphanumeric segments (letters, digits, hyphen, underscore) joined by single
+ * dots — e.g. `com.example.app`. Each dot must sit between two segments, so a
+ * consecutive `..`, a leading/trailing dot, or a path separator (`/`, `\`)
+ * cannot appear in the name.
  */
-export const PROJECT_NAME_PATTERN = /^[a-zA-Z0-9_-]+$/
+export const PROJECT_NAME_PATTERN = /^[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)*$/
 
 /**
  * Returns true when the given project name is safe to use as a single

@@ -9,14 +9,25 @@ describe("isValidProjectName", () => {
 		expect(isValidProjectName("ABC123")).toBe(true)
 	})
 
+	it("accepts single dots between segments", () => {
+		expect(isValidProjectName("a.b")).toBe(true)
+		expect(isValidProjectName("my.project")).toBe(true)
+		expect(isValidProjectName("com.example.app")).toBe(true)
+	})
+
 	it("rejects traversal and separator characters", () => {
 		expect(isValidProjectName("../evil")).toBe(false)
 		expect(isValidProjectName("..")).toBe(false)
 		expect(isValidProjectName("a/b")).toBe(false)
 		expect(isValidProjectName("a\\b")).toBe(false)
-		expect(isValidProjectName("a.b")).toBe(false)
 		expect(isValidProjectName("a b")).toBe(false)
 		expect(isValidProjectName("")).toBe(false)
+	})
+
+	it("rejects consecutive, leading, or trailing dots", () => {
+		expect(isValidProjectName("a..b")).toBe(false)
+		expect(isValidProjectName(".hidden")).toBe(false)
+		expect(isValidProjectName("name.")).toBe(false)
 	})
 })
 
