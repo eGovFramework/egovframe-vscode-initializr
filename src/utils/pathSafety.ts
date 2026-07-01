@@ -30,7 +30,7 @@ export function isValidProjectName(projectName: string): boolean {
  */
 export function assertSafeProjectName(projectName: string): void {
 	if (!isValidProjectName(projectName)) {
-		throw new Error("Project name can only contain letters, numbers, hyphens, and underscores")
+		throw new Error("Project name can only contain letters, numbers, hyphens, underscores, and single dots between segments")
 	}
 }
 
