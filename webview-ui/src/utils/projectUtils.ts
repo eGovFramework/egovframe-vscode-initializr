@@ -60,6 +60,9 @@ export function validateProjectConfig(config: Partial<ProjectConfig>): string[] 
 
 	if (!config.projectName || config.projectName.trim() === "") {
 		errors.push("Project name is required")
+	} else if (!/^[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)*$/.test(config.projectName)) {
+		// 프로젝트명 허용 규칙 — 백엔드 `src/utils/pathSafety.ts`의 PROJECT_NAME_PATTERN과 동일하게 유지한다.
+		errors.push("Project name can only contain letters, numbers, hyphens, underscores, and single dots between segments")
 	}
 
 	// groupId validation (only for templates with pomFile)

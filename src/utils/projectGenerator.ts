@@ -2,6 +2,7 @@ import * as vscode from "vscode"
 import * as fs from "fs-extra"
 import * as path from "path"
 import extractZip from "extract-zip"
+import { assertSafeProjectName, resolveWithinBase } from "./pathSafety"
 
 export interface EgovProjectTemplate {
 	id: string
@@ -81,9 +82,13 @@ export async function generateEgovProject(
 			throw new Error("Template file name is required")
 		}
 
+		// Restrict project name to a safe single directory component (CWE-22)
+		assertSafeProjectName(config.projectName)
+
 		// Setup paths
 		const zipFilePath = path.join(extensionPath, "templates", "projects", "examples", config.template.fileName)
-		const projectRoot = path.join(config.outputPath, config.projectName)
+		// Defense in depth: ensure the project root stays inside the output path
+		const projectRoot = resolveWithinBase(config.outputPath, config.projectName)
 
 		progressCallback?.("📁 Creating project directory...")
 
