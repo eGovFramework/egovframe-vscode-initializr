@@ -35,6 +35,23 @@ describe("validateProjectConfig", () => {
 		expect(errors).toContain("Project name is required")
 	})
 
+	const projectNameError =
+		"Project name can only contain letters, numbers, hyphens, underscores, and single dots between segments"
+
+	it("projectName에 세그먼트 사이 단일 점은 허용한다", () => {
+		for (const projectName of ["my-project", "myProject", "my_project-1", "my.project", "com.example.app"]) {
+			const errors = validateProjectConfig({ projectName, template: makeTemplate({ pomFile: "" }), outputPath: "/tmp" })
+			expect(errors, `expected no projectName error for "${projectName}"`).not.toContain(projectNameError)
+		}
+	})
+
+	it("projectName에 경로 조작·구분자·연속/선행/후행 점이 있으면 오류를 반환한다", () => {
+		for (const projectName of ["../evil", "..", "a/b", "a\\b", "a b", "a..b", ".hidden", "name."]) {
+			const errors = validateProjectConfig({ projectName, template: makeTemplate({ pomFile: "" }), outputPath: "/tmp" })
+			expect(errors, `expected projectName error for "${projectName}"`).toContain(projectNameError)
+		}
+	})
+
 	it("outputPath가 없으면 오류를 반환한다", () => {
 		const errors = validateProjectConfig({
 			projectName: "my-project",
