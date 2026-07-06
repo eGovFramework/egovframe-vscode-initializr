@@ -1,6 +1,6 @@
 import * as vscode from "vscode"
 import { ExtensionMessage } from "@shared/ExtensionMessage"
-import { WebviewMessage } from "@shared/WebviewMessage"
+import { parseWebviewMessage } from "@shared/webviewMessageSchema"
 
 export class Controller {
 	private postMessage: (message: ExtensionMessage) => Thenable<boolean> | undefined
@@ -58,9 +58,18 @@ export class Controller {
 	}
 
 	/**
-	 * Handles messages from the webview
+	 * Handles messages from the webview.
+	 * postMessage로 수신한 값은 신뢰 경계 밖 입력이므로 스키마 검증을 통과한 메시지만 처리한다 (CWE-20).
 	 */
-	async handleWebviewMessage(message: WebviewMessage) {
+	async handleWebviewMessage(rawMessage: unknown) {
+		const parsed = parseWebviewMessage(rawMessage)
+		if (!parsed.success) {
+			console.error("Controller: Rejected invalid webview message:", parsed.error)
+			this.outputChannel.appendLine(`Rejected invalid webview message — ${parsed.error}`)
+			return
+		}
+		const message = parsed.message
+
 		console.log("Controller: Received webview message:", message.type, message)
 		switch (message.type) {
 			case "webviewDidLaunch":
@@ -367,7 +376,7 @@ export class Controller {
 						})
 					}
 				} else {
-					console.log("Missing template or form data:", { template, formData, messageValue: message.value })
+					console.log("Missing template or form data:", { template, formData })
 					await this.postMessageToWebview({
 						type: "error",
 						text: "Missing template or form data for config generation",

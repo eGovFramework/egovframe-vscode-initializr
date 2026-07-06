@@ -1,86 +1,11 @@
-import { TemplateContext } from "@shared/templateContext"
-
-export interface GenerateCodeMessage {
-	type: "generateCode"
-	ddl: string
-	packageName?: string
-	outputPath?: string
-}
-
-export interface UploadTemplatesMessage {
-	type: "uploadTemplates"
-	ddl: string
-}
-
-export interface DownloadTemplateContextMessage {
-	type: "downloadTemplateContext"
-	ddl: string
-	context: TemplateContext
-}
-
-export interface InsertSampleDDLMessage {
-	type: "insertSampleDDL"
-}
-
-export interface GetWorkspacePathMessage {
-	type: "getWorkspacePath"
-}
-
-export interface SelectOutputPathMessage {
-	type: "selectOutputPath"
-}
-
-export interface ValidateAndPreviewMessage {
-	type: "validateAndPreview"
-	ddl: string
-	packageName?: string
-}
-
-export interface ValidateDDLOnlyMessage {
-	type: "validateDDLOnly"
-	ddl: string
-	packageName?: string
-}
-
-export interface GetCurrentThemeMessage {
-	type: "getCurrentTheme"
-}
-
-export interface GetSampleDDLsMessage {
-	type: "getSampleDDLs"
-}
-
-export interface GetEgovSettingsMessage {
-	type: "getEgovSettings"
-}
-
-export interface UpdateEgovSettingsMessage {
-	type: "updateEgovSettings"
-	settings: {
-		defaultGroupId?: string
-		defaultArtifactId?: string
-		defaultPackageName?: string
-	}
-}
-
-export interface GetExtensionInfoMessage {
-	type: "getExtensionInfo"
-}
-
-export type WebviewMessage =
-	| GenerateCodeMessage
-	| UploadTemplatesMessage
-	| DownloadTemplateContextMessage
-	| InsertSampleDDLMessage
-	| GetWorkspacePathMessage
-	| SelectOutputPathMessage
-	| ValidateAndPreviewMessage
-	| ValidateDDLOnlyMessage
-	| GetSampleDDLsMessage
-	| GetCurrentThemeMessage
-	| GetEgovSettingsMessage
-	| UpdateEgovSettingsMessage
-	| GetExtensionInfoMessage
+/**
+ * messageTypes.ts
+ *
+ * 익스텐션 → 웹뷰 응답 메시지 타입 (CodeView에서 사용).
+ *
+ * 웹뷰 → 익스텐션 요청 메시지 타입은 별도로 정의하지 않는다 —
+ * 단일 계약인 @shared/WebviewMessage의 WebviewMessage 판별 유니온을 사용한다.
+ */
 
 export interface ErrorResponse {
 	type: "error"

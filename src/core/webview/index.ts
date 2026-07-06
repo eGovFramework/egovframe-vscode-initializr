@@ -1,7 +1,6 @@
 import * as vscode from "vscode"
 import { Controller } from "../controller"
 import { ExtensionMessage } from "@shared/ExtensionMessage"
-import { WebviewMessage } from "@shared/WebviewMessage"
 
 export class WebviewProvider implements vscode.WebviewViewProvider {
 	public static readonly sideBarId = "egovframe.SidebarProvider"
@@ -76,7 +75,8 @@ export class WebviewProvider implements vscode.WebviewViewProvider {
 		webviewView.webview.html = this.getHtmlForWebview(webviewView.webview)
 
 		// Handle messages from the webview
-		webviewView.webview.onDidReceiveMessage(async (message: WebviewMessage) => {
+		// 원시 값 그대로 넘기고, 스키마 검증은 Controller.handleWebviewMessage가 수행한다
+		webviewView.webview.onDidReceiveMessage(async (message: unknown) => {
 			await this.controller.handleWebviewMessage(message)
 		})
 
