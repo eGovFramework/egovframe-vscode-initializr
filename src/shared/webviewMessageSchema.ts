@@ -31,6 +31,14 @@ const projectTemplateSchema = z.object({
 	displayName: z.string(),
 	fileName: z.string().regex(SAFE_ZIP_FILE_PATTERN),
 	pomFile: z.literal("").or(z.string().regex(SAFE_XML_FILE_PATTERN)),
+	// 버전별 프로젝트 생성 필드 — fileName/pomFile은 로컬·캐시 경로 구성에도 쓰이므로
+	// 위 패턴 검증이 그대로 다운로드 캐시 경로(CWE-22)를 방어한다.
+	// downloadUrl/pomDownloadUrl은 URL 구성에만 쓰이고 파일 경로 구성에는 쓰이지 않는다.
+	templateId: z.string().optional(),
+	version: z.string().optional(),
+	included: z.boolean().optional(),
+	downloadUrl: z.string().optional(),
+	pomDownloadUrl: z.string().optional(),
 })
 
 const projectConfigSchema = z.object({
@@ -94,6 +102,32 @@ const egovSettingsSchema = z.object({
 	language: z.string().optional(),
 })
 
+// 아키텍처 점검 결과 — src/shared/archCheck.ts의 타입과 1:1 대응
+const archCheckResultSchema = z.object({
+	filePath: z.string(),
+	fileName: z.string(),
+	parentPath: z.string(),
+	check1: z.boolean(),
+	check2: z.boolean(),
+	check3: z.boolean(),
+	result: z.enum(["OK", "NotFound"]),
+	type: z.enum(["Controller", "Service", "DAO", "Mapper"]),
+})
+
+const archCheckSummarySchema = z.object({
+	totalFiles: z.number(),
+	passedFiles: z.number(),
+	failedFiles: z.number(),
+	results: z.array(archCheckResultSchema),
+})
+
+const archCheckResultsSchema = z.object({
+	Controller: archCheckSummarySchema.optional(),
+	Service: archCheckSummarySchema.optional(),
+	DAO: archCheckSummarySchema.optional(),
+	Mapper: archCheckSummarySchema.optional(),
+})
+
 /** 페이로드 없이 type만 전달하는 단순 요청 메시지 */
 const simpleMessage = <T extends string>(type: T) => z.object({ type: z.literal(type) })
 
@@ -111,6 +145,7 @@ export const webviewMessageSchema = z.discriminatedUnion("type", [
 	simpleMessage("getExtensionInfo"),
 	simpleMessage("getProjectTemplates"),
 	simpleMessage("getConfigTemplates"),
+	simpleMessage("selectProjectPath"),
 	z.object({
 		type: z.literal("generateProject"),
 		projectConfig: projectConfigSchema,
@@ -170,6 +205,21 @@ export const webviewMessageSchema = z.discriminatedUnion("type", [
 	z.object({
 		type: z.literal("updateEgovSettings"),
 		settings: egovSettingsSchema,
+	}),
+	// projectPath/filePath는 OS 파일 선택 다이얼로그나 점검 결과에서 온 절대 경로라
+	// 패턴으로 제한할 수 없다 — 아키텍처 점검은 사용자가 지정한 임의 프로젝트를 읽는 기능이다.
+	z.object({
+		type: z.literal("startArchCheck"),
+		projectPath: z.string(),
+	}),
+	z.object({
+		type: z.literal("exportArchResults"),
+		results: archCheckResultsSchema,
+		projectPath: z.string(),
+	}),
+	z.object({
+		type: z.literal("openFile"),
+		filePath: z.string(),
 	}),
 ])
 

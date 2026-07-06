@@ -5,7 +5,10 @@ import { vscode } from "../../../utils/vscode"
 import {
 	ProjectTemplate,
 	ProjectConfig,
+	ProjectTemplatesManifest,
+	TemplateVersion,
 	categoriesFromProjectTemplates,
+	convertManifestToTemplates,
 	createGenerateProjectByCommandMessage,
 	createProjectGenerationMessage,
 	getTemplatesByCategory,
@@ -31,6 +34,10 @@ export const ProjectsView = () => {
 		defaultArtifactId,
 		projectTemplates,
 		isTemplatesLoading,
+		// 버전 관련 상태
+		manifest,
+		selectedVersion,
+		availableVersions,
 	} = state
 
 	// Get selectedTemplate from state
@@ -63,7 +70,7 @@ export const ProjectsView = () => {
 	const [initialPath, setInitialPath] = useState("")
 
 	useEffect(() => {
-		// Request project templates, workspace path and default settings when component mounts
+		// Request project templates manifest, workspace path and default settings when component mounts
 		vscode.postMessage({ type: "getProjectTemplates" })
 		vscode.postMessage({ type: "getWorkspacePath" })
 		vscode.postMessage({ type: "getDefaultSettings" })
@@ -73,10 +80,13 @@ export const ProjectsView = () => {
 			const message = event.data
 			switch (message.type) {
 				case "projectTemplates":
-					// Update project templates from extension
+					// Update project templates from manifest
 					if (message.templates) {
+						const manifestData = message.templates as ProjectTemplatesManifest
+						const templates = convertManifestToTemplates(manifestData)
 						updateState({
-							projectTemplates: message.templates,
+							manifest: manifestData,
+							projectTemplates: templates,
 							isTemplatesLoading: false,
 						})
 					}
@@ -136,6 +146,25 @@ export const ProjectsView = () => {
 		setGenerationStatus("") // Clear previous status
 		setSelectedTemplate(template)
 		handleInsertDefault(template) // Insert Default 기능을 템플릿 선택 시 자동 실행
+
+		// 버전 정보 설정
+		if (manifest && template.templateId) {
+			const templateData = manifest.templates.find((t) => t.templateId === template.templateId)
+			if (templateData) {
+				updateState({ availableVersions: templateData.versions })
+				// 기본값으로 최신 버전 선택
+				const latestVersion = templateData.versions.find((v) => v.isLatest)
+				if (latestVersion) {
+					updateState({ selectedVersion: latestVersion.version })
+				}
+			}
+		} else {
+			// Manifest가 없거나 templateId가 없는 경우 (legacy support)
+			updateState({
+				availableVersions: [],
+				selectedVersion: template.version || "",
+			})
+		}
 	}
 
 	const handleInsertDefault = (template: ProjectTemplate | null) => {
@@ -143,6 +172,29 @@ export const ProjectsView = () => {
 		setArtifactId(defaultArtifactId)
 		setGroupId(defaultGroupId)
 		setOutputPath(initialPath)
+	}
+
+	// 버전 변경 핸들러
+	const handleVersionChange = (newVersion: string) => {
+		updateState({ selectedVersion: newVersion })
+
+		// 버전 데이터에서 템플릿 정보 업데이트
+		const versionData = availableVersions.find((v) => v.version === newVersion)
+		if (versionData && selectedTemplate) {
+			const updatedTemplate: ProjectTemplate = {
+				...selectedTemplate,
+				version: versionData.version,
+				fileName: versionData.fileName,
+				pomFile: versionData.pomFile || "",
+				isLatest: versionData.isLatest,
+				included: versionData.included,
+				downloadUrl: versionData.downloadUrl,
+				pomDownloadUrl: versionData.pomDownloadUrl,
+				fileSize: versionData.fileSize,
+				releaseDate: versionData.releaseDate,
+			}
+			setSelectedTemplate(updatedTemplate)
+		}
 	}
 
 	const handleSelectOutputPath = () => {
@@ -485,6 +537,76 @@ export const ProjectsView = () => {
 								{t("projects.projectConfiguration")}
 							</h4>
 
+							{/* Framework Version Selection */}
+							{availableVersions.length > 0 && (
+								<div style={{ marginBottom: "15px" }}>
+									<label
+										style={{
+											display: "block",
+											marginBottom: "5px",
+											fontSize: "13px",
+											fontWeight: "bold",
+											color: "var(--vscode-foreground)",
+										}}>
+										Framework Version
+									</label>
+									<select
+										value={selectedVersion}
+										onChange={(e) => handleVersionChange(e.target.value)}
+										style={{
+											width: "100%",
+											padding: "8px 12px",
+											backgroundColor: "var(--vscode-input-background)",
+											color: "var(--vscode-input-foreground)",
+											border: "1px solid var(--vscode-dropdown-border)",
+											borderRadius: "4px",
+											fontSize: "13px",
+											fontFamily: "inherit",
+											outline: "none",
+										}}
+										onFocus={(e) => {
+											e.currentTarget.style.border = "1px solid var(--vscode-focusBorder)"
+										}}
+										onBlur={(e) => {
+											e.currentTarget.style.border = "1px solid var(--vscode-dropdown-border)"
+										}}>
+										{availableVersions.map((ver) => (
+											<option key={ver.version} value={ver.version}>
+												v{ver.version}
+												{ver.isLatest ? " (Latest)" : ""}
+												{ver.included ? " - Included" : " - Download from GitHub"}
+											</option>
+										))}
+									</select>
+
+									{/* Download Required Warning */}
+									{selectedTemplate?.included === false && selectedTemplate?.downloadUrl && (
+										<div
+											style={{
+												marginTop: "8px",
+												padding: "8px 12px",
+												backgroundColor: "var(--vscode-inputValidation-warningBackground)",
+												border: "1px solid var(--vscode-inputValidation-warningBorder)",
+												borderRadius: "3px",
+												fontSize: "11px",
+												display: "flex",
+												alignItems: "start",
+												gap: "8px",
+											}}>
+											<span className="codicon codicon-cloud-download" style={{ marginTop: "2px" }}></span>
+											<div>
+												<strong>Download Required</strong>
+												<br />
+												This version will be downloaded from GitHub Releases (
+												{selectedTemplate.fileSize || "unknown size"}).
+												<br />
+												One-time download, cached for future use.
+											</div>
+										</div>
+									)}
+								</div>
+							)}
+
 							{/* Project Name */}
 							<div style={{ width: "calc(100% - 24px)", marginBottom: "15px" }}>
 								<TextField
@@ -607,6 +729,42 @@ export const ProjectsView = () => {
 								<div style={{ fontSize: "11px", color: "var(--vscode-descriptionForeground)" }}>
 									{selectedTemplate.description}
 								</div>
+								{selectedTemplate.version && (
+									<div
+										style={{
+											fontSize: "10px",
+											color: "var(--vscode-descriptionForeground)",
+											marginTop: "5px",
+										}}>
+										Version: v{selectedTemplate.version}
+										{selectedTemplate.isLatest && " (Latest)"}
+									</div>
+								)}
+								<div style={{ fontSize: "10px", color: "var(--vscode-descriptionForeground)", marginTop: "5px" }}>
+									File: {selectedTemplate.fileName}
+								</div>
+								{selectedTemplate.included === false && selectedTemplate.downloadUrl && (
+									<div
+										style={{
+											fontSize: "10px",
+											color: "var(--vscode-descriptionForeground)",
+											marginTop: "5px",
+										}}>
+										<span style={{ color: "var(--vscode-charts-orange)" }}>⬇ Download:</span>{" "}
+										{selectedTemplate.downloadUrl}
+									</div>
+								)}
+								{selectedTemplate.included === true && (
+									<div
+										style={{
+											fontSize: "10px",
+											color: "var(--vscode-descriptionForeground)",
+											marginTop: "5px",
+										}}>
+										<span style={{ color: "var(--vscode-charts-green)" }}>✓ Included:</span>{" "}
+										templates/projects/examples/{selectedTemplate.fileName}
+									</div>
+								)}
 								{selectedTemplate.pomFile && (
 									<div
 										style={{

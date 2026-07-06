@@ -2,9 +2,11 @@ import * as vscode from "vscode"
 import * as fs from "fs-extra"
 import * as path from "path"
 import extractZip from "extract-zip"
+import * as https from "https"
+import * as http from "http"
 import { replacePlaceholders } from "../shared/placeholderUtil"
 import { assertSafeProjectName, resolveWithinBase } from "./pathSafety"
-import { ProjectConfigPayload } from "../shared/WebviewMessage"
+import { ProjectConfigPayload, ProjectTemplatePayload } from "../shared/WebviewMessage"
 
 export interface EgovProjectTemplate {
 	id: string
@@ -17,6 +19,11 @@ export interface EgovProjectTemplate {
 	version?: string
 	frameworkVersion?: string
 	dependencies?: string[]
+	// Version-related fields for download support
+	templateId?: string
+	included?: boolean
+	downloadUrl?: string
+	pomDownloadUrl?: string
 }
 
 export interface EgovProjectConfig {
@@ -34,6 +41,8 @@ export interface EgovProjectConfig {
 	includeThymeleaf?: boolean
 	author?: string
 	description?: string
+	// Repository base URL for downloading templates (from manifest)
+	repositoryBaseUrl?: string
 }
 
 export interface ProjectGenerationResult {
@@ -43,13 +52,211 @@ export interface ProjectGenerationResult {
 	error?: string
 }
 
+// 기본 GitHub URL for downloading templates (fallback if not provided)
+const DEFAULT_GITHUB_RELEASES_BASE_URL = "https://github.com/eGovFramework/egovframe-templates-download/releases/download/"
+
+// 캐시 디렉토리 이름
+const CACHE_DIR_NAME = "cache"
+
+/**
+ * Download a file from URL to local path
+ */
+async function downloadFile(url: string, destPath: string, progressCallback?: (message: string) => void): Promise<void> {
+	return new Promise((resolve, reject) => {
+		progressCallback?.(`Downloading from ${url.substring(0, 80)}...`)
+
+		const file = fs.createWriteStream(destPath)
+		const parsedUrl = new URL(url)
+		const protocol = parsedUrl.protocol === "https:" ? https : http
+
+		const options = {
+			hostname: parsedUrl.hostname,
+			port: parsedUrl.port || (parsedUrl.protocol === "https:" ? 443 : 80),
+			path: parsedUrl.pathname + parsedUrl.search,
+			method: "GET",
+			headers: {
+				"User-Agent": "egovframe-vscode-initializr",
+			},
+		}
+
+		const request = protocol.get(options, (response) => {
+			// Handle redirects (301, 302, 307, 308)
+			if (response.statusCode && [301, 302, 307, 308].includes(response.statusCode)) {
+				const redirectUrl = response.headers.location
+				if (redirectUrl) {
+					file.close()
+					// Safely remove incomplete file
+					try {
+						if (fs.existsSync(destPath)) {
+							fs.unlinkSync(destPath)
+						}
+					} catch (e) {
+						// Ignore deletion errors
+					}
+					downloadFile(redirectUrl, destPath, progressCallback).then(resolve).catch(reject)
+					return
+				}
+			}
+
+			if (response.statusCode !== 200) {
+				file.close()
+				// Safely remove incomplete file
+				try {
+					if (fs.existsSync(destPath)) {
+						fs.unlinkSync(destPath)
+					}
+				} catch (e) {
+					// Ignore deletion errors
+				}
+				reject(new Error(`Failed to download: HTTP ${response.statusCode}`))
+				return
+			}
+
+			const totalLength = parseInt(response.headers["content-length"] || "0", 10)
+			let downloadedLength = 0
+
+			response.on("data", (chunk) => {
+				downloadedLength += chunk.length
+				if (totalLength > 0) {
+					const percent = Math.round((downloadedLength / totalLength) * 100)
+					progressCallback?.(`Downloading... ${percent}%`)
+				}
+			})
+
+			response.pipe(file)
+
+			file.on("finish", () => {
+				file.close()
+				progressCallback?.(`Download completed`)
+				resolve()
+			})
+		})
+
+		request.on("error", (err) => {
+			file.close()
+			fs.unlink(destPath, () => {}) // Remove incomplete file
+			reject(err)
+		})
+
+		file.on("error", (err) => {
+			file.close()
+			fs.unlink(destPath, () => {}) // Remove incomplete file
+			reject(err)
+		})
+	})
+}
+
+/**
+ * Get or download template file
+ * Returns the path to the template zip file
+ */
+async function getOrDownloadTemplate(
+	template: ProjectTemplatePayload,
+	extensionPath: string,
+	repositoryBaseUrl?: string,
+	progressCallback?: (message: string) => void,
+): Promise<string> {
+	const examplesDir = path.join(extensionPath, "templates", "projects", "examples")
+	const localPath = path.join(examplesDir, template.fileName)
+
+	// 1. Check if file is included in extension
+	if (template.included !== false) {
+		if (await fs.pathExists(localPath)) {
+			return localPath
+		}
+	}
+
+	// 2. Check cache directory
+	const cacheDir = path.join(examplesDir, CACHE_DIR_NAME)
+	const cachedPath = path.join(cacheDir, template.fileName)
+
+	if (await fs.pathExists(cachedPath)) {
+		progressCallback?.(`📦 Using cached template: ${template.fileName}`)
+		return cachedPath
+	}
+
+	// 3. Download from GitHub
+	if (!template.downloadUrl) {
+		throw new Error(`Template file not found and no download URL available: ${template.fileName}`)
+	}
+
+	// Ensure cache directory exists
+	await fs.ensureDir(cacheDir)
+
+	// Use provided baseUrl or fallback to default
+	const baseUrl = repositoryBaseUrl || DEFAULT_GITHUB_RELEASES_BASE_URL
+
+	// Construct full download URL
+	const fullUrl = template.downloadUrl.startsWith("http") ? template.downloadUrl : `${baseUrl}${template.downloadUrl}`
+
+	progressCallback?.(`📥 Downloading template from GitHub...`)
+	await downloadFile(fullUrl, cachedPath, progressCallback)
+
+	return cachedPath
+}
+
+/**
+ * Get or download POM template file
+ */
+async function getOrDownloadPomTemplate(
+	template: ProjectTemplatePayload,
+	extensionPath: string,
+	repositoryBaseUrl?: string,
+	progressCallback?: (message: string) => void,
+): Promise<string | null> {
+	if (!template.pomFile) {
+		return null
+	}
+
+	const pomDir = path.join(extensionPath, "templates", "projects", "pom")
+	const localPath = path.join(pomDir, template.pomFile)
+
+	// 1. Check if file is included in extension
+	if (template.included !== false) {
+		if (await fs.pathExists(localPath)) {
+			return localPath
+		}
+	}
+
+	// 2. Check cache directory
+	const cacheDir = path.join(pomDir, CACHE_DIR_NAME)
+	const cachedPath = path.join(cacheDir, template.pomFile)
+
+	if (await fs.pathExists(cachedPath)) {
+		return cachedPath
+	}
+
+	// 3. Download from GitHub (if pomDownloadUrl is available)
+	if (!template.pomDownloadUrl) {
+		// POM file is optional, return null if not available
+		return null
+	}
+
+	// Ensure cache directory exists
+	await fs.ensureDir(cacheDir)
+
+	// Use provided baseUrl or fallback to default
+	const baseUrl = repositoryBaseUrl || DEFAULT_GITHUB_RELEASES_BASE_URL
+
+	// Construct full download URL
+	const fullUrl = template.pomDownloadUrl.startsWith("http") ? template.pomDownloadUrl : `${baseUrl}${template.pomDownloadUrl}`
+
+	progressCallback?.(`📥 Downloading POM template from GitHub...`)
+	await downloadFile(fullUrl, cachedPath, progressCallback)
+
+	return cachedPath
+}
+
 /*
  * Generate eGovFrame project
  *
  * Form-based Project Generation
  */
+/** 프로젝트 생성 입력 — 웹뷰 페이로드에 컨트롤러가 manifest의 repository.baseUrl을 주입한 형태 */
+export type GenerateProjectInput = ProjectConfigPayload & { repositoryBaseUrl?: string }
+
 export async function generateEgovProject(
-	config: ProjectConfigPayload,
+	config: GenerateProjectInput,
 	extensionPath: string,
 	progressCallback?: (message: string) => void,
 ): Promise<ProjectGenerationResult> {
@@ -88,7 +295,6 @@ export async function generateEgovProject(
 		assertSafeProjectName(config.projectName)
 
 		// Setup paths
-		const zipFilePath = path.join(extensionPath, "templates", "projects", "examples", config.template.fileName)
 		// Defense in depth: ensure the project root stays inside the output path
 		const projectRoot = resolveWithinBase(config.outputPath, config.projectName)
 
@@ -99,7 +305,16 @@ export async function generateEgovProject(
 			throw new Error(`Project directory already exists: ${projectRoot}`)
 		}
 
-		// Check if template file exists
+		// Get template file (download if needed)
+		progressCallback?.("Preparing template...")
+		const zipFilePath = await getOrDownloadTemplate(
+			config.template,
+			extensionPath,
+			config.repositoryBaseUrl,
+			progressCallback,
+		)
+
+		// Check if template file exists after download attempt
 		if (!(await fs.pathExists(zipFilePath))) {
 			throw new Error(`Template file not found: ${zipFilePath}`)
 		}
@@ -119,7 +334,7 @@ export async function generateEgovProject(
 
 		// Generate POM file if needed
 		if (config.template.pomFile) {
-			await generatePomFile(config, projectRoot, extensionPath, progressCallback)
+			await generatePomFile(config, projectRoot, extensionPath, config.template, config.repositoryBaseUrl, progressCallback)
 		}
 
 		// updatePackageNames 함수 주석처리
@@ -230,17 +445,43 @@ async function generatePomFile(
 	config: ProjectConfigPayload,
 	projectRoot: string,
 	extensionPath: string,
+	template: ProjectTemplatePayload,
+	repositoryBaseUrl?: string,
 	progressCallback?: (message: string) => void,
 ): Promise<void> {
 	try {
 		progressCallback?.("📝 Generating Maven POM file...")
 
-		const templatePath = path.join(extensionPath, "templates", "projects", "pom", config.template.pomFile)
+		// Get POM template file (download if needed)
+		const templatePath = await getOrDownloadPomTemplate(template, extensionPath, repositoryBaseUrl, progressCallback)
 		const outputPath = path.join(projectRoot, "pom.xml")
 
 		// Check if POM template exists
-		if (!(await fs.pathExists(templatePath))) {
-			throw new Error(`POM template not found: ${templatePath}`)
+		if (!templatePath || !(await fs.pathExists(templatePath))) {
+			// 이 안에는 다음 코드만 있어도 될 것 같다.
+			// throw new Error(`POM template not found: ${config.template.pomFile}`)
+			// getOrDownloadPomTemplate 함수에서 이미 아래 localTemplatePath 경우까지 다 처리하기 때문이다.
+			// 이 if문 안에 있는 코드를 그대로 두겠다.
+
+			// Fallback to local path
+			const localTemplatePath = path.join(extensionPath, "templates", "projects", "pom", config.template.pomFile)
+			if (!(await fs.pathExists(localTemplatePath))) {
+				throw new Error(`POM template not found: ${config.template.pomFile}`)
+			}
+			// Use local template path
+			let content = await fs.readFile(localTemplatePath, "utf8")
+			// Replace placeholders and write
+			const placeholders = {
+				"###NAME###": config.projectName,
+				"###ARTIFACT_ID###": config.artifactId,
+				"###GROUP_ID###": config.groupId,
+				"###VERSION###": config.version || "1.0.0",
+				"###URL###": config.url || "https://www.egovframe.go.kr",
+			}
+			content = replacePlaceholders(content, placeholders)
+			await fs.writeFile(outputPath, content, "utf8")
+			progressCallback?.("📝 Maven POM file generated successfully!")
+			return
 		}
 
 		// Read POM template

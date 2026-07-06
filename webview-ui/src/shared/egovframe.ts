@@ -1,1 +1,1 @@
-export type EgovViewTab = "projects" | "code" | "config"
+export type EgovViewTab = "projects" | "code" | "config" | "checkArch"

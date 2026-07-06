@@ -31,7 +31,8 @@
 	"tabs": {
 		"projects": "Projects",
 		"codeGenerator": "Code Generator",
-		"configuration": "Configuration"
+		"configuration": "Configuration",
+		"checkArch": "Check Arch"
 	},
 	"projects": {
 		"title": "Generate eGovFrame Projects",

@@ -31,7 +31,8 @@
 	"tabs": {
 		"projects": "프로젝트",
 		"codeGenerator": "코드 생성기",
-		"configuration": "설정"
+		"configuration": "설정",
+		"checkArch": "아키텍쳐"
 	},
 	"projects": {
 		"title": "eGovFrame 프로젝트 생성",

@@ -1,178 +1,644 @@
-[
-	{
-		"displayName": "Web Project",
-		"fileName": "egovframe-web.zip",
-		"pomFile": "egovframe-web-pom.xml",
-		"description": "Basic eGovFrame web application project",
-		"category": "Web",
-		"projectName": "egov-web"
+{
+	"description": "eGovFrame project templates version manifest",
+	"repository": {
+		"owner": "eGovFramework",
+		"repo": "egovframe-templates-download",
+		"baseUrl": "https://github.com/egovframework/egovframe-templates-download/releases/download/"
 	},
-	{
-		"displayName": "Template > Simple Homepage",
-		"fileName": "egovframe-template-simple.zip",
-		"pomFile": "egovframe-template-simple-pom.xml",
-		"description": "Simple homepage template with basic functionalities",
-		"category": "Template",
-		"projectName": "egov-template-simple"
-	},
-	{
-		"displayName": "Template > Portal Site",
-		"fileName": "egovframe-template-portal.zip",
-		"pomFile": "egovframe-template-portal-pom.xml",
-		"description": "Portal site template for enterprise applications",
-		"category": "Template",
-		"projectName": "egov-template-portal"
-	},
-	{
-		"displayName": "Template > Enterprise Business",
-		"fileName": "egovframe-template-enterprise.zip",
-		"pomFile": "egovframe-template-enterprise-pom.xml",
-		"description": "Enterprise business application template",
-		"category": "Template",
-		"projectName": "egov-template-enterprise"
-	},
-	{
-		"displayName": "Template > Common Components",
-		"fileName": "egovframe-template-common-components.zip",
-		"pomFile": "egovframe-template-common-components-pom.xml",
-		"description": "Comprehensive common-components all-in-one project template",
-		"category": "Template",
-		"projectName": "egov-template-common-components"
-	},
-	{
-		"displayName": "Boot Web Project",
-		"fileName": "egovframe-boot-web.zip",
-		"pomFile": "egovframe-boot-web-pom.xml",
-		"description": "Spring Boot based web project",
-		"category": "Boot",
-		"projectName": "egov-boot-web"
-	},
-	{
-		"displayName": "Boot Template > Simple Homepage (Backend)",
-		"fileName": "egovframe-boot-simple-backend.zip",
-		"pomFile": "egovframe-boot-simple-backend-pom.xml",
-		"description": "Spring Boot simple homepage backend",
-		"category": "Boot",
-		"projectName": "egov-boot-simple-backend"
-	},
-	{
-		"displayName": "Boot Template > Simple Homepage (Frontend)",
-		"fileName": "egovframe-boot-simple-frontend.zip",
-		"pomFile": "",
-		"description": "React-based frontend for simple homepage",
-		"category": "Boot",
-		"projectName": "egov-boot-simple-frontend"
-	},
-	{
-		"displayName": "MSA Boot Template > Common Components (KRDS)",
-		"fileName": "egovframe-msa-common-components.zip",
-		"pomFile": "",
-		"description": "MSA common components with KRDS integration",
-		"category": "MSA",
-		"projectName": "egov-msa-boot-common-components"
-	},
-	{
-		"displayName": "MSA Boot Template > Portal (Backend)",
-		"fileName": "egovframe-msa-portal-backend.zip",
-		"pomFile": "",
-		"description": "MSA portal backend services",
-		"category": "MSA",
-		"projectName": "egov-msa-portal-backend"
-	},
-	{
-		"displayName": "MSA Boot Template > Portal (Frontend)",
-		"fileName": "egovframe-msa-portal-frontend.zip",
-		"pomFile": "",
-		"description": "MSA portal frontend application",
-		"category": "MSA",
-		"projectName": "egov-msa-portal-frontend"
-	},
-	{
-		"displayName": "Mobile Web Project",
-		"fileName": "egovframe-mobile-web.zip",
-		"pomFile": "egovframe-mobile-web-pom.xml",
-		"description": "Mobile web application project",
-		"category": "Mobile",
-		"projectName": "egov-mobile-web"
-	},
-	{
-		"displayName": "Mobile Common Components Project",
-		"fileName": "egovframe-mobile-common-components.zip",
-		"pomFile": "egovframe-mobile-common-components-pom.xml",
-		"description": "Mobile template common-components project with hybrid app support",
-		"category": "Mobile",
-		"projectName": "egov-mobile-common-components"
-	},
-	{
-		"displayName": "DeviceAPI Web Project",
-		"fileName": "egovframe-mobile-deviceapi.zip",
-		"pomFile": "egovframe-mobile-deviceapi-pom.xml",
-		"description": "Device API integration web project",
-		"category": "Mobile",
-		"projectName": "egov-mobile-deviceapi"
-	},
-	{
-		"displayName": "Boot Batch Template > Scheduler (File)",
-		"fileName": "egovframe-boot-batch-file-scheduler.zip",
-		"pomFile": "egovframe-boot-batch-file-scheduler-pom.xml",
-		"description": "File-based batch scheduler project",
-		"category": "Batch",
-		"projectName": "egov-boot-batch-scheduler-file"
-	},
-	{
-		"displayName": "Boot Batch Template > CommandLine (File)",
-		"fileName": "egovframe-boot-batch-file-commandline.zip",
-		"pomFile": "egovframe-boot-batch-file-commandline-pom.xml",
-		"description": "File-based command line batch project",
-		"category": "Batch",
-		"projectName": "egov-boot-batch-commandline-file"
-	},
-	{
-		"displayName": "Boot Batch Template > Web (File)",
-		"fileName": "egovframe-boot-batch-file-web.zip",
-		"pomFile": "egovframe-boot-batch-file-web-pom.xml",
-		"description": "File-based web batch project",
-		"category": "Batch",
-		"projectName": "egov-boot-batch-web-file"
-	},
-	{
-		"displayName": "Boot Batch Template > Scheduler (DB)",
-		"fileName": "egovframe-boot-batch-db-scheduler.zip",
-		"pomFile": "egovframe-boot-batch-db-scheduler-pom.xml",
-		"description": "Database-based batch scheduler project",
-		"category": "Batch",
-		"projectName": "egov-boot-batch-scheduler-db"
-	},
-	{
-		"displayName": "Boot Batch Template > CommandLine (DB)",
-		"fileName": "egovframe-boot-batch-db-commandline.zip",
-		"pomFile": "egovframe-boot-batch-db-commandline-pom.xml",
-		"description": "Database-based command line batch project",
-		"category": "Batch",
-		"projectName": "egov-boot-batch-commandline-db"
-	},
-	{
-		"displayName": "Boot Batch Template > Web (DB)",
-		"fileName": "egovframe-boot-batch-db-web.zip",
-		"pomFile": "egovframe-boot-batch-db-web-pom.xml",
-		"description": "Database-based web batch project",
-		"category": "Batch",
-		"projectName": "egov-boot-batch-web-db"
-	},
-	{
-		"displayName": "AI > RAG Project (Spring AI)",
-		"fileName": "egovframe-ai-rag-springai.zip",
-		"pomFile": "egovframe-ai-rag-springai-pom.xml",
-		"description": "RAG Project Using Spring AI and Redis Stack",
-		"category": "AI",
-		"projectName": "egov-ai-rag-springai"
-	},
-	{
-		"displayName": "AI > RAG Project (Langchain4j)",
-		"fileName": "egovframe-ai-rag-langchain4j.zip",
-		"pomFile": "egovframe-ai-rag-langchain4j-pom.xml",
-		"description": "RAG Project Using Langchain4j and PostgreSQL",
-		"category": "AI",
-		"projectName": "egov-ai-rag-langchain4j"
-	}
-]
+	"templates": [
+		{
+			"templateId": "web-project",
+			"displayName": "Web Project",
+			"description": "Basic eGovFrame web application project",
+			"category": "Web",
+			"projectName": "egov-web",
+			"latestVersion": "5.0.0",
+			"versions": [
+				{
+					"version": "5.0.0",
+					"fileName": "egovframe-web.zip",
+					"pomFile": "egovframe-web-pom.xml",
+					"releaseDate": "2025-01-01",
+					"isLatest": true,
+					"included": true,
+					"fileSize": "12MB"
+				},
+				{
+					"version": "4.3.1",
+					"fileName": "egovframe-web-4.3.1.zip",
+					"pomFile": "egovframe-web-4.3.1-pom.xml",
+					"releaseDate": "2024-09-01",
+					"isLatest": false,
+					"included": false,
+					"downloadUrl": "v4.3.1/egovframe-web-4.3.1.zip",
+					"pomDownloadUrl": "v4.3.1/egovframe-web-4.3.1-pom.xml",
+					"fileSize": "10MB"
+				}
+			]
+		},
+		{
+			"templateId": "template-simple",
+			"displayName": "Template > Simple Homepage",
+			"description": "Simple homepage template with basic functionalities",
+			"category": "Template",
+			"projectName": "egov-template-simple",
+			"latestVersion": "5.0.0",
+			"versions": [
+				{
+					"version": "5.0.0",
+					"fileName": "egovframe-template-simple.zip",
+					"pomFile": "egovframe-template-simple-pom.xml",
+					"releaseDate": "2025-01-01",
+					"isLatest": true,
+					"included": true,
+					"fileSize": "18MB"
+				},
+				{
+					"version": "4.3.1",
+					"fileName": "egovframe-template-simple-4.3.1.zip",
+					"pomFile": "egovframe-template-simple-4.3.1-pom.xml",
+					"releaseDate": "2024-09-01",
+					"isLatest": false,
+					"included": false,
+					"downloadUrl": "v4.3.1/egovframe-template-simple-4.3.1.zip",
+					"pomDownloadUrl": "v4.3.1/egovframe-template-simple-4.3.1-pom.xml",
+					"fileSize": "16MB"
+				}
+			]
+		},
+		{
+			"templateId": "template-portal",
+			"displayName": "Template > Portal Site",
+			"description": "Portal site template for enterprise applications",
+			"category": "Template",
+			"projectName": "egov-template-portal",
+			"latestVersion": "5.0.0",
+			"versions": [
+				{
+					"version": "5.0.0",
+					"fileName": "egovframe-template-portal.zip",
+					"pomFile": "egovframe-template-portal-pom.xml",
+					"releaseDate": "2025-01-01",
+					"isLatest": true,
+					"included": true,
+					"fileSize": "20MB"
+				},
+				{
+					"version": "4.3.1",
+					"fileName": "egovframe-template-portal-4.3.1.zip",
+					"pomFile": "egovframe-template-portal-4.3.1-pom.xml",
+					"releaseDate": "2024-09-01",
+					"isLatest": false,
+					"included": false,
+					"downloadUrl": "v4.3.1/egovframe-template-portal-4.3.1.zip",
+					"pomDownloadUrl": "v4.3.1/egovframe-template-portal-4.3.1-pom.xml",
+					"fileSize": "18MB"
+				}
+			]
+		},
+		{
+			"templateId": "template-enterprise",
+			"displayName": "Template > Enterprise Business",
+			"description": "Enterprise business application template",
+			"category": "Template",
+			"projectName": "egov-template-enterprise",
+			"latestVersion": "5.0.0",
+			"versions": [
+				{
+					"version": "5.0.0",
+					"fileName": "egovframe-template-enterprise.zip",
+					"pomFile": "egovframe-template-enterprise-pom.xml",
+					"releaseDate": "2025-01-01",
+					"isLatest": true,
+					"included": true,
+					"fileSize": "22MB"
+				},
+				{
+					"version": "4.3.1",
+					"fileName": "egovframe-template-enterprise-4.3.1.zip",
+					"pomFile": "egovframe-template-enterprise-4.3.1-pom.xml",
+					"releaseDate": "2024-09-01",
+					"isLatest": false,
+					"included": false,
+					"downloadUrl": "v4.3.1/egovframe-template-enterprise-4.3.1.zip",
+					"pomDownloadUrl": "v4.3.1/egovframe-template-enterprise-4.3.1-pom.xml",
+					"fileSize": "20MB"
+				}
+			]
+		},
+		{
+			"templateId": "template-common-components",
+			"displayName": "Template > Common Components",
+			"description": "Comprehensive common-components all-in-one project template",
+			"category": "Template",
+			"projectName": "egov-template-common-components",
+			"latestVersion": "5.0.0",
+			"versions": [
+				{
+					"version": "5.0.0",
+					"fileName": "egovframe-template-common-components.zip",
+					"pomFile": "egovframe-template-common-components-pom.xml",
+					"releaseDate": "2025-01-01",
+					"isLatest": true,
+					"included": true,
+					"fileSize": "25MB"
+				},
+				{
+					"version": "4.3.1",
+					"fileName": "egovframe-template-common-components-4.3.1.zip",
+					"pomFile": "egovframe-template-common-components-4.3.1-pom.xml",
+					"releaseDate": "2024-09-01",
+					"isLatest": false,
+					"included": false,
+					"downloadUrl": "v4.3.1/egovframe-template-common-components-4.3.1.zip",
+					"pomDownloadUrl": "v4.3.1/egovframe-template-common-components-4.3.1-pom.xml",
+					"fileSize": "23MB"
+				}
+			]
+		},
+		{
+			"templateId": "boot-web-project",
+			"displayName": "Boot Web Project",
+			"description": "Spring Boot based web project",
+			"category": "Boot",
+			"projectName": "egov-boot-web",
+			"latestVersion": "5.0.0",
+			"versions": [
+				{
+					"version": "5.0.0",
+					"fileName": "egovframe-boot-web.zip",
+					"pomFile": "egovframe-boot-web-pom.xml",
+					"releaseDate": "2025-01-01",
+					"isLatest": true,
+					"included": true,
+					"fileSize": "15MB"
+				},
+				{
+					"version": "4.3.1",
+					"fileName": "egovframe-boot-web-4.3.1.zip",
+					"pomFile": "egovframe-boot-web-4.3.1-pom.xml",
+					"releaseDate": "2024-09-01",
+					"isLatest": false,
+					"included": false,
+					"downloadUrl": "v4.3.1/egovframe-boot-web-4.3.1.zip",
+					"pomDownloadUrl": "v4.3.1/egovframe-boot-web-4.3.1-pom.xml",
+					"fileSize": "12MB"
+				}
+			]
+		},
+		{
+			"templateId": "boot-simple-backend",
+			"displayName": "Boot Template > Simple Homepage (Backend)",
+			"description": "Spring Boot simple homepage backend",
+			"category": "Boot",
+			"projectName": "egov-boot-simple-backend",
+			"latestVersion": "5.0.0",
+			"versions": [
+				{
+					"version": "5.0.0",
+					"fileName": "egovframe-boot-simple-backend.zip",
+					"pomFile": "egovframe-boot-simple-backend-pom.xml",
+					"releaseDate": "2025-01-01",
+					"isLatest": true,
+					"included": true,
+					"fileSize": "16MB"
+				},
+				{
+					"version": "4.3.1",
+					"fileName": "egovframe-boot-simple-backend-4.3.1.zip",
+					"pomFile": "egovframe-boot-simple-backend-4.3.1-pom.xml",
+					"releaseDate": "2024-09-01",
+					"isLatest": false,
+					"included": false,
+					"downloadUrl": "v4.3.1/egovframe-boot-simple-backend-4.3.1.zip",
+					"pomDownloadUrl": "v4.3.1/egovframe-boot-simple-backend-4.3.1-pom.xml",
+					"fileSize": "14MB"
+				}
+			]
+		},
+		{
+			"templateId": "boot-simple-frontend",
+			"displayName": "Boot Template > Simple Homepage (Frontend)",
+			"description": "React-based frontend for simple homepage",
+			"category": "Boot",
+			"projectName": "egov-boot-simple-frontend",
+			"latestVersion": "5.0.0",
+			"versions": [
+				{
+					"version": "5.0.0",
+					"fileName": "egovframe-boot-simple-frontend.zip",
+					"pomFile": "",
+					"releaseDate": "2025-01-01",
+					"isLatest": true,
+					"included": true,
+					"fileSize": "12MB"
+				},
+				{
+					"version": "4.3.1",
+					"fileName": "egovframe-boot-simple-frontend-4.3.1.zip",
+					"pomFile": "",
+					"releaseDate": "2024-09-01",
+					"isLatest": false,
+					"included": false,
+					"downloadUrl": "v4.3.1/egovframe-boot-simple-frontend-4.3.1.zip",
+					"fileSize": "10MB"
+				}
+			]
+		},
+		{
+			"templateId": "msa-common-components",
+			"displayName": "MSA Boot Template > Common Components (KRDS)",
+			"description": "MSA common components with KRDS integration",
+			"category": "MSA",
+			"projectName": "egov-msa-boot-common-components",
+			"latestVersion": "5.0.0",
+			"versions": [
+				{
+					"version": "5.0.0",
+					"fileName": "egovframe-msa-common-components.zip",
+					"pomFile": "",
+					"releaseDate": "2025-01-01",
+					"isLatest": true,
+					"included": true,
+					"fileSize": "30MB"
+				},
+				{
+					"version": "4.3.1",
+					"fileName": "egovframe-msa-common-components-4.3.1.zip",
+					"pomFile": "",
+					"releaseDate": "2024-09-01",
+					"isLatest": false,
+					"included": false,
+					"downloadUrl": "v4.3.1/egovframe-msa-common-components-4.3.1.zip",
+					"fileSize": "28MB"
+				}
+			]
+		},
+		{
+			"templateId": "msa-portal-backend",
+			"displayName": "MSA Boot Template > Portal (Backend)",
+			"description": "MSA portal backend services",
+			"category": "MSA",
+			"projectName": "egov-msa-portal-backend",
+			"latestVersion": "5.0.0",
+			"versions": [
+				{
+					"version": "5.0.0",
+					"fileName": "egovframe-msa-portal-backend.zip",
+					"pomFile": "",
+					"releaseDate": "2025-01-01",
+					"isLatest": true,
+					"included": true,
+					"fileSize": "18MB"
+				},
+				{
+					"version": "4.3.1",
+					"fileName": "egovframe-msa-portal-backend-4.3.1.zip",
+					"pomFile": "",
+					"releaseDate": "2024-09-01",
+					"isLatest": false,
+					"included": false,
+					"downloadUrl": "v4.3.1/egovframe-msa-portal-backend-4.3.1.zip",
+					"fileSize": "16MB"
+				}
+			]
+		},
+		{
+			"templateId": "msa-portal-frontend",
+			"displayName": "MSA Boot Template > Portal (Frontend)",
+			"description": "MSA portal frontend application",
+			"category": "MSA",
+			"projectName": "egov-msa-portal-frontend",
+			"latestVersion": "5.0.0",
+			"versions": [
+				{
+					"version": "5.0.0",
+					"fileName": "egovframe-msa-portal-frontend.zip",
+					"pomFile": "",
+					"releaseDate": "2025-01-01",
+					"isLatest": true,
+					"included": true,
+					"fileSize": "15MB"
+				},
+				{
+					"version": "4.3.1",
+					"fileName": "egovframe-msa-portal-frontend-4.3.1.zip",
+					"pomFile": "",
+					"releaseDate": "2024-09-01",
+					"isLatest": false,
+					"included": false,
+					"downloadUrl": "v4.3.1/egovframe-msa-portal-frontend-4.3.1.zip",
+					"fileSize": "13MB"
+				}
+			]
+		},
+		{
+			"templateId": "mobile-web",
+			"displayName": "Mobile Web Project",
+			"description": "Mobile web application project",
+			"category": "Mobile",
+			"projectName": "egov-mobile-web",
+			"latestVersion": "5.0.0",
+			"versions": [
+				{
+					"version": "5.0.0",
+					"fileName": "egovframe-mobile-web.zip",
+					"pomFile": "egovframe-mobile-web-pom.xml",
+					"releaseDate": "2025-01-01",
+					"isLatest": true,
+					"included": true,
+					"fileSize": "14MB"
+				},
+				{
+					"version": "4.3.1",
+					"fileName": "egovframe-mobile-web-4.3.1.zip",
+					"pomFile": "egovframe-mobile-web-4.3.1-pom.xml",
+					"releaseDate": "2024-09-01",
+					"isLatest": false,
+					"included": false,
+					"downloadUrl": "v4.3.1/egovframe-mobile-web-4.3.1.zip",
+					"pomDownloadUrl": "v4.3.1/egovframe-mobile-web-4.3.1-pom.xml",
+					"fileSize": "12MB"
+				}
+			]
+		},
+		{
+			"templateId": "mobile-common-components",
+			"displayName": "Mobile Common Components Project",
+			"description": "Mobile template common-components project with hybrid app support",
+			"category": "Mobile",
+			"projectName": "egov-mobile-common-components",
+			"latestVersion": "5.0.0",
+			"versions": [
+				{
+					"version": "5.0.0",
+					"fileName": "egovframe-mobile-common-components.zip",
+					"pomFile": "egovframe-mobile-common-components-pom.xml",
+					"releaseDate": "2025-01-01",
+					"isLatest": true,
+					"included": true,
+					"fileSize": "16MB"
+				},
+				{
+					"version": "4.3.1",
+					"fileName": "egovframe-mobile-common-components-4.3.1.zip",
+					"pomFile": "egovframe-mobile-common-components-4.3.1-pom.xml",
+					"releaseDate": "2024-09-01",
+					"isLatest": false,
+					"included": false,
+					"downloadUrl": "v4.3.1/egovframe-mobile-common-components-4.3.1.zip",
+					"pomDownloadUrl": "v4.3.1/egovframe-mobile-common-components-4.3.1-pom.xml",
+					"fileSize": "14MB"
+				}
+			]
+		},
+		{
+			"templateId": "mobile-deviceapi",
+			"displayName": "DeviceAPI Web Project",
+			"description": "Device API integration web project",
+			"category": "Mobile",
+			"projectName": "egov-mobile-deviceapi",
+			"latestVersion": "5.0.0",
+			"versions": [
+				{
+					"version": "5.0.0",
+					"fileName": "egovframe-mobile-deviceapi.zip",
+					"pomFile": "egovframe-mobile-deviceapi-pom.xml",
+					"releaseDate": "2025-01-01",
+					"isLatest": true,
+					"included": true,
+					"fileSize": "10MB"
+				},
+				{
+					"version": "4.3.1",
+					"fileName": "egovframe-mobile-deviceapi-4.3.1.zip",
+					"pomFile": "egovframe-mobile-deviceapi-4.3.1-pom.xml",
+					"releaseDate": "2024-09-01",
+					"isLatest": false,
+					"included": false,
+					"downloadUrl": "v4.3.1/egovframe-mobile-deviceapi-4.3.1.zip",
+					"pomDownloadUrl": "v4.3.1/egovframe-mobile-deviceapi-4.3.1-pom.xml",
+					"fileSize": "8MB"
+				}
+			]
+		},
+		{
+			"templateId": "batch-file-scheduler",
+			"displayName": "Boot Batch Template > Scheduler (File)",
+			"description": "File-based batch scheduler project",
+			"category": "Batch",
+			"projectName": "egov-boot-batch-file-scheduler",
+			"latestVersion": "5.0.0",
+			"versions": [
+				{
+					"version": "5.0.0",
+					"fileName": "egovframe-boot-batch-file-scheduler.zip",
+					"pomFile": "egovframe-boot-batch-file-scheduler-pom.xml",
+					"releaseDate": "2025-01-01",
+					"isLatest": true,
+					"included": true,
+					"fileSize": "8MB"
+				},
+				{
+					"version": "4.3.1",
+					"fileName": "egovframe-boot-batch-file-scheduler-4.3.1.zip",
+					"pomFile": "egovframe-boot-batch-file-scheduler-4.3.1-pom.xml",
+					"releaseDate": "2024-09-01",
+					"isLatest": false,
+					"included": false,
+					"downloadUrl": "v4.3.1/egovframe-boot-batch-file-scheduler-4.3.1.zip",
+					"pomDownloadUrl": "v4.3.1/egovframe-boot-batch-file-scheduler-4.3.1-pom.xml",
+					"fileSize": "7MB"
+				}
+			]
+		},
+		{
+			"templateId": "batch-file-commandline",
+			"displayName": "Boot Batch Template > CommandLine (File)",
+			"description": "File-based command line batch project",
+			"category": "Batch",
+			"projectName": "egov-boot-batch-file-commandline",
+			"latestVersion": "5.0.0",
+			"versions": [
+				{
+					"version": "5.0.0",
+					"fileName": "egovframe-boot-batch-file-commandline.zip",
+					"pomFile": "egovframe-boot-batch-file-commandline-pom.xml",
+					"releaseDate": "2025-01-01",
+					"isLatest": true,
+					"included": true,
+					"fileSize": "7MB"
+				},
+				{
+					"version": "4.3.1",
+					"fileName": "egovframe-boot-batch-file-commandline-4.3.1.zip",
+					"pomFile": "egovframe-boot-batch-file-commandline-4.3.1-pom.xml",
+					"releaseDate": "2024-09-01",
+					"isLatest": false,
+					"included": false,
+					"downloadUrl": "v4.3.1/egovframe-boot-batch-file-commandline-4.3.1.zip",
+					"pomDownloadUrl": "v4.3.1/egovframe-boot-batch-file-commandline-4.3.1-pom.xml",
+					"fileSize": "6MB"
+				}
+			]
+		},
+		{
+			"templateId": "batch-file-web",
+			"displayName": "Boot Batch Template > Web (File)",
+			"description": "File-based web batch project",
+			"category": "Batch",
+			"projectName": "egov-boot-batch-file-web",
+			"latestVersion": "5.0.0",
+			"versions": [
+				{
+					"version": "5.0.0",
+					"fileName": "egovframe-boot-batch-file-web.zip",
+					"pomFile": "egovframe-boot-batch-file-web-pom.xml",
+					"releaseDate": "2025-01-01",
+					"isLatest": true,
+					"included": true,
+					"fileSize": "10MB"
+				},
+				{
+					"version": "4.3.1",
+					"fileName": "egovframe-boot-batch-file-web-4.3.1.zip",
+					"pomFile": "egovframe-boot-batch-file-web-4.3.1-pom.xml",
+					"releaseDate": "2024-09-01",
+					"isLatest": false,
+					"included": false,
+					"downloadUrl": "v4.3.1/egovframe-boot-batch-file-web-4.3.1.zip",
+					"pomDownloadUrl": "v4.3.1/egovframe-boot-batch-file-web-4.3.1-pom.xml",
+					"fileSize": "9MB"
+				}
+			]
+		},
+		{
+			"templateId": "batch-db-scheduler",
+			"displayName": "Boot Batch Template > Scheduler (DB)",
+			"description": "Database-based batch scheduler project",
+			"category": "Batch",
+			"projectName": "egov-boot-batch-db-scheduler",
+			"latestVersion": "5.0.0",
+			"versions": [
+				{
+					"version": "5.0.0",
+					"fileName": "egovframe-boot-batch-db-scheduler.zip",
+					"pomFile": "egovframe-boot-batch-db-scheduler-pom.xml",
+					"releaseDate": "2025-01-01",
+					"isLatest": true,
+					"included": true,
+					"fileSize": "9MB"
+				},
+				{
+					"version": "4.3.1",
+					"fileName": "egovframe-boot-batch-db-scheduler-4.3.1.zip",
+					"pomFile": "egovframe-boot-batch-db-scheduler-4.3.1-pom.xml",
+					"releaseDate": "2024-09-01",
+					"isLatest": false,
+					"included": false,
+					"downloadUrl": "v4.3.1/egovframe-boot-batch-db-scheduler-4.3.1.zip",
+					"pomDownloadUrl": "v4.3.1/egovframe-boot-batch-db-scheduler-4.3.1-pom.xml",
+					"fileSize": "8MB"
+				}
+			]
+		},
+		{
+			"templateId": "batch-db-commandline",
+			"displayName": "Boot Batch Template > CommandLine (DB)",
+			"description": "Database-based command line batch project",
+			"category": "Batch",
+			"projectName": "egov-boot-batch-db-commandline",
+			"latestVersion": "5.0.0",
+			"versions": [
+				{
+					"version": "5.0.0",
+					"fileName": "egovframe-boot-batch-db-commandline.zip",
+					"pomFile": "egovframe-boot-batch-db-commandline-pom.xml",
+					"releaseDate": "2025-01-01",
+					"isLatest": true,
+					"included": true,
+					"fileSize": "8MB"
+				},
+				{
+					"version": "4.3.1",
+					"fileName": "egovframe-boot-batch-db-commandline-4.3.1.zip",
+					"pomFile": "egovframe-boot-batch-db-commandline-4.3.1-pom.xml",
+					"releaseDate": "2024-09-01",
+					"isLatest": false,
+					"included": false,
+					"downloadUrl": "v4.3.1/egovframe-boot-batch-db-commandline-4.3.1.zip",
+					"pomDownloadUrl": "v4.3.1/egovframe-boot-batch-db-commandline-4.3.1-pom.xml",
+					"fileSize": "7MB"
+				}
+			]
+		},
+		{
+			"templateId": "batch-db-web",
+			"displayName": "Boot Batch Template > Web (DB)",
+			"description": "Database-based web batch project",
+			"category": "Batch",
+			"projectName": "egov-boot-batch-db-web",
+			"latestVersion": "5.0.0",
+			"versions": [
+				{
+					"version": "5.0.0",
+					"fileName": "egovframe-boot-batch-db-web.zip",
+					"pomFile": "egovframe-boot-batch-db-web-pom.xml",
+					"releaseDate": "2025-01-01",
+					"isLatest": true,
+					"included": true,
+					"fileSize": "11MB"
+				},
+				{
+					"version": "4.3.1",
+					"fileName": "egovframe-boot-batch-db-web-4.3.1.zip",
+					"pomFile": "egovframe-boot-batch-db-web-4.3.1-pom.xml",
+					"releaseDate": "2024-09-01",
+					"isLatest": false,
+					"included": false,
+					"downloadUrl": "v4.3.1/egovframe-boot-batch-db-web-4.3.1.zip",
+					"pomDownloadUrl": "v4.3.1/egovframe-boot-batch-db-web-4.3.1-pom.xml",
+					"fileSize": "10MB"
+				}
+			]
+		},
+		{
+			"templateId": "ai-rag-springai",
+			"displayName": "AI > RAG Project (Spring AI)",
+			"description": "RAG Project Using Spring AI and Redis Stack",
+			"category": "AI",
+			"projectName": "egov-ai-rag-springai",
+			"latestVersion": "5.0.0",
+			"versions": [
+				{
+					"version": "5.0.0",
+					"fileName": "egovframe-ai-rag-springai.zip",
+					"pomFile": "egovframe-ai-rag-springai-pom.xml",
+					"releaseDate": "2025-01-01",
+					"isLatest": true,
+					"included": true,
+					"fileSize": "15MB"
+				}
+			]
+		},
+		{
+			"templateId": "ai-rag-langchain4j",
+			"displayName": "AI > RAG Project (Langchain4j)",
+			"description": "RAG Project Using Langchain4j and PostgreSQL",
+			"category": "AI",
+			"projectName": "egov-ai-rag-langchain4j",
+			"latestVersion": "5.0.0",
+			"versions": [
+				{
+					"version": "5.0.0",
+					"fileName": "egovframe-ai-rag-langchain4j.zip",
+					"pomFile": "egovframe-ai-rag-langchain4j-pom.xml",
+					"releaseDate": "2025-01-01",
+					"isLatest": true,
+					"included": true,
+					"fileSize": "15MB"
+				}
+			]
+		}
+	]
+}

@@ -10,6 +10,7 @@
  * 이 파일은 웹뷰(webview-ui)에서도 import 하므로 순수 타입만 두고 런타임 의존성(zod 등)을 두지 않는다.
  */
 
+import type { ArchCheckResults } from "./archCheck"
 import type { TemplateContext } from "./templateContext"
 
 // ---------------------------------------------------------------------------
@@ -23,6 +24,16 @@ export interface ProjectTemplatePayload {
 	fileName: string
 	/** templates/projects/pom/ 아래의 POM 템플릿 파일명. POM이 없는 템플릿은 빈 문자열 */
 	pomFile: string
+	/** templates-projects.json manifest의 템플릿 식별자 */
+	templateId?: string
+	/** 선택한 템플릿 버전 (예: "4.3.1") */
+	version?: string
+	/** true면 확장에 ZIP이 포함됨, false면 downloadUrl로 내려받아야 함 */
+	included?: boolean
+	/** included가 false일 때의 ZIP 다운로드 URL (절대 URL 또는 manifest baseUrl 기준 상대 경로) */
+	downloadUrl?: string
+	/** included가 false일 때의 POM 템플릿 다운로드 URL */
+	pomDownloadUrl?: string
 }
 
 /** 프로젝트 생성 폼 입력 값 */
@@ -88,6 +99,7 @@ export interface SimpleWebviewMessage {
 		| "getExtensionInfo"
 		| "getProjectTemplates"
 		| "getConfigTemplates"
+		| "selectProjectPath"
 }
 
 export interface GenerateProjectMessage {
@@ -158,6 +170,25 @@ export interface UpdateEgovSettingsMessage {
 	settings: EgovSettingsPayload
 }
 
+/** 아키텍처 점검 시작 — projectPath는 사용자가 다이얼로그로 선택한 프로젝트 루트 */
+export interface StartArchCheckMessage {
+	type: "startArchCheck"
+	projectPath: string
+}
+
+/** 아키텍처 점검 결과를 프로젝트 폴더에 파일로 내보내기 */
+export interface ExportArchResultsMessage {
+	type: "exportArchResults"
+	results: ArchCheckResults
+	projectPath: string
+}
+
+/** 점검 결과 목록에서 클릭한 파일을 에디터로 열기 */
+export interface OpenFileMessage {
+	type: "openFile"
+	filePath: string
+}
+
 export type WebviewMessage =
 	| SimpleWebviewMessage
 	| GenerateProjectMessage
@@ -172,3 +203,6 @@ export type WebviewMessage =
 	| ShowErrorMessage
 	| ShowWarningMessage
 	| UpdateEgovSettingsMessage
+	| StartArchCheckMessage
+	| ExportArchResultsMessage
+	| OpenFileMessage
