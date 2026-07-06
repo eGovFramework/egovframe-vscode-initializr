@@ -3,6 +3,7 @@ import * as fs from "fs-extra"
 import * as path from "path"
 import extractZip from "extract-zip"
 import { assertSafeProjectName, resolveWithinBase } from "./pathSafety"
+import { ProjectConfigPayload } from "../shared/WebviewMessage"
 
 export interface EgovProjectTemplate {
 	id: string
@@ -47,7 +48,7 @@ export interface ProjectGenerationResult {
  * Form-based Project Generation
  */
 export async function generateEgovProject(
-	config: EgovProjectConfig, // { projectName: string, artifactId: string, groupId: string, version: string(초기값 "1.0.0"), url: string(초기값 "http://www.egovframe.go.kr"), outputPath: string, template: {displayName: string, fileName: string, pomFile: string} }
+	config: ProjectConfigPayload,
 	extensionPath: string,
 	progressCallback?: (message: string) => void,
 ): Promise<ProjectGenerationResult> {
@@ -225,7 +226,7 @@ async function processFilesRecursively(projectRoot: string, placeholders: Record
 
 // Internal function for Form-based Project Generation
 async function generatePomFile(
-	config: EgovProjectConfig, // { projectName: string, artifactId: string, groupId: string, outputPath: string, template: {displayName: string, fileName: string, pomFile: string} }
+	config: ProjectConfigPayload,
 	projectRoot: string,
 	extensionPath: string,
 	progressCallback?: (message: string) => void,
@@ -233,7 +234,7 @@ async function generatePomFile(
 	try {
 		progressCallback?.("📝 Generating Maven POM file...")
 
-		const templatePath = path.join(extensionPath, "templates", "projects", "pom", config.template.pomFile!)
+		const templatePath = path.join(extensionPath, "templates", "projects", "pom", config.template.pomFile)
 		const outputPath = path.join(projectRoot, "pom.xml")
 
 		// Check if POM template exists
