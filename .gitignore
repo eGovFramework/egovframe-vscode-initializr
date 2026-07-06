@@ -57,13 +57,6 @@ coverage
 # But don't ignore the coverage scripts in .github/scripts/
 !.github/scripts/coverage/
 
-# Claude
-CLAUDE.md
-.claude/
-
-# Serena
-.serena/
-
 *evals.env
 
 # Generated proto files
@@ -73,3 +66,50 @@ src/core/controller/*/index.ts
 src/core/controller/grpc-service-config.ts
 webview-ui/src/services/grpc-client.ts
 src/standalone/server-setup.ts
+
+# ─────────────── AI 코딩 도구 ───────────────
+
+# JetBrains (IntelliJ 등)
+.idea/
+*.iml
+*.iws
+out/
+
+# Eclipse — eGovFrame 사용 시 아래는 선택적으로 조정
+.metadata/
+.settings/
+bin/
+
+# Vim / Sublime
+*.swp
+.*.sw?
+*.sublime-workspace
+
+# Cursor
+.cursor/
+
+# Cline / Roo Code
+.cline/
+.roo/
+
+# Windsurf
+.windsurf/
+
+# Continue
+.continue/
+
+# Aider
+.aider*
+
+# AGENTS.md
+AGENTS.md
+CLAUDE.md
+
+# Claude
+.claude/
+
+# Serena
+.serena/
+
+# Codex
+.codex/
