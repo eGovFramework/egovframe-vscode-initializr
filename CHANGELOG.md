@@ -1,34 +1,65 @@
 # Changelog
 
 ## Unreleased
-
 - Code Generation
-  - DDL 입력 내용을 기반으로 테이블, 컬럼, PK/FK, 1:N 관계를 표시하는 ERD Preview 추가
-  - 컬럼 COMMENT 본문에 "primary key" 문구가 있을 때 해당 컬럼이 PK로 오분류되어 생성 SQL의 WHERE 절이 잘못되던 문제 수정
-  - 컬럼명에서 언더스코어 뒤에 숫자가 오는 경우(addr_1 등) camelCase 변환이 누락되어 언더스코어가 남던 문제 수정
+  - DDL 입력 내용을 기반으로 테이블, 컬럼, PK/FK, 1:N 관계를 표시하는 ERD Preview 추가 (Refs: PR #10)
+  - DDL COMMENT를 파싱해 VO 필드 주석에 반영 (Refs: PR #18)
+  - NUMBER 타입을 정밀도/스케일 기반으로 매핑하고 누락된 SQL 타입 보강 (Refs: PR #19)
+  - TEXT/BLOB/BYTE 타입을 각각 String/byte[]/byte[]로 변환하도록 매핑 추가 (Refs: PR #16)
+  - 컬럼 COMMENT 본문에 "primary key" 문구가 있을 때 해당 컬럼이 PK로 오분류되어 생성 SQL의 WHERE 절이 잘못되던 문제 수정 (Refs: PR #27)
+- Config Generation
+  - AOP 트랜잭션 설정 템플릿에서 txAdvisor의 잘못된 직접 메서드 호출 수정 (Refs: PR #12)
+  - TransactionForm의 READ_UNCOMMITTED 오타 수정 (Refs: PR #9)
+- Internationalization
+  - 웹뷰 UI(*.tsx) 다국어(i18n) 처리 (Refs: PR #29)
 - Project Generation
-  - POM 생성 시 입력값(프로젝트명·groupId 등)에 `$`가 포함되면 `String.replace`의 치환 특수 시퀀스로 해석되어 pom.xml이 손상되던 문제 수정
-  - Group ID 검증이 연속된 점(com..example)과 숫자로 시작하는 세그먼트(com.123)를 허용해 잘못된 Maven groupId가 생성되던 문제 수정
-  - Security: 프로젝트명·설정 파일명 입력에 경로 조작(CWE-22) 검증 추가 — 생성 결과가 지정한 출력 디렉터리를 벗어나지 못하도록 봉쇄
 - Security
-  - 웹뷰 → 익스텐션 메시지를 판별 유니온 타입으로 확정하고 zod 기반 런타임 검증 추가 — 경로 구성에 쓰이는 필드는 안전한 문자 집합으로 제한 (CWE-20/22)
 - Refactoring
-  - 불필요한 try/catch(no-useless-catch) 제거 (codeGenerator.ts)
+  - 컬럼 유효성 검사 로직 분리 (Refs: PR #13)
+  - 불필요한 try/catch(no-useless-catch) 제거 (codeGenerator.ts) (Refs: PR #24)
 
-## v5.0.0 Beta (2025-12-04)
+## v5.0.6 (2026-07-15)
+- Code Generation
+  - Monaco SQL Worker가 CSP(default-src 'none')에 막혀 동작하지 않던 문제 수정
+  - MyBatis Mapper SQL이 Java 클래스명 대신 실제 DB 테이블명(DDL 원본 테이블명)을 사용하도록 수정 (Refs: PR #23)
+  - UPDATE 구문 SET 절에서 PK 컬럼을 제외하도록 수정 (Refs: PR #6)
+  - 컬럼명에서 언더스코어 뒤에 숫자가 오는 경우(addr_1 등) camelCase 변환이 누락되어 언더스코어가 남던 문제 수정 (Refs: PR #28)
+- Project Generation
+  - POM 생성 시 입력값(프로젝트명·groupId 등)에 `$`가 포함되면 `String.replace`의 치환 특수 시퀀스로 해석되어 pom.xml이 손상되던 문제 수정 (Refs: PR #25)
+  - Group ID 검증이 연속된 점(com..example)과 숫자로 시작하는 세그먼트(com.123)를 허용해 잘못된 Maven groupId가 생성되던 문제 수정 (Refs: PR #30)
+  - Security: 프로젝트명·설정 파일명 입력에 경로 조작(CWE-22) 검증 추가 — 생성 결과가 지정한 출력 디렉터리를 벗어나지 못하도록 봉쇄 (Refs: PR #31)
+  - 템플릿 보안 취약점 업데이트(NCSC, 국정원, KISA):
+    - egovframe-ai-rag-langchain4j
+    - egovframe-ai-rag-springai
+    - egovframe-boot-simple-backend
+    - egovframe-boot-simple-frontend
+    - egovframe-boot-web
+    - egovframe-mobile-deviceapi
+    - egovframe-msa-common-components
+    - egovframe-msa-portal-backend
+    - egovframe-template-common-components
+    - egovframe-template-enterprise
+    - egovframe-template-portal
+    - egovframe-web
+- Security
+  - 웹뷰 → 익스텐션 메시지를 판별 유니온 타입으로 확정하고 zod 기반 런타임 검증 추가 — 경로 구성에 쓰이는 필드는 안전한 문자 집합으로 제한
+  - 웹뷰에 CSP 적용
+  - handlebars 4.7.9 업데이트로 JS Injection·Prototype Pollution 등 취약점 8종 해소 (Refs: PR #20)
+  - vite 6.4.3 업데이트로 dev server 취약점 7종 해소 (Refs: PR #21)
+- Refactoring
+  - Controller의 테마 변경 이벤트 리스너를 Disposable로 정리해 리소스 누수 방지 (Refs: PR #17)
+  - 미사용 git 유틸리티(src/utils/git.ts) 제거
 
-- v5.0.x Initial Beta Release
+## v5.0.5 (2026-05-18)
+- Project Generation
+  - 템플릿 보안 취약점 업데이트(KISA): Common Components, Boot Simple Homepage (Backend/Frontend), MSA Portal (Backend)
 
-## v5.0.1 Beta (2026-01-06)
-
-- sample-controller-template.hbs 핸들바 파싱 오류 수정
-
-## v5.0.2 Beta (2026-01-06)
-
-- sample-thymeleaf-register.hbs 핸들바 파싱 오류 수정
+## v5.0.4 (2026-04-10)
+- Project Generation 
+  - 템플릿 보안 취약점 업데이트(KISA): egovframe-boot-simple-backend 
+  - 기타 템플릿 오류 수정
 
 ## v5.0.3 (2026-03-31)
-
 - v5.0.x Initial official Release
 - Project Generation
   - AI 카테고리에 **RAG Project (LangChain4j) 템플릿 추가**
@@ -42,17 +73,15 @@
   - 입력 필드의 특수문자 및 숫자에 대한 검증 기능 추가
   - Handlebars 템플릿 비교 연산자 오류 수정
 - Egov Settings
-  - **언어 선택 옵션** 추가
+  - **언어 선택 옵션** 추가 (Refs: PR #1)
   - 입력값 검증 기능 추가
   - Save Settings 버튼 클릭 시 저장 성공 또는 실패 여부를 시각적으로 확인할 수 있도록 개선
 
-## v5.0.4 (2026-04-10)
+## v5.0.2 Beta (2026-01-06)
+- sample-thymeleaf-register.hbs 핸들바 파싱 오류 수정
 
-- Project Generation 
-    - egovframe-boot-simple-backend 템플릿 KISA 보안 취약점(KVE-2026-0588) 업데이트
-    - 기타 템플릿 오류 수정
+## v5.0.1 Beta (2026-01-06)
+- sample-controller-template.hbs 핸들바 파싱 오류 수정
 
-## v5.0.5 (2026-05-18)
-
-- Project Generation
-  - 템플릿 보안 취약점 업데이트: Common Components, Boot Simple Homepage (Backend/Frontend), MSA Portal (Backend)
+## v5.0.0 Beta (2025-12-04)
+- v5.0.x Initial Beta Release
