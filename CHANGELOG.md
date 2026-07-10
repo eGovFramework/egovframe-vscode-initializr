@@ -28,6 +28,7 @@
   - POM 생성 시 입력값(프로젝트명·groupId 등)에 `$`가 포함되면 `String.replace`의 치환 특수 시퀀스로 해석되어 pom.xml이 손상되던 문제 수정 (Refs: PR #25)
   - Group ID 검증이 연속된 점(com..example)과 숫자로 시작하는 세그먼트(com.123)를 허용해 잘못된 Maven groupId가 생성되던 문제 수정 (Refs: PR #30)
   - Security: 프로젝트명·설정 파일명 입력에 경로 조작(CWE-22) 검증 추가 — 생성 결과가 지정한 출력 디렉터리를 벗어나지 못하도록 봉쇄 (Refs: PR #31)
+  - VS Code 1.128(Node.js 24.17.0)에서 zip 파일 압축해제 시 hang 발생 오류 수정: extract-zip → adm-zip 으로 교체
   - 템플릿 보안 취약점 업데이트(NCSC, 국정원, KISA):
     - egovframe-ai-rag-langchain4j
     - egovframe-ai-rag-springai
