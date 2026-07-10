@@ -163,6 +163,7 @@
 		]
 	},
 	"devDependencies": {
+		"@types/adm-zip": "0.5.8",
 		"@types/fs-extra": "11.0.4",
 		"@types/node": "20.x",
 		"@types/vscode": "1.84.0",
@@ -181,7 +182,7 @@
 	},
 	"dependencies": {
 		"@vscode/ripgrep": "1.17.0",
-		"extract-zip": "2.0.1",
+		"adm-zip": "0.5.18",
 		"fs-extra": "11.2.0",
 		"handlebars": "4.7.9",
 		"zod": "4.4.3"
