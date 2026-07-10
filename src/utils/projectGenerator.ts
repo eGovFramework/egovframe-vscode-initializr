@@ -1,7 +1,7 @@
 import * as vscode from "vscode"
 import * as fs from "fs-extra"
 import * as path from "path"
-import extractZip from "extract-zip"
+import AdmZip from "adm-zip"
 import { replacePlaceholders } from "../shared/placeholderUtil"
 import { assertSafeProjectName, resolveWithinBase } from "./pathSafety"
 import { ProjectConfigPayload } from "../shared/WebviewMessage"
@@ -106,8 +106,13 @@ export async function generateEgovProject(
 
 		progressCallback?.("📦 Extracting template...")
 
-		// Extract template ZIP
-		await extractZip(zipFilePath, { dir: projectRoot })
+		// Extract template ZIP.
+		// NOTE: Do NOT switch back to a streaming extractor (extract-zip/yauzl/fd-slicer).
+		// Those hand-roll an fd refCount over serialized chunk streams; on newer Node
+		// runtimes (VS Code 1.128+) the completion event never fires for templates that
+		// contain large files, so extraction hangs forever right here. adm-zip reads the
+		// archive fully and writes synchronously — no stream lifecycle to wedge.
+		new AdmZip(zipFilePath).extractAllTo(projectRoot, /* overwrite */ true, /* keepOriginalPermission */ true)
 
 		// processTemplateFiles를 적용할만한 zip파일이 없음 => 아래 processTemplateFiles, processFilesRecursively 함수 주석처리
 		/*
