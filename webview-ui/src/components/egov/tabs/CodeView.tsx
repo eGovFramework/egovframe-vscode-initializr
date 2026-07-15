@@ -1243,11 +1243,11 @@ const CodeView = () => {
 							}}>
 							<li>
 								<strong>Thymeleaf Views:</strong> {parsedDDL?.tableName || "Table"}List.html,{" "}
-								{parsedDDL?.tableName || "Table"}Regist.html
+								{parsedDDL?.tableName || "Table"}Register.html
 							</li>
 							<li>
 								<strong>JSP Views:</strong> {parsedDDL?.tableName || "Table"}List.jsp,{" "}
-								{parsedDDL?.tableName || "Table"}Regist.jsp
+								{parsedDDL?.tableName || "Table"}Register.jsp
 							</li>
 						</ul>
 					</div>
