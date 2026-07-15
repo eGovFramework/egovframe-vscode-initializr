@@ -22,13 +22,12 @@
 		"noUncheckedSideEffectImports": true,
 
 		/* Aliasing */
-		"baseUrl": ".",
 		"paths": {
-			"@/*": ["src/*"],
-			"@components/*": ["src/components/*"],
-			"@context/*": ["src/context/*"],
+			"@/*": ["./src/*"],
+			"@components/*": ["./src/components/*"],
+			"@context/*": ["./src/context/*"],
 			"@shared/*": ["../src/shared/*"],
-			"@utils/*": ["src/utils/*"]
+			"@utils/*": ["./src/utils/*"]
 		}
 	},
 	"include": ["src"]
