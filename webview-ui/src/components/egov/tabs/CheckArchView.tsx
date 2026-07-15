@@ -198,7 +198,7 @@ const CheckArchView = () => {
 					}}>
 					Automatically check compliance with eGovFrame architecture guidelines. Verify annotations and inheritance
 					rules for Controller, Service, DAO, and Mapper layers. Learn more at{" "}
-					<Link href="https://github.com/egovframework/vscode-egovframe-initializr" style={{ display: "inline" }}>
+					<Link href="https://github.com/eGovFramework/egovframe-vscode-initializr" style={{ display: "inline" }}>
 						GitHub
 					</Link>
 				</p>
