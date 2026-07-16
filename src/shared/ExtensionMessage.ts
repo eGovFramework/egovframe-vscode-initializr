@@ -37,10 +37,6 @@ export type ExtensionMessage =
 			message?: string
 	  }
 	| {
-			type: "transferDDLToCodeView"
-			ddl: string
-	  }
-	| {
 			type: "selectedOutputFolder"
 			text: string
 	  }

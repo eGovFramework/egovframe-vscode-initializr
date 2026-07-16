@@ -348,22 +348,6 @@ export class Controller {
 				break
 			}
 
-			case "transferDDLToCodeView": {
-				// Forward DDL to CodeView via webview message
-				console.log("[Controller] Received transferDDLToCodeView message with DDL:", message.ddl)
-				if (message.ddl) {
-					console.log("[Controller] Forwarding DDL to webview")
-					await this.postMessageToWebview({
-						type: "transferDDLToCodeView",
-						ddl: message.ddl,
-					})
-					console.log("[Controller] DDL forwarded successfully")
-				} else {
-					console.warn("[Controller] No DDL in transferDDLToCodeView message")
-				}
-				break
-			}
-
 			case "generateConfig": {
 				console.log("Received generateConfig message:", message)
 

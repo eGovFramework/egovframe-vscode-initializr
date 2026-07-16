@@ -182,10 +182,6 @@ export const webviewMessageSchema = z.discriminatedUnion("type", [
 		packageName: z.string().optional(),
 	}),
 	z.object({
-		type: z.literal("transferDDLToCodeView"),
-		ddl: z.string(),
-	}),
-	z.object({
 		type: z.literal("generateConfig"),
 		template: configTemplateSchema,
 		formData: configFormDataSchema,
