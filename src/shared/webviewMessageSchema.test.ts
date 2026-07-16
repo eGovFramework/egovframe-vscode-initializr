@@ -103,7 +103,6 @@ describe("parseWebviewMessage", () => {
 		parseOk({ type: "downloadTemplateContext", ddl: "CREATE TABLE t (id INT)", context: validTemplateContext })
 		parseOk({ type: "validateDDLOnly", ddl: "CREATE TABLE t (id INT)" })
 		parseOk({ type: "validateAndPreview", ddl: "CREATE TABLE t (id INT)", packageName: "com.example" })
-		parseOk({ type: "transferDDLToCodeView", ddl: "CREATE TABLE t (id INT)" })
 		parseOk({ type: "generateConfig", template: validConfigTemplate, formData: validFormData })
 		parseOk({ type: "selectOutputFolder", formData: validFormData })
 		parseOk({ type: "showError", value: "something failed" })

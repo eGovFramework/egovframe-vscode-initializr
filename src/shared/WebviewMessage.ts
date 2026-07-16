@@ -127,11 +127,6 @@ export interface ValidateAndPreviewMessage {
 	packageName?: string
 }
 
-export interface TransferDDLToCodeViewMessage {
-	type: "transferDDLToCodeView"
-	ddl: string
-}
-
 export interface GenerateConfigMessage {
 	type: "generateConfig"
 	template: ConfigTemplatePayload
@@ -166,7 +161,6 @@ export type WebviewMessage =
 	| DownloadTemplateContextMessage
 	| ValidateDDLOnlyMessage
 	| ValidateAndPreviewMessage
-	| TransferDDLToCodeViewMessage
 	| GenerateConfigMessage
 	| SelectOutputFolderMessage
 	| ShowErrorMessage

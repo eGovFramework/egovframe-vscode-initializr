@@ -307,25 +307,6 @@ const CodeView = () => {
 							setOutputPath(message.text)
 						}
 						break
-					case "transferDDLToCodeView":
-						console.log("[CodeView] Received transferDDLToCodeView message:", message)
-						if (message.ddl) {
-							console.log("[CodeView] Setting DDL content:", message.ddl)
-							setDdlContent(message.ddl)
-							setError("")
-							// Show a temporary success message
-							setTimeout(() => {
-								console.log("[CodeView] Showing success message")
-								setError("✅ DDL successfully imported from chat!")
-								setTimeout(() => {
-									console.log("[CodeView] Clearing success message")
-									setError("")
-								}, 3000)
-							}, 100)
-						} else {
-							console.warn("[CodeView] transferDDLToCodeView message has no DDL")
-						}
-						break
 					case "validationResult":
 						console.log("[CodeView] Received validationResult message:", message)
 						setIsPreviewLoading(false)
