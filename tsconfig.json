@@ -19,16 +19,15 @@
 		"target": "es2022",
 		"useDefineForClassFields": true,
 		"useUnknownInCatchVariables": false,
-		"baseUrl": ".",
 		"paths": {
-			"@/*": ["src/*"],
-			"@api/*": ["src/api/*"],
-			"@core/*": ["src/core/*"],
-			"@integrations/*": ["src/integrations/*"],
-			"@services/*": ["src/services/*"],
-			"@shared/*": ["src/shared/*"],
-			"@utils/*": ["src/utils/*"],
-			"@packages/*": ["src/packages/*"]
+			"@/*": ["./src/*"],
+			"@api/*": ["./src/api/*"],
+			"@core/*": ["./src/core/*"],
+			"@integrations/*": ["./src/integrations/*"],
+			"@services/*": ["./src/services/*"],
+			"@shared/*": ["./src/shared/*"],
+			"@utils/*": ["./src/utils/*"],
+			"@packages/*": ["./src/packages/*"]
 		}
 	},
 	"include": ["src/**/*", "scripts/**/*"],
