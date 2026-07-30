@@ -221,8 +221,7 @@ function swallowsAnotherStatement(sql: string, bodyStart: number, bodyEnd: numbe
 	return false
 }
 
-export function extractCreateTableStatements(ddl: string): CreateTableStatement[] {
-	const sql = ddl
+export function extractCreateTableStatements(sql: string): CreateTableStatement[] {
 	const statements: CreateTableStatement[] = []
 	const createTableRegex = /CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?[`"]?(\w+)[`"]?\s*\(/gi
 	const resolvedMask = resolveQuoteMask(sql)
@@ -275,11 +274,9 @@ function isValidColumnDefinition(column: string, includePrimaryKey = false): boo
 
 // DDL 파싱 함수
 export function parseDDL(ddl: string): ParsedDDL {
-	// 주석을 먼저 제거하되 문장 추출까지는 줄바꿈을 남긴다.
-	// 인용부호 해석이 줄 경계를 어긋남 신호로 쓰므로 공백 정규화는 추출 이후에 한다.
-	const cleanedDdl = ddl
-	const normalizedDdl = cleanedDdl.replace(/\s+/g, " ").trim()
-	const createTableStatement = extractCreateTableStatements(cleanedDdl)[0]
+	// 인용부호 해석이 줄 경계를 어긋남 신호로 쓰므로 공백 정규화는 문장 추출 이후에 한다.
+	const normalizedDdl = ddl.replace(/\s+/g, " ").trim()
+	const createTableStatement = extractCreateTableStatements(ddl)[0]
 
 	// 테이블 이름 추출 (백틱 처리 추가) - DDL 시작 부분에서만 매칭
 	if (!createTableStatement) {
