@@ -476,6 +476,26 @@ describe("ddlParser", () => {
 		expect(result.attributes.map((attribute) => attribute.columnName)).toEqual(["id", "nm"])
 	})
 
+	it("should keep a generated column expression when two dashes are not a line comment", () => {
+		// MySQL은 `--` 뒤에 공백이 없으면 줄 주석으로 보지 않는다. 주석으로 지우면 괄호 균형이 깨진다.
+		const ddl = `CREATE TABLE t (
+  id INT,
+  x INT GENERATED ALWAYS AS (a--b) STORED,
+  nm INT
+);`
+		const result = parseDDL(ddl)
+		expect(result.attributes.map((column) => column.columnName)).toEqual(["id", "x", "nm"])
+	})
+
+	it("should keep an arithmetic default when two dashes are not a line comment", () => {
+		const ddl = `CREATE TABLE t (
+  id INT DEFAULT (5--3),
+  nm INT
+);`
+		const result = parseDDL(ddl)
+		expect(result.attributes.map((column) => column.columnName)).toEqual(["id", "nm"])
+	})
+
 	it("should convert underscore followed by a digit into a clean camelCase name", () => {
 		const result = parseDDL(`
 			CREATE TABLE addresses (

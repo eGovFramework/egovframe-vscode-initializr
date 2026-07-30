@@ -106,6 +106,14 @@ function buildQuoteMask(sql: string, mode: QuoteMode): QuoteMask {
 // 주석 안 아포스트로피가 문자열 시작으로 오인되지 않게 파싱 전에 SQL 주석을 제거한다.
 // 문자열 안의 주석 표식은 보존하고, 문자열 이스케이프 해석은 mode를 따른다.
 // spansLines는 문자열 리터럴이 줄바꿈을 넘겼는지를 알린다(해석이 어긋났는지 판단하는 신호).
+function isLineCommentStart(sql: string, index: number): boolean {
+	if (index >= sql.length) {
+		return true
+	}
+	const char = sql[index]
+	return char === " " || char === "\t" || char === "\n" || char === "\r"
+}
+
 function removeSqlComments(sql: string, mode: QuoteMode): { text: string; balanced: boolean; spansLines: boolean } {
 	let text = ""
 	let openQuote: string | undefined
@@ -116,7 +124,9 @@ function removeSqlComments(sql: string, mode: QuoteMode): { text: string; balanc
 		const nextChar = sql[index + 1]
 
 		if (!openQuote) {
-			if (char === "-" && nextChar === "-") {
+			// MySQL은 `--` 뒤에 공백이나 줄 끝이 와야 줄 주석으로 본다. 공백이 없으면 `(a--b)`처럼
+			// 연산자·생성 컬럼 식일 수 있으므로 주석으로 지우지 않는다.
+			if (char === "-" && nextChar === "-" && isLineCommentStart(sql, index + 2)) {
 				index += 2
 				while (index < sql.length && sql[index] !== "\n" && sql[index] !== "\r") {
 					index += 1
