@@ -286,9 +286,26 @@ function findStatementBodyEnd(ddl: string, bodyStart: number, mask: QuoteMask): 
 	return undefined
 }
 
-// 본문이 다음 CREATE TABLE 문장을 삼켰는지 검사한다(인용부호 해석 어긋남 신호).
-function swallowsAnotherStatement(body: string): boolean {
-	return /CREATE\s+TABLE\s/i.test(body)
+// 본문이 문장 경계를 넘어 삼켰는지 검사한다(인용부호 해석이 어긋났다는 신호).
+// 정상적인 컬럼 정의 블록에는 인용부호 밖 세미콜론이나 또 다른 CREATE TABLE이 나타나지 않는다.
+function swallowsAnotherStatement(sql: string, bodyStart: number, bodyEnd: number, mask: QuoteMask): boolean {
+	for (let index = bodyStart; index < bodyEnd; index += 1) {
+		if (sql[index] === ";" && !mask.quoted[index]) {
+			return true
+		}
+	}
+
+	const statementStartRegex = /CREATE\s+TABLE\s/gi
+	const body = sql.slice(bodyStart, bodyEnd)
+	let match: RegExpExecArray | null
+
+	while ((match = statementStartRegex.exec(body)) !== null) {
+		if (!mask.quoted[bodyStart + match.index]) {
+			return true
+		}
+	}
+
+	return false
 }
 
 export function extractCreateTableStatements(ddl: string): CreateTableStatement[] {
@@ -307,7 +324,7 @@ export function extractCreateTableStatements(ddl: string): CreateTableStatement[
 		}
 		let bodyEnd = findStatementBodyEnd(sql, bodyStart, resolvedMask) ?? findFallbackBodyEnd()
 
-		if (bodyEnd !== undefined && swallowsAnotherStatement(sql.slice(bodyStart, bodyEnd))) {
+		if (bodyEnd !== undefined && swallowsAnotherStatement(sql, bodyStart, bodyEnd, resolvedMask)) {
 			bodyEnd = findFallbackBodyEnd() ?? bodyEnd
 		}
 
