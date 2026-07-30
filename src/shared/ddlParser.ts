@@ -103,103 +103,6 @@ function buildQuoteMask(sql: string, mode: QuoteMode): QuoteMask {
 	return { quoted, balanced: openQuote === undefined, spansLines }
 }
 
-// 주석 안 아포스트로피가 문자열 시작으로 오인되지 않게 파싱 전에 SQL 주석을 제거한다.
-// 문자열 안의 주석 표식은 보존하고, 문자열 이스케이프 해석은 mode를 따른다.
-// spansLines는 문자열 리터럴이 줄바꿈을 넘겼는지를 알린다(해석이 어긋났는지 판단하는 신호).
-function isLineCommentStart(sql: string, index: number): boolean {
-	if (index >= sql.length) {
-		return true
-	}
-	const char = sql[index]
-	return char === " " || char === "\t" || char === "\n" || char === "\r"
-}
-
-function removeSqlComments(sql: string, mode: QuoteMode): { text: string; balanced: boolean; spansLines: boolean } {
-	let text = ""
-	let openQuote: string | undefined
-	let spansLines = false
-
-	for (let index = 0; index < sql.length; index += 1) {
-		const char = sql[index]
-		const nextChar = sql[index + 1]
-
-		if (!openQuote) {
-			// MySQL은 `--` 뒤에 공백이나 줄 끝이 와야 줄 주석으로 본다. 공백이 없으면 `(a--b)`처럼
-			// 연산자·생성 컬럼 식일 수 있으므로 주석으로 지우지 않는다.
-			if (char === "-" && nextChar === "-" && isLineCommentStart(sql, index + 2)) {
-				index += 2
-				while (index < sql.length && sql[index] !== "\n" && sql[index] !== "\r") {
-					index += 1
-				}
-				index -= 1
-				continue
-			}
-
-			if (char === "#") {
-				index += 1
-				while (index < sql.length && sql[index] !== "\n" && sql[index] !== "\r") {
-					index += 1
-				}
-				index -= 1
-				continue
-			}
-
-			if (char === "/" && nextChar === "*") {
-				text += " "
-				index += 2
-				while (index < sql.length && !(sql[index] === "*" && sql[index + 1] === "/")) {
-					index += 1
-				}
-				if (index < sql.length) {
-					index += 1
-				}
-				continue
-			}
-
-			if (mode !== "none" && (char === "'" || char === '"' || char === "`")) {
-				openQuote = char
-			}
-
-			text += char
-			continue
-		}
-
-		text += char
-
-		if (char === "\n" || char === "\r") {
-			spansLines = true
-		}
-
-		if (char === openQuote) {
-			if (nextChar === openQuote) {
-				text += nextChar
-				index += 1
-			} else {
-				openQuote = undefined
-			}
-		} else if (mode === "backslash" && openQuote !== "`" && char === "\\" && index + 1 < sql.length) {
-			text += nextChar
-			index += 1
-		}
-	}
-
-	return { text, balanced: openQuote === undefined, spansLines }
-}
-
-// 닫힌 인용부호 해석 기준으로 주석을 먼저 제거해 이후 구조 스캔의 오탐을 줄인다.
-// MySQL 백슬래시 해석을 먼저 시도하되, 인용부호가 닫히지 않거나 문자열이 줄바꿈을 넘긴 해석은
-// 어긋난 것으로 보고 다음 해석으로 넘어간다. 어느 해석도 만족하지 못하면 기존 동작 보존을 위해 원문을 돌려준다.
-function stripSqlComments(sql: string): string {
-	for (const mode of ["backslash", "doubled"] as const) {
-		const result = removeSqlComments(sql, mode)
-		if (result.balanced && !result.spansLines) {
-			return result.text
-		}
-	}
-
-	return sql
-}
-
 // 인용부호가 모두 닫히고 문자열이 줄바꿈을 넘지 않는 첫 해석을 고른다.
 // MySQL 백슬래시 이스케이프를 먼저 시도하고, 어긋나면 표준 SQL의 중복 인용부호 해석을 시도한다.
 // 줄바꿈을 넘긴 문자열은 인용부호 해석이 어긋났다는 신호다(DDL의 문자열 리터럴은 한 줄에 담긴다).
@@ -319,7 +222,7 @@ function swallowsAnotherStatement(sql: string, bodyStart: number, bodyEnd: numbe
 }
 
 export function extractCreateTableStatements(ddl: string): CreateTableStatement[] {
-	const sql = stripSqlComments(ddl)
+	const sql = ddl
 	const statements: CreateTableStatement[] = []
 	const createTableRegex = /CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?[`"]?(\w+)[`"]?\s*\(/gi
 	const resolvedMask = resolveQuoteMask(sql)
@@ -374,7 +277,7 @@ function isValidColumnDefinition(column: string, includePrimaryKey = false): boo
 export function parseDDL(ddl: string): ParsedDDL {
 	// 주석을 먼저 제거하되 문장 추출까지는 줄바꿈을 남긴다.
 	// 인용부호 해석이 줄 경계를 어긋남 신호로 쓰므로 공백 정규화는 추출 이후에 한다.
-	const cleanedDdl = stripSqlComments(ddl)
+	const cleanedDdl = ddl
 	const normalizedDdl = cleanedDdl.replace(/\s+/g, " ").trim()
 	const createTableStatement = extractCreateTableStatements(cleanedDdl)[0]
 

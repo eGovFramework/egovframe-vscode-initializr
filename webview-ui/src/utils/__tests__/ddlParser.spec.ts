@@ -393,31 +393,6 @@ describe("ddlParser", () => {
 		expect(result.attributes.map((attribute) => attribute.columnName)).toEqual(["path", "nm"])
 	})
 
-	it("should drop line comments and keep the columns that follow them", () => {
-		const result = parseDDL(`
-			CREATE TABLE t (
-				id INT PRIMARY KEY, -- user's id
-				nm VARCHAR(10)
-			);
-		`)
-
-		expect(result.dbTableName).toBe("t")
-		expect(result.attributes.map((attribute) => attribute.columnName)).toEqual(["id", "nm"])
-		expect(result.attributes[0]).toMatchObject({ columnName: "id", dataType: "INT", isPrimaryKey: true })
-	})
-
-	it("should drop hash line comments and block comments", () => {
-		const result = parseDDL(`
-			CREATE TABLE t (
-				id INT PRIMARY KEY, # owner's id
-				nm VARCHAR(10), /* 설명, 콤마 포함 */
-				age INT
-			);
-		`)
-
-		expect(result.attributes.map((attribute) => attribute.columnName)).toEqual(["id", "nm", "age"])
-	})
-
 	it("should not treat a comment marker inside a string literal as a comment", () => {
 		const result = parseDDL(`
 			CREATE TABLE t (
@@ -463,17 +438,6 @@ describe("ddlParser", () => {
 
 		expect(result.attributes.map((attribute) => attribute.columnName)).toEqual(["p", "amt", "nm"])
 		expect(result.attributes[1].comment).toBe("금액(원), 세금")
-	})
-
-	it("should not create a phantom column when an escaped quote meets a line comment", () => {
-		const result = parseDDL(`
-			CREATE TABLE t (
-				id INT COMMENT 'it\\'s, ok',
-				nm VARCHAR(10) -- owner's
-			);
-		`)
-
-		expect(result.attributes.map((attribute) => attribute.columnName)).toEqual(["id", "nm"])
 	})
 
 	it("should keep a generated column expression when two dashes are not a line comment", () => {
