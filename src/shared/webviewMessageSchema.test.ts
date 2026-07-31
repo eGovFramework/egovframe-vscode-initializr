@@ -206,10 +206,8 @@ describe("parseWebviewMessage", () => {
 			const base = { type: "generateCode", ddl: "CREATE TABLE t (id INT)", outputPath: "/tmp/out" }
 			parseOk({ ...base, packageName: "com.example.sample" })
 			parseOk(base) // packageName 생략 가능
-			// 웹뷰 validateCodeConfig와 동일한 패턴이라 연속된 점은 통과하지만,
-			// codeGenerator의 createPackagePath가 점을 모두 슬래시로 바꾸므로 ..으로는 디렉터리 탈출이 불가능하다
-			parseOk({ ...base, packageName: "com..example" })
-			for (const packageName of ["../etc", "Com.Bad", "com.", ".com", "com/example"]) {
+			// 웹뷰 validateCodeConfig와 동일하게 연속된 점과 숫자로 시작하는 세그먼트를 거부한다
+			for (const packageName of ["../etc", "Com.Bad", "com.", ".com", "com/example", "com..example", "com.1example"]) {
 				parseFail({ ...base, packageName })
 			}
 		})

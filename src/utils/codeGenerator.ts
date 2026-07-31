@@ -229,8 +229,8 @@ export async function generateCrudFromDDL(
 				prompt: "Enter package name (e.g., com.example.project)",
 				value: "com.example.project",
 				validateInput: (value) => {
-					if (!value || !value.includes(".")) {
-						return "Please enter a valid package name (e.g., com.example.project)"
+					if (!value || !/^[a-z][a-z0-9]*(\.[a-z][a-z0-9]*)*$/.test(value)) {
+						return "Please enter a valid package name with dot-separated lowercase segments (e.g., com.example.project)"
 					}
 					return null
 				},
