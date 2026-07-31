@@ -56,6 +56,17 @@ describe("validateEgovSettings", () => {
 		expect(errors.some((e) => e.includes("Default Group ID must start"))).toBe(true)
 	})
 
+	it("defaultGroupId가 연속된 점이나 숫자로 시작하는 세그먼트를 포함하면 오류를 반환한다", () => {
+		for (const defaultGroupId of ["com..example", "com.1example"]) {
+			const errors = validateEgovSettings({
+				defaultGroupId,
+				defaultArtifactId: "my-project",
+				defaultPackageName: "egovframework.example",
+			})
+			expect(errors.some((e) => e.includes("Default Group ID must start"))).toBe(true)
+		}
+	})
+
 	it("defaultArtifactId가 없으면 오류를 반환한다", () => {
 		const errors = validateEgovSettings({
 			defaultGroupId: "egovframework.com",
@@ -99,6 +110,17 @@ describe("validateEgovSettings", () => {
 			defaultPackageName: "egovframework.example.",
 		})
 		expect(errors.some((e) => e.includes("Default Package Name must start"))).toBe(true)
+	})
+
+	it("defaultPackageName이 연속된 점이나 숫자로 시작하는 세그먼트를 포함하면 오류를 반환한다", () => {
+		for (const defaultPackageName of ["com..example", "com.1example"]) {
+			const errors = validateEgovSettings({
+				defaultGroupId: "egovframework.com",
+				defaultArtifactId: "my-project",
+				defaultPackageName,
+			})
+			expect(errors.some((e) => e.includes("Default Package Name must start"))).toBe(true)
+		}
 	})
 
 	it("여러 필드가 동시에 잘못되면 모든 오류를 반환한다", () => {
