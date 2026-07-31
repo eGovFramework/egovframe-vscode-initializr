@@ -96,6 +96,17 @@ describe("parseWebviewMessage", () => {
 		}
 	})
 
+	it("scope를 선택적으로 받는 요청 메시지를 허용한다", () => {
+		expect(parseOk({ type: "selectOutputPath", scope: "code" })).toEqual({ type: "selectOutputPath", scope: "code" })
+		expect(parseOk({ type: "getWorkspacePath", scope: "projects" })).toEqual({
+			type: "getWorkspacePath",
+			scope: "projects",
+		})
+		expect(parseOk({ type: "getEgovSettings", scope: "settings" })).toEqual({ type: "getEgovSettings", scope: "settings" })
+		expect(parseOk({ type: "selectOutputPath" })).toEqual({ type: "selectOutputPath" })
+		parseFail({ type: "selectOutputPath", scope: "unknown" })
+	})
+
 	it("페이로드가 있는 모든 메시지의 정상 형태를 허용한다", () => {
 		parseOk({ type: "generateProject", projectConfig: validProjectConfig, method: "form" })
 		parseOk({ type: "generateCode", ddl: "CREATE TABLE t (id INT)", packageName: "com.example", outputPath: "/tmp/out" })

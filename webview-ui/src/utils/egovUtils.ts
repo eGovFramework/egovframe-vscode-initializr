@@ -1,12 +1,16 @@
-export function createSelectOutputPathMessage() {
+import type { WebviewScope } from "@shared/WebviewMessage"
+
+export function createSelectOutputPathMessage(scope?: WebviewScope) {
 	return {
 		type: "selectOutputPath" as const,
+		...(scope ? { scope } : {}),
 	}
 }
 
-export function createGetWorkspacePathMessage() {
+export function createGetWorkspacePathMessage(scope?: WebviewScope) {
 	return {
 		type: "getWorkspacePath" as const,
+		...(scope ? { scope } : {}),
 	}
 }
 

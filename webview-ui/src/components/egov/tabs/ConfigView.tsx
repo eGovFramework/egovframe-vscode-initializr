@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react"
 import { Button, TextField, TextArea, Select, RadioGroup, ProgressRing, Link, Divider } from "../../ui"
+import { getMessageText, isMessageForScope } from "@shared/webviewMessageRouting"
 import { TemplateConfig, GroupedTemplates, ConfigFormData } from "../types/templates"
 import { groupTemplates } from "../../../utils/templateUtils"
 import FormFactory from "../forms/FormFactory"
@@ -41,7 +42,10 @@ const ConfigView: React.FC = () => {
 					}
 					break
 				case "error":
-					setError(message.message || "Failed to load templates. Please try again.")
+					if (!isMessageForScope(message, "config")) {
+						break
+					}
+					setError(getMessageText(message) || "Failed to load templates. Please try again.")
 					updateState({ isTemplatesLoading: false })
 					break
 			}

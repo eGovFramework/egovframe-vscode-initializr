@@ -93,20 +93,23 @@ const egovSettingsSchema = z.object({
 	language: z.string().optional(),
 })
 
+const webviewScopeSchema = z.enum(["projects", "code", "config", "settings"])
+
 /** 페이로드 없이 type만 전달하는 단순 요청 메시지 */
 const simpleMessage = <T extends string>(type: T) => z.object({ type: z.literal(type) })
+const scopedRequest = <T extends string>(type: T) => z.object({ type: z.literal(type), scope: webviewScopeSchema.optional() })
 
 export const webviewMessageSchema = z.discriminatedUnion("type", [
 	simpleMessage("webviewDidLaunch"),
-	simpleMessage("selectOutputPath"),
+	scopedRequest("selectOutputPath"),
 	simpleMessage("generateProjectByCommand"),
-	simpleMessage("getWorkspacePath"),
+	scopedRequest("getWorkspacePath"),
 	simpleMessage("getDefaultSettings"),
 	simpleMessage("openPackageSettings"),
 	simpleMessage("getSampleDDLs"),
 	simpleMessage("getCurrentTheme"),
 	simpleMessage("selectConfigFilePath"),
-	simpleMessage("getEgovSettings"),
+	scopedRequest("getEgovSettings"),
 	simpleMessage("getExtensionInfo"),
 	simpleMessage("getProjectTemplates"),
 	simpleMessage("getConfigTemplates"),

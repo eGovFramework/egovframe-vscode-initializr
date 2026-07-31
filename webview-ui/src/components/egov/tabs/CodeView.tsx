@@ -2,6 +2,7 @@ import { Button, TextArea, Link, ProgressRing, TextField } from "../../ui"
 import { useState, useEffect, useRef } from "react"
 import { parseDDL, validateDDL, ParsedDDL } from "@shared/ddlParser"
 import { getTemplateContext } from "@shared/templateContext"
+import { getMessageText, isMessageForScope } from "@shared/webviewMessageRouting"
 import { ExtensionResponse } from "../../../utils/messageTypes"
 import { createSelectOutputPathMessage } from "../../../utils/egovUtils"
 import { vscode } from "../../../utils/vscode"
@@ -266,10 +267,10 @@ const CodeView = () => {
 
 		// Request current workspace path when component mounts
 		try {
-			vscode.postMessage({ type: "getWorkspacePath" })
+			vscode.postMessage({ type: "getWorkspacePath", scope: "code" })
 			vscode.postMessage({ type: "getSampleDDLs" })
 			vscode.postMessage({ type: "getCurrentTheme" })
-			vscode.postMessage({ type: "getEgovSettings" })
+			vscode.postMessage({ type: "getEgovSettings", scope: "code" })
 		} catch (err) {
 			console.error("Error sending message:", err)
 		}
@@ -277,18 +278,28 @@ const CodeView = () => {
 		const handleMessage = (event: MessageEvent) => {
 			const message = event.data
 			console.log("Received message from extension:", message)
-			setIsLoading(false)
 
 			if (message && typeof message === "object" && "type" in message) {
 				switch (message.type) {
-					case "error":
-						console.error("Extension error:", message.message)
-						setError(message.message || "Unknown error occurred")
+					case "error": {
+						if (!isMessageForScope(message, "code")) {
+							break
+						}
+						const errorMessage = getMessageText(message) || "Unknown error occurred"
+						console.error("Extension error:", errorMessage)
+						setIsLoading(false)
+						setError(errorMessage)
 						break
-					case "success":
-						console.log("Extension success:", message.message)
+					}
+					case "success": {
+						if (!isMessageForScope(message, "code")) {
+							break
+						}
+						console.log("Extension success:", getMessageText(message))
+						setIsLoading(false)
 						setError("")
 						break
+					}
 					case "sampleDDLs":
 						const sampleList = message.data as Extract<ExtensionResponse, { type: "sampleDDLs" }>["data"]
 						setSampleDDLs(sampleList || {})
@@ -297,12 +308,18 @@ const CodeView = () => {
 						// setDdlContent(defaultSample?.ddl || "")
 						break
 					case "selectedOutputPath":
+						if (!isMessageForScope(message, "code")) {
+							break
+						}
 						if (message.text) {
 							setOutputPath(message.text)
 							setValidationErrors([]) // Clear validation errors
 						}
 						break
 					case "currentWorkspacePath":
+						if (!isMessageForScope(message, "code")) {
+							break
+						}
 						if (message.text) {
 							setOutputPath(message.text)
 						}
@@ -466,7 +483,7 @@ const CodeView = () => {
 				return
 			}
 
-			const message = createSelectOutputPathMessage()
+			const message = createSelectOutputPathMessage("code")
 			console.log("Sending message:", message)
 			vscode.postMessage(message)
 		} catch (err) {

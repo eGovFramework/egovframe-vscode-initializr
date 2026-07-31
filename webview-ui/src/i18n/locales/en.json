@@ -41,6 +41,7 @@
 		"templateCategory": "Template Category",
 		"templateSelection": "Template Selection",
 		"loadingTemplates": "Loading templates...",
+		"failedToLoadTemplates": "Failed to load project templates. Please try again.",
 		"noTemplates": "No templates available",
 		"projectConfiguration": "Project Configuration",
 		"projectName": "Project Name",
