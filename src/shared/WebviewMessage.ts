@@ -83,23 +83,29 @@ export interface EgovSettingsPayload {
 // 메시지 타입 (type 필드로 판별)
 // ---------------------------------------------------------------------------
 
+/** 웹뷰 탭별 메시지 발신 스코프 */
+export type WebviewScope = "projects" | "code" | "config" | "settings"
+
 /** 페이로드 없이 type만으로 동작하는 단순 요청 메시지 */
 export interface SimpleWebviewMessage {
 	type:
 		| "webviewDidLaunch"
-		| "selectOutputPath"
 		| "generateProjectByCommand"
-		| "getWorkspacePath"
 		| "getDefaultSettings"
 		| "openPackageSettings"
 		| "getSampleDDLs"
 		| "getCurrentTheme"
 		| "selectConfigFilePath"
-		| "getEgovSettings"
 		| "getExtensionInfo"
 		| "getProjectTemplates"
 		| "getConfigTemplates"
 		| "selectProjectPath"
+}
+
+/** 탭 스코프를 선택적으로 포함하는 요청 메시지 */
+export interface ScopedRequestMessage {
+	type: "selectOutputPath" | "getWorkspacePath" | "getEgovSettings"
+	scope?: WebviewScope
 }
 
 export interface GenerateProjectMessage {
@@ -186,6 +192,7 @@ export interface OpenFileMessage {
 
 export type WebviewMessage =
 	| SimpleWebviewMessage
+	| ScopedRequestMessage
 	| GenerateProjectMessage
 	| GenerateCodeMessage
 	| UploadTemplatesMessage

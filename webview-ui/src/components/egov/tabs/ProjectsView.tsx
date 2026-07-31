@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react"
 import { useTranslation } from "react-i18next"
 import { Button, TextField, TextArea, Select, RadioGroup, ProgressRing, Link, Divider } from "../../ui"
+import { getMessageText, isMessageForScope } from "@shared/webviewMessageRouting"
 import { vscode } from "../../../utils/vscode"
 import {
 	ProjectTemplate,
@@ -68,11 +69,12 @@ export const ProjectsView = () => {
 
 	// Sample 버튼(handleInsertSample)을 위해 초기 출력 경로 설정
 	const [initialPath, setInitialPath] = useState("")
+	const [templatesError, setTemplatesError] = useState("")
 
 	useEffect(() => {
 		// Request project templates manifest, workspace path and default settings when component mounts
 		vscode.postMessage({ type: "getProjectTemplates" })
-		vscode.postMessage({ type: "getWorkspacePath" })
+		vscode.postMessage({ type: "getWorkspacePath", scope: "projects" })
 		vscode.postMessage({ type: "getDefaultSettings" })
 
 		// Listen for messages from extension
@@ -84,6 +86,7 @@ export const ProjectsView = () => {
 					if (message.templates) {
 						const manifestData = message.templates as ProjectTemplatesManifest
 						const templates = convertManifestToTemplates(manifestData)
+						setTemplatesError("")
 						updateState({
 							manifest: manifestData,
 							projectTemplates: templates,
@@ -91,12 +94,25 @@ export const ProjectsView = () => {
 						})
 					}
 					break
+				case "error":
+					if (!isMessageForScope(message, "projects")) {
+						break
+					}
+					setTemplatesError(getMessageText(message) || t("projects.failedToLoadTemplates"))
+					updateState({ isTemplatesLoading: false })
+					break
 				case "selectedOutputPath":
+					if (!isMessageForScope(message, "projects")) {
+						break
+					}
 					if (message.text) {
 						setOutputPath(message.text)
 					}
 					break
 				case "currentWorkspacePath":
+					if (!isMessageForScope(message, "projects")) {
+						break
+					}
 					// Set workspace path as default output path
 					if (message.text) {
 						setOutputPath(message.text)
@@ -198,7 +214,7 @@ export const ProjectsView = () => {
 	}
 
 	const handleSelectOutputPath = () => {
-		vscode.postMessage(createSelectOutputPathMessage())
+		vscode.postMessage(createSelectOutputPathMessage("projects"))
 	}
 
 	const validateForm = (): boolean => {
@@ -481,7 +497,11 @@ export const ProjectsView = () => {
 								overflowY: "auto",
 								backgroundColor: "var(--vscode-input-background)",
 							}}>
-							{isTemplatesLoading ? (
+							{templatesError ? (
+								<div style={{ textAlign: "center", padding: "20px", color: "var(--vscode-errorForeground)" }}>
+									{templatesError}
+								</div>
+							) : isTemplatesLoading ? (
 								<div
 									style={{
 										textAlign: "center",

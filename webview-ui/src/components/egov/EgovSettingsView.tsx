@@ -1,5 +1,6 @@
 import { memo, useState, useEffect } from "react"
 import { Button, TextField, useVSCodeTheme, ResponsiveMenuButton, LanguageSelector } from "../ui"
+import { getMessageText, isMessageForScope } from "@shared/webviewMessageRouting"
 import { vscode } from "../../utils/vscode"
 import { validateEgovSettings } from "../../utils/settingsUtils"
 import i18n, { changeLanguage } from "../../i18n"
@@ -98,9 +99,12 @@ const EgovSettingsView = memo(({ onDone }: EgovSettingsViewProps) => {
 				}
 			}
 			if (message.type === "success") {
+				if (!isMessageForScope(message, "settings")) {
+					return
+				}
 				setSaveStatus({
 					isSaving: false,
-					message: message.message || t("common.settingsSaved"),
+					message: getMessageText(message) || t("common.settingsSaved"),
 					type: "success",
 				})
 				// 3초 후 메시지 숨기기
@@ -113,9 +117,12 @@ const EgovSettingsView = memo(({ onDone }: EgovSettingsViewProps) => {
 				}, 3000)
 			}
 			if (message.type === "error") {
+				if (!isMessageForScope(message, "settings")) {
+					return
+				}
 				setSaveStatus({
 					isSaving: false,
-					message: message.message || t("common.settingsSaveFailed"),
+					message: getMessageText(message) || t("common.settingsSaveFailed"),
 					type: "error",
 				})
 				// 5초 후 에러 메시지 숨기기
@@ -132,7 +139,7 @@ const EgovSettingsView = memo(({ onDone }: EgovSettingsViewProps) => {
 		window.addEventListener("message", handleMessage)
 
 		// 설정 및 확장 정보 요청
-		vscode.postMessage({ type: "getEgovSettings" })
+		vscode.postMessage({ type: "getEgovSettings", scope: "settings" })
 		vscode.postMessage({ type: "getExtensionInfo" })
 
 		return () => window.removeEventListener("message", handleMessage)

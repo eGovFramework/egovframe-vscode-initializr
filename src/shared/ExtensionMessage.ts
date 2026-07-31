@@ -5,6 +5,7 @@
  */
 
 import type { ArchCheckResults } from "./archCheck"
+import type { WebviewScope } from "./WebviewMessage"
 
 export type ExtensionMessage =
 	| {
@@ -15,10 +16,12 @@ export type ExtensionMessage =
 	| {
 			type: "selectedOutputPath"
 			text: string
+			scope?: WebviewScope
 	  }
 	| {
 			type: "currentWorkspacePath"
 			text: string
+			scope?: WebviewScope
 	  }
 	| {
 			type: "projectGenerationProgress"
@@ -35,6 +38,7 @@ export type ExtensionMessage =
 			type: "success" | "error"
 			text?: string
 			message?: string
+			scope?: WebviewScope
 	  }
 	| {
 			type: "selectedOutputFolder"

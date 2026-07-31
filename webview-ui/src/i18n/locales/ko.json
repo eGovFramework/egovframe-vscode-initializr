@@ -52,6 +52,7 @@
 		"templateCategory": "템플릿 카테고리",
 		"templateSelection": "템플릿 선택",
 		"loadingTemplates": "템플릿 로딩 중...",
+		"failedToLoadTemplates": "프로젝트 템플릿 로드에 실패했습니다. 다시 시도해 주세요.",
 		"noTemplates": "사용 가능한 템플릿이 없습니다",
 		"projectConfiguration": "프로젝트 설정",
 		"projectName": "프로젝트 이름",

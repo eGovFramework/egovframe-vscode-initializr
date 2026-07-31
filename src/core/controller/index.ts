@@ -98,6 +98,7 @@ export class Controller {
 						await this.postMessageToWebview({
 							type: "selectedOutputPath",
 							text: folders[0].fsPath,
+							scope: message.scope,
 						})
 					} else {
 						console.log("No folder selected")
@@ -195,6 +196,7 @@ export class Controller {
 					await this.postMessageToWebview({
 						type: "currentWorkspacePath",
 						text: workspaceFolders[0].uri.fsPath,
+						scope: message.scope,
 					})
 				}
 				break
@@ -231,18 +233,21 @@ export class Controller {
 						await this.postMessageToWebview({
 							type: "success",
 							text: "CRUD code generation completed successfully",
+							scope: "code",
 						})
 					} catch (error) {
 						console.error("CRUD code generation error:", error)
 						await this.postMessageToWebview({
 							type: "error",
 							text: error instanceof Error ? error.message : "Code generation failed",
+							scope: "code",
 						})
 					}
 				} else {
 					await this.postMessageToWebview({
 						type: "error",
 						text: "No DDL provided for code generation",
+						scope: "code",
 					})
 				}
 				break
@@ -256,11 +261,13 @@ export class Controller {
 						await this.postMessageToWebview({
 							type: "success",
 							text: "Custom template code generation completed successfully",
+							scope: "code",
 						})
 					} catch (error) {
 						await this.postMessageToWebview({
 							type: "error",
 							text: error instanceof Error ? error.message : "Template generation failed",
+							scope: "code",
 						})
 					}
 				}
@@ -275,11 +282,13 @@ export class Controller {
 						await this.postMessageToWebview({
 							type: "success",
 							text: "Template context downloaded successfully",
+							scope: "code",
 						})
 					} catch (error) {
 						await this.postMessageToWebview({
 							type: "error",
 							text: error instanceof Error ? error.message : "Template context download failed",
+							scope: "code",
 						})
 					}
 				}
@@ -372,12 +381,14 @@ export class Controller {
 						await this.postMessageToWebview({
 							type: "success",
 							text: "Configuration file generated successfully",
+							scope: "config",
 						})
 					} catch (error) {
 						console.error("Config generation error:", error)
 						await this.postMessageToWebview({
 							type: "error",
 							text: error instanceof Error ? error.message : "Configuration file generation failed",
+							scope: "config",
 						})
 					}
 				} else {
@@ -385,6 +396,7 @@ export class Controller {
 					await this.postMessageToWebview({
 						type: "error",
 						text: "Missing template or form data for config generation",
+						scope: "config",
 					})
 				}
 				break
@@ -545,7 +557,8 @@ export class Controller {
 					console.error("Error getting eGov settings:", error)
 					await this.postMessageToWebview({
 						type: "error",
-						message: "Failed to get eGov settings",
+						text: "Failed to get eGov settings",
+						scope: message.scope,
 					})
 				}
 				break
@@ -578,13 +591,15 @@ export class Controller {
 
 					await this.postMessageToWebview({
 						type: "success",
-						message: "Settings saved successfully",
+						text: "Settings saved successfully",
+						scope: "settings",
 					})
 				} catch (error) {
 					console.error("Error updating eGov settings:", error)
 					await this.postMessageToWebview({
 						type: "error",
-						message: "Failed to save settings",
+						text: "Failed to save settings",
+						scope: "settings",
 					})
 				}
 				break
@@ -615,7 +630,8 @@ export class Controller {
 					console.error("Error getting extension info:", error)
 					await this.postMessageToWebview({
 						type: "error",
-						message: "Failed to get extension info",
+						text: "Failed to get extension info",
+						scope: "settings",
 					})
 				}
 				break
@@ -640,7 +656,8 @@ export class Controller {
 					console.error("Error reading project templates:", error)
 					await this.postMessageToWebview({
 						type: "error",
-						message: "Failed to load project templates",
+						text: "Failed to load project templates",
+						scope: "projects",
 					})
 				}
 				break
@@ -665,7 +682,8 @@ export class Controller {
 					console.error("Error reading config templates:", error)
 					await this.postMessageToWebview({
 						type: "error",
-						message: "Failed to load config templates",
+						text: "Failed to load config templates",
+						scope: "config",
 					})
 				}
 				break
