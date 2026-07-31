@@ -4,6 +4,8 @@
  * 익스텐션이 웹뷰로 보내는 메시지 타입
  */
 
+import type { WebviewScope } from "./WebviewMessage"
+
 export type ExtensionMessage =
 	| {
 			type: "action"
@@ -13,10 +15,12 @@ export type ExtensionMessage =
 	| {
 			type: "selectedOutputPath"
 			text: string
+			scope?: WebviewScope
 	  }
 	| {
 			type: "currentWorkspacePath"
 			text: string
+			scope?: WebviewScope
 	  }
 	| {
 			type: "projectGenerationProgress"
@@ -33,6 +37,7 @@ export type ExtensionMessage =
 			type: "success" | "error"
 			text?: string
 			message?: string
+			scope?: WebviewScope
 	  }
 	| {
 			type: "selectedOutputFolder"

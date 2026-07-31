@@ -31,7 +31,8 @@ export async function activate(context: vscode.ExtensionContext) {
 					action: "egovButtonClicked",
 				})
 
-				// Send current workspace path as default output path
+				// 특정 탭 요청에 대한 응답이 아니라 열려 있는 모든 탭에 기본 출력 경로를 알리는 브로드캐스트다.
+				// 그래서 currentWorkspacePath에는 scope를 붙이지 않는다.
 				const workspaceFolders = vscode.workspace.workspaceFolders
 				if (workspaceFolders && workspaceFolders.length > 0) {
 					const workspacePath = workspaceFolders[0].uri.fsPath
