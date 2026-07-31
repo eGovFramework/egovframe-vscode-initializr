@@ -32,6 +32,9 @@ export default defineConfig({
 		environment: "jsdom",
 		globals: true,
 		setupFiles: ["./src/setupTests.ts"],
+		// monaco-editor 0.31은 package.json에 main 필드가 없어 테스트 환경에서 해석되지 않는다.
+		// 에디터는 테스트 대상이 아니므로 테스트에서만 빈 스텁으로 대체한다.
+		alias: [{ find: /^monaco-editor$/, replacement: resolve(__dirname, "./src/__mocks__/monaco-editor.ts") }],
 		coverage: {
 			provider: "v8",
 			reportOnFailure: true,
