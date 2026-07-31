@@ -21,8 +21,8 @@ const SAFE_ZIP_FILE_PATTERN = /^(?!\.)(?!.*\.\.)[A-Za-z0-9._-]+\.zip$/
 const SAFE_XML_FILE_PATTERN = /^(?!\.)(?!.*\.\.)[A-Za-z0-9._-]+\.xml$/
 const SAFE_HBS_FILE_PATTERN = /^(?!\.)(?!.*\.\.)[A-Za-z0-9._-]+\.hbs$/
 const TEMPLATE_FOLDER_PATTERN = /^[A-Za-z0-9_-]+$/
-// 웹뷰 validateCodeConfig와 동일한 Java 패키지명 규칙 — 패키지 경로(디렉터리) 생성에 쓰이므로 엄격하게 검증한다
-const JAVA_PACKAGE_PATTERN = /^[a-z]([a-z0-9.]*[a-z0-9])?$/
+// 웹뷰 validateCodeConfig와 동일한 Java 패키지명 규칙 — 점으로 구분된 각 세그먼트가 소문자로 시작해야 한다
+const JAVA_PACKAGE_PATTERN = /^[a-z][a-z0-9]*(\.[a-z][a-z0-9]*)*$/
 
 // templates-context-xml.json은 "변형 템플릿 없음"을 빈 문자열로 표기하므로 빈 문자열도 허용한다
 const optionalHbsFileSchema = z.literal("").or(z.string().regex(SAFE_HBS_FILE_PATTERN)).optional()

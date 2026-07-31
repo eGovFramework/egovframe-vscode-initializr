@@ -7,16 +7,16 @@ export interface CodeConfig {
 
 /**
  * CodeView에서 사용되는 설정에 대한 validation을 수행합니다.
- * packageName은 Java package name 규칙을 따르며 groupId와 동일한 validation을 적용합니다.
+ * packageName은 점으로 구분된 각 세그먼트가 소문자로 시작하는 Java package name 규칙을 따릅니다.
  */
 export function validateCodeConfig(config: Partial<CodeConfig>): string[] {
 	const errors: string[] = []
 
 	if (!config.packageName || config.packageName.trim() === "") {
 		errors.push("Package name is required")
-	} else if (!/^[a-z]([a-z0-9.]*[a-z0-9])?$/.test(config.packageName)) {
+	} else if (!/^[a-z][a-z0-9]*(\.[a-z][a-z0-9]*)*$/.test(config.packageName)) {
 		errors.push(
-			"Package name must start with a lowercase letter, contain only lowercase letters, numbers, or dots, and cannot end with a dot",
+			"Package name must start with a lowercase letter and consist of dot-separated segments, where each segment starts with a lowercase letter and contains only lowercase letters or numbers",
 		)
 	}
 
@@ -39,7 +39,7 @@ export function hasSpecialCharacters(value: string): boolean {
 
 /**
  * Java 패키지명 유효성을 검사합니다.
- * 패키지명은 소문자로 시작하고, 소문자, 숫자, 점(.)만 포함할 수 있으며, 점으로 끝날 수 없습니다.
+ * 패키지명은 점으로 구분된 각 세그먼트가 소문자로 시작하고, 소문자와 숫자만 포함할 수 있습니다.
  * @param packageName - 검사할 패키지명
  * @returns 에러 메시지 (유효하면 null)
  */
@@ -48,8 +48,8 @@ export function validatePackageName(packageName: string): string | null {
 		return "Package name is required"
 	}
 
-	if (!/^[a-z]([a-z0-9.]*[a-z0-9])?$/.test(packageName)) {
-		return "Package name must start with a lowercase letter, contain only lowercase letters, numbers, or dots, and cannot end with a dot"
+	if (!/^[a-z][a-z0-9]*(\.[a-z][a-z0-9]*)*$/.test(packageName)) {
+		return "Package name must start with a lowercase letter and consist of dot-separated segments, where each segment starts with a lowercase letter and contains only lowercase letters or numbers"
 	}
 
 	return null
