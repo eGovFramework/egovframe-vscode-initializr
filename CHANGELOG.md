@@ -8,6 +8,7 @@
   - TEXT/BLOB/BYTE 타입을 각각 String/byte[]/byte[]로 변환하도록 매핑 추가 (Refs: PR #16)
   - 컬럼 COMMENT 본문에 "primary key" 문구가 있을 때 해당 컬럼이 PK로 오분류되어 생성 SQL의 WHERE 절이 잘못되던 문제 수정 (Refs: PR #27)
   - ERD Preview에서 컬럼 COMMENT 본문의 "primary key"·"references" 문구를 제약조건으로 오인해 PK/FK가 잘못 표시되던 문제 수정 (Refs: PR #33)
+  - COMMENT·DEFAULT 문자열 안의 콤마·괄호 때문에 컬럼 분리가 깨져 DDL 파싱과 CRUD 코드 생성이 실패하던 문제 수정 (Refs: PR #34)
 - Config Generation
   - AOP 트랜잭션 설정 템플릿에서 txAdvisor의 잘못된 직접 메서드 호출 수정 (Refs: PR #12)
   - TransactionForm의 READ_UNCOMMITTED 오타 수정 (Refs: PR #9)

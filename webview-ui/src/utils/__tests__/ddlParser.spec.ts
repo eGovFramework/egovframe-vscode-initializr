@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { parseDDL, validateDDL } from "@shared/ddlParser"
+import { parseDDL, splitColumnDefinitions, validateDDL } from "@shared/ddlParser"
 
 describe("ddlParser", () => {
 	it("should parse basic MySQL columns and inline primary key", () => {
@@ -291,6 +291,175 @@ describe("ddlParser", () => {
 		expect(result.attributes[0].isPrimaryKey).toBe(true)
 	})
 
+	it("should not split columns on commas inside COMMENT literals", () => {
+		const result = parseDDL(`
+			CREATE TABLE users (
+				user_id VARCHAR(20) NOT NULL COMMENT '사용자 ID, 기본키',
+				user_nm VARCHAR(50) NOT NULL COMMENT '사용자 이름',
+				PRIMARY KEY (user_id)
+			);
+		`)
+
+		expect(result.attributes.map((attribute) => attribute.columnName)).toEqual(["user_id", "user_nm"])
+		expect(result.attributes[0].comment).toBe("사용자 ID, 기본키")
+		expect(result.attributes[1].comment).toBe("사용자 이름")
+		expect(result.pkAttributes.map((attribute) => attribute.columnName)).toEqual(["user_id"])
+	})
+
+	it("should not split columns on commas inside DEFAULT literals and escaped quotes", () => {
+		const result = parseDDL(`
+			CREATE TABLE codes (
+				code_id VARCHAR(10) PRIMARY KEY,
+				code_nm VARCHAR(50) DEFAULT 'A,B' COMMENT 'user''s code, label',
+				use_yn CHAR(1) DEFAULT 'Y'
+			);
+		`)
+
+		expect(result.attributes.map((attribute) => attribute.columnName)).toEqual(["code_id", "code_nm", "use_yn"])
+		expect(result.attributes[1].comment).toBe("user's code, label")
+	})
+
+	it("should ignore parentheses inside string literals when extracting the statement body", () => {
+		const result = parseDDL(`
+			CREATE TABLE notices (
+				notice_id INT PRIMARY KEY COMMENT '공지 ID (필수',
+				title VARCHAR(200) COMMENT '제목'
+			);
+		`)
+
+		expect(result.attributes.map((attribute) => attribute.columnName)).toEqual(["notice_id", "title"])
+		expect(result.attributes[0].comment).toBe("공지 ID (필수")
+	})
+
+	it("should not end the statement body at a closing parenthesis inside a string literal", () => {
+		const result = parseDDL(`
+			CREATE TABLE remarks (
+				remark_id INT PRIMARY KEY COMMENT '비고 ID)',
+				remark_ct VARCHAR(200) COMMENT '내용'
+			);
+		`)
+
+		expect(result.attributes.map((attribute) => attribute.columnName)).toEqual(["remark_id", "remark_ct"])
+		expect(result.attributes[1].comment).toBe("내용")
+	})
+
+	it("should parse columns when a comment contains a backslash-escaped quote", () => {
+		const result = parseDDL(`
+			CREATE TABLE users (
+				user_id VARCHAR(20) NOT NULL COMMENT 'user\\'s id',
+				user_nm VARCHAR(50) NOT NULL
+			);
+		`)
+
+		expect(result.dbTableName).toBe("users")
+		expect(result.attributes.map((attribute) => attribute.columnName)).toEqual(["user_id", "user_nm"])
+	})
+
+	it("should parse columns when a default value is a double quoted literal containing an apostrophe", () => {
+		const result = parseDDL(`
+			CREATE TABLE users (
+				user_id VARCHAR(20) NOT NULL DEFAULT "it's",
+				user_nm VARCHAR(50) NOT NULL
+			);
+		`)
+
+		expect(result.attributes.map((attribute) => attribute.columnName)).toEqual(["user_id", "user_nm"])
+	})
+
+	it("should parse the first table when an earlier column comment contains a backslash-escaped quote", () => {
+		const result = parseDDL(`
+			CREATE TABLE users (
+				user_id VARCHAR(20) NOT NULL COMMENT 'user\\'s id',
+				PRIMARY KEY (user_id)
+			);
+			CREATE TABLE orders (
+				order_id INT PRIMARY KEY,
+				amt DECIMAL(10,2)
+			);
+		`)
+
+		expect(result.dbTableName).toBe("users")
+		expect(result.attributes.map((attribute) => attribute.columnName)).toEqual(["user_id"])
+	})
+
+	it("should parse columns when a default value ends with a backslash", () => {
+		const result = parseDDL(`
+			CREATE TABLE files (
+				path VARCHAR(50) DEFAULT 'C:\\',
+				nm VARCHAR(10)
+			);
+		`)
+
+		expect(result.attributes.map((attribute) => attribute.columnName)).toEqual(["path", "nm"])
+	})
+
+	it("should not treat a comment marker inside a string literal as a comment", () => {
+		const result = parseDDL(`
+			CREATE TABLE t (
+				id INT COMMENT 'a -- b, c',
+				nm VARCHAR(10)
+			);
+		`)
+
+		expect(result.attributes.map((attribute) => attribute.columnName)).toEqual(["id", "nm"])
+		expect(result.attributes[0].comment).toBe("a -- b, c")
+	})
+
+	it("should keep a comment marker that a MySQL escape puts inside a string literal", () => {
+		const result = parseDDL(`
+			CREATE TABLE t (
+				id INT COMMENT 'it\\'s -- ok',
+				nm VARCHAR(10)
+			);
+		`)
+
+		expect(result.attributes.map((attribute) => attribute.columnName)).toEqual(["id", "nm"])
+	})
+
+	it("should keep every column when a dialect-ambiguous backslash meets a line comment", () => {
+		const result = parseDDL(`
+			CREATE TABLE a (
+				p VARCHAR(50) DEFAULT 'C:\\',
+				id INT -- owner's
+			);
+		`)
+
+		expect(result.attributes.map((attribute) => attribute.columnName)).toEqual(["p", "id"])
+	})
+
+	it("should keep every column when a trailing backslash precedes later quoted comments", () => {
+		const result = parseDDL(`
+			CREATE TABLE t (
+				p VARCHAR(50) DEFAULT 'C:\\',
+				amt DECIMAL(10,2) COMMENT '금액(원), 세금',
+				nm VARCHAR(10) COMMENT '이름, 별칭'
+			);
+		`)
+
+		expect(result.attributes.map((attribute) => attribute.columnName)).toEqual(["p", "amt", "nm"])
+		expect(result.attributes[1].comment).toBe("금액(원), 세금")
+	})
+
+	it("should keep a generated column expression when two dashes are not a line comment", () => {
+		// MySQL은 `--` 뒤에 공백이 없으면 줄 주석으로 보지 않는다. 주석으로 지우면 괄호 균형이 깨진다.
+		const ddl = `CREATE TABLE t (
+  id INT,
+  x INT GENERATED ALWAYS AS (a--b) STORED,
+  nm INT
+);`
+		const result = parseDDL(ddl)
+		expect(result.attributes.map((column) => column.columnName)).toEqual(["id", "x", "nm"])
+	})
+
+	it("should keep an arithmetic default when two dashes are not a line comment", () => {
+		const ddl = `CREATE TABLE t (
+  id INT DEFAULT (5--3),
+  nm INT
+);`
+		const result = parseDDL(ddl)
+		expect(result.attributes.map((column) => column.columnName)).toEqual(["id", "nm"])
+	})
+
 	it("should convert underscore followed by a digit into a clean camelCase name", () => {
 		const result = parseDDL(`
 			CREATE TABLE addresses (
@@ -338,6 +507,18 @@ describe("validateDDL", () => {
 		).toBe(false)
 	})
 
+	it("should accept CREATE TABLE statements whose comments contain commas", () => {
+		expect(
+			validateDDL(`
+				CREATE TABLE users (
+					user_id VARCHAR(20) NOT NULL COMMENT '사용자 ID, 기본키',
+					user_nm VARCHAR(50) NOT NULL COMMENT '사용자 이름',
+					PRIMARY KEY (user_id)
+				);
+			`),
+		).toBe(true)
+	})
+
 	it("should reject empty input", () => {
 		expect(validateDDL("")).toBe(false)
 	})
@@ -349,5 +530,107 @@ describe("validateDDL", () => {
 
 	it("should reject CREATE TABLE with no closing parenthesis (statement extraction fails)", () => {
 		expect(validateDDL("CREATE TABLE sample (id INT")).toBe(false)
+	})
+
+	it("should accept a comment containing a backslash-escaped quote", () => {
+		expect(
+			validateDDL(`
+				CREATE TABLE users (
+					user_id VARCHAR(20) NOT NULL COMMENT 'user\\'s id',
+					user_nm VARCHAR(50) NOT NULL
+				);
+			`),
+		).toBe(true)
+	})
+
+	it("should accept a line comment containing an apostrophe", () => {
+		expect(
+			validateDDL(`
+				CREATE TABLE t (
+					id INT PRIMARY KEY, -- user's id
+					nm VARCHAR(10)
+				);
+			`),
+		).toBe(true)
+	})
+
+	it("should accept a dialect-ambiguous backslash followed by a line comment", () => {
+		expect(
+			validateDDL(`
+				CREATE TABLE a (
+					p VARCHAR(50) DEFAULT 'C:\\',
+					id INT -- owner's
+				);
+			`),
+		).toBe(true)
+	})
+
+	it("should accept a double quoted default value containing an apostrophe", () => {
+		expect(
+			validateDDL(`
+				CREATE TABLE users (
+					user_id VARCHAR(20) NOT NULL DEFAULT "it's",
+					user_nm VARCHAR(50) NOT NULL
+				);
+			`),
+		).toBe(true)
+	})
+})
+
+describe("splitColumnDefinitions", () => {
+	it("should split on top level commas only", () => {
+		expect(splitColumnDefinitions("a DECIMAL(10,2), CHECK (a IN ('Y','N')), b INT")).toEqual([
+			"a DECIMAL(10,2)",
+			"CHECK (a IN ('Y','N'))",
+			"b INT",
+		])
+	})
+
+	it("should keep commas inside single quoted literals", () => {
+		expect(splitColumnDefinitions("id INT COMMENT 'a, b', nm VARCHAR(10)")).toEqual([
+			"id INT COMMENT 'a, b'",
+			"nm VARCHAR(10)",
+		])
+	})
+
+	it("should keep commas inside literals using doubled quotes", () => {
+		expect(splitColumnDefinitions("id INT COMMENT 'a''b, c', nm VARCHAR(10)")).toEqual([
+			"id INT COMMENT 'a''b, c'",
+			"nm VARCHAR(10)",
+		])
+	})
+
+	it("should keep commas inside literals using backslash-escaped quotes", () => {
+		expect(splitColumnDefinitions("id INT COMMENT 'a\\', b', nm VARCHAR(10)")).toEqual([
+			"id INT COMMENT 'a\\', b'",
+			"nm VARCHAR(10)",
+		])
+	})
+
+	it("should keep commas inside double quoted literals", () => {
+		expect(splitColumnDefinitions(`id INT DEFAULT "it's, ok", nm VARCHAR(10)`)).toEqual([
+			`id INT DEFAULT "it's, ok"`,
+			"nm VARCHAR(10)",
+		])
+	})
+
+	it("should keep commas inside backtick quoted identifiers", () => {
+		expect(splitColumnDefinitions("`a,b` INT, c INT")).toEqual(["`a,b` INT", "c INT"])
+	})
+
+	it("should not treat a trailing backslash as an escape when it unbalances the quotes", () => {
+		expect(splitColumnDefinitions("path VARCHAR(50) DEFAULT 'C:\\', nm VARCHAR(10)")).toEqual([
+			"path VARCHAR(50) DEFAULT 'C:\\'",
+			"nm VARCHAR(10)",
+		])
+	})
+
+	it("should fall back to quote-unaware splitting when a quote is left open", () => {
+		expect(splitColumnDefinitions("id INT COMMENT 'oops, nm VARCHAR(10)")).toEqual(["id INT COMMENT 'oops", "nm VARCHAR(10)"])
+	})
+
+	it("should drop empty definitions", () => {
+		expect(splitColumnDefinitions("")).toEqual([])
+		expect(splitColumnDefinitions(" , , ")).toEqual([])
 	})
 })

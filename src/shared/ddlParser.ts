@@ -25,6 +25,16 @@ export interface CreateTableStatement {
 	statement: string
 }
 
+// 인용부호 해석 방식
+// backslash: MySQL 계열(백슬래시 이스케이프) · doubled: 표준 SQL(중복 인용부호만) · none: 인용부호 무시
+type QuoteMode = "backslash" | "doubled" | "none"
+
+interface QuoteMask {
+	quoted: boolean[] // 각 문자가 인용부호(', ", `) 안인지 여부(여닫는 인용부호 자체 포함)
+	balanced: boolean // 스캔이 끝났을 때 모든 인용부호가 닫혔는지 여부
+	spansLines: boolean // 문자열 리터럴이 줄바꿈을 넘겼는지 여부(해석이 어긋났다는 신호)
+}
+
 // snake_case를 camelCase로 변환하는 함수
 function convertToCamelCase(str: string): string {
 	// 언더스코어 뒤의 영문/숫자를 모두 처리한다. 숫자만 오는 경우(addr_1 등)에도
@@ -48,15 +58,71 @@ function decodeSqlComment(comment: string): string {
 	return comment.replace(/''/g, "'")
 }
 
+// 인용부호 안에 있는 문자 위치를 표시한 마스크를 만든다.
+// 단일·이중 인용부호와 백틱 식별자를 각각 추적해 문자열 안의 콤마·괄호·세미콜론을 구조 문자로 오인하지 않게 한다.
+function buildQuoteMask(sql: string, mode: QuoteMode): QuoteMask {
+	const quoted = Array<boolean>(sql.length).fill(false)
+
+	if (mode === "none") {
+		return { quoted, balanced: true, spansLines: false }
+	}
+
+	let openQuote: string | undefined
+	let spansLines = false
+
+	for (let index = 0; index < sql.length; index += 1) {
+		const char = sql[index]
+
+		if (!openQuote) {
+			if (char === "'" || char === '"' || char === "`") {
+				openQuote = char
+				quoted[index] = true
+			}
+			continue
+		}
+
+		quoted[index] = true
+
+		if (char === "\n" || char === "\r") {
+			spansLines = true
+		}
+
+		if (char === openQuote) {
+			if (sql[index + 1] === openQuote) {
+				quoted[index + 1] = true
+				index += 1
+			} else {
+				openQuote = undefined
+			}
+		} else if (mode === "backslash" && openQuote !== "`" && char === "\\" && index + 1 < sql.length) {
+			quoted[index + 1] = true
+			index += 1
+		}
+	}
+
+	return { quoted, balanced: openQuote === undefined, spansLines }
+}
+
+// 인용부호가 모두 닫히고 문자열이 줄바꿈을 넘지 않는 첫 해석을 고른다.
+// MySQL 백슬래시 이스케이프를 먼저 시도하고, 어긋나면 표준 SQL의 중복 인용부호 해석을 시도한다.
+// 줄바꿈을 넘긴 문자열은 인용부호 해석이 어긋났다는 신호다(DDL의 문자열 리터럴은 한 줄에 담긴다).
+function resolveQuoteMask(sql: string): QuoteMask {
+	for (const mode of ["backslash", "doubled"] as const) {
+		const mask = buildQuoteMask(sql, mode)
+		if (mask.balanced && !mask.spansLines) {
+			return mask
+		}
+	}
+
+	// 둘 다 실패하면 인용부호를 무시해 기존 base 동작 이하로 떨어지지 않게 한다.
+	return buildQuoteMask(sql, "none")
+}
+
 function extractStatementOptions(ddl: string, startIndex: number): string {
-	let inString = false
+	const mask = resolveQuoteMask(ddl)
 
 	for (let index = startIndex; index < ddl.length; index += 1) {
-		if (ddl[index] === "'" && inString && ddl[index + 1] === "'") {
-			index += 1
-		} else if (ddl[index] === "'") {
-			inString = !inString
-		} else if (ddl[index] === ";" && !inString) {
+		if (ddl[index] === ";" && !mask.quoted[index]) {
 			return ddl.slice(startIndex, index)
 		}
 	}
@@ -64,35 +130,128 @@ function extractStatementOptions(ddl: string, startIndex: number): string {
 	return ddl.slice(startIndex)
 }
 
-export function extractCreateTableStatements(ddl: string): CreateTableStatement[] {
-	const statements: CreateTableStatement[] = []
-	const createTableRegex = /CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?[`"]?(\w+)[`"]?\s*\(/gi
+function splitTopLevelCommas(body: string, mask: QuoteMask): { definitions: string[]; closed: boolean } {
+	const definitions: string[] = []
+	let depth = 0
+	let startIndex = 0
+
+	for (let index = 0; index < body.length; index += 1) {
+		const char = body[index]
+
+		if (mask.quoted[index]) {
+			continue
+		}
+
+		if (char === "(") {
+			depth += 1
+		} else if (char === ")" && depth > 0) {
+			depth -= 1
+		} else if (char === "," && depth === 0) {
+			const definition = body.slice(startIndex, index).trim()
+			if (definition) {
+				definitions.push(definition)
+			}
+			startIndex = index + 1
+		}
+	}
+
+	const definition = body.slice(startIndex).trim()
+	if (definition) {
+		definitions.push(definition)
+	}
+
+	return { definitions, closed: depth === 0 }
+}
+
+// CREATE TABLE 본문을 컬럼 정의 단위로 분리하는 함수
+// 문자열 리터럴('' 이스케이프 포함)과 괄호 depth를 인식해 최상위 콤마에서만 분리한다.
+// COMMENT '사용자 ID, 기본키'처럼 주석에 콤마가 있어도 컬럼 정의가 쪼개지지 않는다.
+export function splitColumnDefinitions(body: string): string[] {
+	const resolved = splitTopLevelCommas(body, resolveQuoteMask(body))
+	if (resolved.closed) {
+		return resolved.definitions
+	}
+
+	// depth가 닫히지 않으면 인용부호를 무시해 기존 base 동작 이하로 떨어지지 않게 한다.
+	return splitTopLevelCommas(body, buildQuoteMask(body, "none")).definitions
+}
+
+function findStatementBodyEnd(ddl: string, bodyStart: number, mask: QuoteMask): number | undefined {
+	let depth = 1
+
+	for (let index = bodyStart; index < ddl.length; index += 1) {
+		const char = ddl[index]
+
+		if (mask.quoted[index]) {
+			continue
+		}
+
+		if (char === "(") {
+			depth += 1
+		} else if (char === ")") {
+			depth -= 1
+			if (depth === 0) {
+				return index
+			}
+		}
+	}
+
+	return undefined
+}
+
+// 본문이 문장 경계를 넘어 삼켰는지 검사한다(인용부호 해석이 어긋났다는 신호).
+// 정상적인 컬럼 정의 블록에는 인용부호 밖 세미콜론이나 또 다른 CREATE TABLE이 나타나지 않는다.
+function swallowsAnotherStatement(sql: string, bodyStart: number, bodyEnd: number, mask: QuoteMask): boolean {
+	for (let index = bodyStart; index < bodyEnd; index += 1) {
+		if (sql[index] === ";" && !mask.quoted[index]) {
+			return true
+		}
+	}
+
+	const statementStartRegex = /CREATE\s+TABLE\s/gi
+	const body = sql.slice(bodyStart, bodyEnd)
 	let match: RegExpExecArray | null
 
-	while ((match = createTableRegex.exec(ddl)) !== null) {
+	while ((match = statementStartRegex.exec(body)) !== null) {
+		if (!mask.quoted[bodyStart + match.index]) {
+			return true
+		}
+	}
+
+	return false
+}
+
+export function extractCreateTableStatements(sql: string): CreateTableStatement[] {
+	const statements: CreateTableStatement[] = []
+	const createTableRegex = /CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?[`"]?(\w+)[`"]?\s*\(/gi
+	const resolvedMask = resolveQuoteMask(sql)
+	let fallbackMask: QuoteMask | undefined
+	let match: RegExpExecArray | null
+
+	while ((match = createTableRegex.exec(sql)) !== null) {
 		const bodyStart = createTableRegex.lastIndex
-		let depth = 1
-		let currentIndex = bodyStart
+		const findFallbackBodyEnd = (): number | undefined => {
+			fallbackMask ??= buildQuoteMask(sql, "none")
+			return findStatementBodyEnd(sql, bodyStart, fallbackMask)
+		}
+		let bodyEnd = findStatementBodyEnd(sql, bodyStart, resolvedMask) ?? findFallbackBodyEnd()
 
-		while (currentIndex < ddl.length && depth > 0) {
-			const char = ddl[currentIndex]
-			if (char === "(") {
-				depth += 1
-			} else if (char === ")") {
-				depth -= 1
-			}
-			currentIndex += 1
+		if (bodyEnd !== undefined && swallowsAnotherStatement(sql, bodyStart, bodyEnd, resolvedMask)) {
+			bodyEnd = findFallbackBodyEnd() ?? bodyEnd
 		}
 
-		if (depth === 0) {
-			const bodyEnd = currentIndex - 1
-			statements.push({
-				tableName: match[1],
-				body: ddl.slice(bodyStart, bodyEnd),
-				statement: ddl.slice(match.index, currentIndex),
-			})
-			createTableRegex.lastIndex = currentIndex
+		if (bodyEnd === undefined) {
+			// 닫는 괄호를 찾지 못한 문장은 건너뛴다. 다음 CREATE TABLE을 본문 시작 이후에서 찾도록 lastIndex를 명시한다.
+			createTableRegex.lastIndex = bodyStart
+			continue
 		}
+
+		statements.push({
+			tableName: match[1],
+			body: sql.slice(bodyStart, bodyEnd),
+			statement: sql.slice(match.index, bodyEnd + 1),
+		})
+		createTableRegex.lastIndex = bodyEnd + 1
 	}
 
 	return statements
@@ -115,9 +274,9 @@ function isValidColumnDefinition(column: string, includePrimaryKey = false): boo
 
 // DDL 파싱 함수
 export function parseDDL(ddl: string): ParsedDDL {
-	// 공백 정규화
+	// 인용부호 해석이 줄 경계를 어긋남 신호로 쓰므로 공백 정규화는 문장 추출 이후에 한다.
 	const normalizedDdl = ddl.replace(/\s+/g, " ").trim()
-	const createTableStatement = extractCreateTableStatements(normalizedDdl)[0]
+	const createTableStatement = extractCreateTableStatements(ddl)[0]
 
 	// 테이블 이름 추출 (백틱 처리 추가) - DDL 시작 부분에서만 매칭
 	if (!createTableStatement) {
@@ -126,19 +285,19 @@ export function parseDDL(ddl: string): ParsedDDL {
 
 	const dbTableName = createTableStatement.tableName
 	const tableName = convertCamelcaseToPascalcase(convertToCamelCase(dbTableName))
+	const normalizedStatement = createTableStatement.statement.replace(/\s+/g, " ").trim()
 
-	// 컬럼 정의 추출
+	// 컬럼 정의 추출 (정의 단위로 공백 정규화)
 	const columnDefinitions = createTableStatement.body
-	const columnsArray = columnDefinitions
-		.split(/,(?![^(]*\))/)
-		.map((column) => column.trim())
+	const columnsArray = splitColumnDefinitions(columnDefinitions)
+		.map((column) => column.replace(/\s+/g, " ").trim())
 		.filter((column) => isValidColumnDefinition(column, true))
 
 	const attributes: Column[] = []
 	const pkAttributes: Column[] = []
 
 	// PRIMARY KEY 제약조건 찾기
-	const pkConstraintMatch = RegExp(/PRIMARY KEY\s*\(([^)]+)\)/i).exec(createTableStatement.statement)
+	const pkConstraintMatch = RegExp(/PRIMARY KEY\s*\(([^)]+)\)/i).exec(normalizedStatement)
 	const primaryKeyColumns = pkConstraintMatch
 		? pkConstraintMatch[1].split(",").map((col) => col.trim().replace(/[`"']/g, ""))
 		: []
@@ -157,7 +316,7 @@ export function parseDDL(ddl: string): ParsedDDL {
 
 	// 테이블 COMMENT 파싱
 	// MySQL: 컬럼 정의 블록 이후의 테이블 옵션 COMMENT 'table comment'
-	const createTableEnd = normalizedDdl.indexOf(createTableStatement.statement) + createTableStatement.statement.length
+	const createTableEnd = normalizedDdl.indexOf(normalizedStatement) + normalizedStatement.length
 	const tableOptions = extractStatementOptions(normalizedDdl, createTableEnd)
 	const mysqlTableCommentMatch = RegExp(/\bCOMMENT\s*=?\s*'((?:''|[^'])*)'/i).exec(tableOptions)
 	// PostgreSQL: COMMENT ON TABLE tableName IS 'table comment'
@@ -257,10 +416,7 @@ export function validateDDL(ddl: string): boolean {
 
 	// 각 컬럼 정의 검증
 	const columnDefinitions = createTableStatement.body
-	const columnsArray = columnDefinitions
-		.split(/,(?![^(]*\))/)
-		.map((column) => column.trim())
-		.filter((column) => isValidColumnDefinition(column))
+	const columnsArray = splitColumnDefinitions(columnDefinitions).filter((column) => isValidColumnDefinition(column))
 
 	// 각 컬럼에 컬럼명과 자료형이 있는지 확인
 	for (const columnDef of columnsArray) {
