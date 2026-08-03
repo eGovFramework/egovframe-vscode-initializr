@@ -121,4 +121,46 @@ describe("parseErdModel", () => {
 		])
 		expect(model.tables[1].columns.find((column) => column.name === "user_id")?.isForeignKey).toBe(true)
 	})
+
+	it("does not mark a column as primary key when only its comment mentions primary key", () => {
+		const model = parseErdModel(`
+			CREATE TABLE notes (
+				id INT PRIMARY KEY,
+				memo VARCHAR(100) COMMENT 'not the primary key just a note'
+			);
+		`)
+
+		const columns = model.tables[0].columns
+		expect(columns.map((column) => column.name)).toEqual(["id", "memo"])
+		expect(columns.find((column) => column.name === "id")?.isPrimaryKey).toBe(true)
+		expect(columns.find((column) => column.name === "memo")?.isPrimaryKey).toBe(false)
+	})
+
+	it("does not read a table-level primary key constraint out of a column comment", () => {
+		const model = parseErdModel(`
+			CREATE TABLE notes (
+				id INT,
+				memo VARCHAR(100) COMMENT 'see primary key (id) for details',
+				PRIMARY KEY (id)
+			);
+		`)
+
+		const columns = model.tables[0].columns
+		expect(columns.map((column) => column.name)).toEqual(["id", "memo"])
+		expect(columns.find((column) => column.name === "memo")?.isPrimaryKey).toBe(false)
+	})
+
+	it("does not read a foreign key constraint out of a column comment", () => {
+		const model = parseErdModel(`
+			CREATE TABLE notes (
+				id INT PRIMARY KEY,
+				memo VARCHAR(100) COMMENT 'foreign key (id) references users(id) is defined elsewhere'
+			);
+		`)
+
+		const columns = model.tables[0].columns
+		expect(columns.map((column) => column.name)).toEqual(["id", "memo"])
+		expect(columns.find((column) => column.name === "memo")?.isForeignKey).toBe(false)
+		expect(model.relationships).toEqual([])
+	})
 })

@@ -36,6 +36,13 @@ function getDefinitionKind(definition: string): string {
 	return definition.split(/\s+/)[0]?.toUpperCase() || ""
 }
 
+// 제약조건 판정에 쓰지 않을 COMMENT 문자열 본문을 걷어낸다.
+// 주석에 든 'primary key'·'references' 문구를 제약조건으로 오인하지 않기 위한 것으로,
+// ddlParser의 PK 판정과 같은 규칙을 쓴다.
+function stripColumnComment(definition: string): string {
+	return definition.replace(/COMMENT\s+'(?:''|[^'])*'/i, "")
+}
+
 export function parseErdModel(ddl: string): ErdModel {
 	const createTableStatements = extractCreateTableStatements(ddl)
 	const tables: ErdTable[] = []
@@ -49,13 +56,16 @@ export function parseErdModel(ddl: string): ErdModel {
 		const columns: ErdColumn[] = []
 
 		for (const definition of definitions) {
-			const pkMatch = /PRIMARY\s+KEY\s*\(([^)]+)\)/i.exec(definition)
+			const definitionWithoutComment = stripColumnComment(definition)
+			const pkMatch = /PRIMARY\s+KEY\s*\(([^)]+)\)/i.exec(definitionWithoutComment)
 			if (pkMatch) {
 				parseColumnList(pkMatch[1]).forEach((columnName) => primaryKeyColumns.add(columnName))
 				continue
 			}
 
-			const fkMatch = /FOREIGN\s+KEY\s*\(([^)]+)\)\s+REFERENCES\s+[`"]?(\w+)[`"]?\s*\(([^)]+)\)/i.exec(definition)
+			const fkMatch = /FOREIGN\s+KEY\s*\(([^)]+)\)\s+REFERENCES\s+[`"]?(\w+)[`"]?\s*\(([^)]+)\)/i.exec(
+				definitionWithoutComment,
+			)
 			if (fkMatch) {
 				const fromColumns = parseColumnList(fkMatch[1])
 				const toTable = cleanIdentifier(fkMatch[2])
@@ -88,7 +98,8 @@ export function parseErdModel(ddl: string): ErdModel {
 				continue
 			}
 
-			const inlineReferenceMatch = /REFERENCES\s+[`"]?(\w+)[`"]?\s*\(([^)]+)\)/i.exec(definition)
+			const definitionWithoutComment = stripColumnComment(definition)
+			const inlineReferenceMatch = /REFERENCES\s+[`"]?(\w+)[`"]?\s*\(([^)]+)\)/i.exec(definitionWithoutComment)
 			if (inlineReferenceMatch) {
 				const toTable = cleanIdentifier(inlineReferenceMatch[1])
 				const toColumn = parseColumnList(inlineReferenceMatch[2])[0] || "id"
@@ -104,7 +115,7 @@ export function parseErdModel(ddl: string): ErdModel {
 			columns.push({
 				name: columnName,
 				dataType,
-				isPrimaryKey: primaryKeyColumns.has(columnName) || /\bPRIMARY\s+KEY\b/i.test(definition),
+				isPrimaryKey: primaryKeyColumns.has(columnName) || /\bPRIMARY\s+KEY\b/i.test(definitionWithoutComment),
 				isForeignKey: foreignKeyColumns.has(columnName),
 			})
 		}
