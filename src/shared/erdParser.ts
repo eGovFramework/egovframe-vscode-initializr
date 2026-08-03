@@ -1,4 +1,4 @@
-import { extractCreateTableStatements } from "./ddlParser"
+import { extractCreateTableStatements, splitColumnDefinitions } from "./ddlParser"
 
 export interface ErdColumn {
 	name: string
@@ -26,13 +26,6 @@ export interface ErdModel {
 
 function cleanIdentifier(identifier: string): string {
 	return identifier.trim().replace(/^[`"']|[`"']$/g, "")
-}
-
-function splitColumnDefinitions(body: string): string[] {
-	return body
-		.split(/,(?![^(]*\))/)
-		.map((definition) => definition.trim())
-		.filter(Boolean)
 }
 
 function parseColumnList(columnList: string): string[] {
