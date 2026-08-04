@@ -108,12 +108,13 @@
 			FROM {{dbTableName}}
 			WHERE 1=1
 			<if test="searchKeyword != null and searchKeyword != ''">
+				<bind name="searchPattern" value="'%' + searchKeyword + '%'"/>
 		        <choose>
 		            <when test="searchCondition == 0">
 					{{#if pkAttributes.length}}
-						AND	{{pkAttributes.[0].columnName}} LIKE '%' || {{concat "#{" "searchKeyword" "}"}} || '%'
+						AND	{{pkAttributes.[0].columnName}} LIKE {{concat "#{" "searchPattern" "}"}}
 					{{else}}
-						AND	{{attributes.[0].columnName}} LIKE '%' || {{concat "#{" "searchKeyword" "}"}} || '%'
+						AND	{{attributes.[0].columnName}} LIKE {{concat "#{" "searchPattern" "}"}}
 					{{/if}}
 					</when>
 		            <when test="searchCondition == 1">
@@ -122,16 +123,16 @@
 						{{#if (eq pkAttributes.length 1)}}
 							{{#each attributes}}
 								{{#unless isPrimaryKey~}}{{#unless @root.foundFirst~}}
-						AND {{columnName}} LIKE '%' || {{concat "#{" "searchKeyword" "}"}} || '%'
+						AND {{columnName}} LIKE {{concat "#{" "searchPattern" "}"}}
 									{{~setVar "foundFirst" true~}}
 								{{/unless}}{{/unless}}
 							{{/each}}
 						{{else}}
-						AND	{{pkAttributes.[1].columnName}} LIKE '%' || {{concat "#{" "searchKeyword" "}"}} || '%'
+						AND	{{pkAttributes.[1].columnName}} LIKE {{concat "#{" "searchPattern" "}"}}
 						{{/if}}
 					{{else}}
 						{{#unless (eq attributes.length 1)}}
-						AND	{{attributes.[1].columnName}} LIKE '%' || {{concat "#{" "searchKeyword" "}"}} || '%'
+						AND	{{attributes.[1].columnName}} LIKE {{concat "#{" "searchPattern" "}"}}
 						{{/unless}}
 					{{/if}}
 					</when>
@@ -148,12 +149,13 @@
 			FROM {{dbTableName}}
 			WHERE 1=1
 			<if test="searchKeyword != null and searchKeyword != ''">
+				<bind name="searchPattern" value="'%' + searchKeyword + '%'"/>
 		        <choose>
 		            <when test="searchCondition == 0">
 					{{#if pkAttributes.length}}
-						AND {{pkAttributes.[0].columnName}} LIKE '%' || {{concat "#{" "searchKeyword" "}"}} || '%'
+						AND {{pkAttributes.[0].columnName}} LIKE {{concat "#{" "searchPattern" "}"}}
 					{{else}}
-						AND {{attributes.[0].columnName}} LIKE '%' || {{concat "#{" "searchKeyword" "}"}} || '%'
+						AND {{attributes.[0].columnName}} LIKE {{concat "#{" "searchPattern" "}"}}
 					{{/if}}
 					</when>
 		            <when test="searchCondition == 1">
@@ -162,16 +164,16 @@
 							{{~setVar "foundFirst" false~}}
 							{{#each attributes}}
 								{{#unless isPrimaryKey}}{{#unless @root.foundFirst}}
-						AND {{columnName}} LIKE '%' || {{concat "#{" "searchKeyword" "}"}} || '%'
+						AND {{columnName}} LIKE {{concat "#{" "searchPattern" "}"}}
 									{{~setVar "foundFirst" true~}}
 								{{/unless}}{{/unless}}
 							{{/each}}
 						{{else}}
-						AND {{pkAttributes.[1].columnName}} LIKE '%' || {{concat "#{" "searchKeyword" "}"}} || '%'
+						AND {{pkAttributes.[1].columnName}} LIKE {{concat "#{" "searchPattern" "}"}}
 						{{/if}}
 					{{else}}
 						{{#unless (eq attributes.length 1)}}
-						AND {{attributes.[1].columnName}} LIKE '%' || {{concat "#{" "searchKeyword" "}"}} || '%'
+						AND {{attributes.[1].columnName}} LIKE {{concat "#{" "searchPattern" "}"}}
 						{{/unless}}
 					{{/if}}
 					</when>
