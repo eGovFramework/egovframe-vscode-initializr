@@ -6,6 +6,7 @@
   - MyBatis Mapper SQL이 Java 클래스명 대신 실제 DB 테이블명(DDL 원본 테이블명)을 사용하도록 수정 (Refs: PR #23)
   - UPDATE 구문 SET 절에서 PK 컬럼을 제외하도록 수정 (Refs: PR #6)
   - 컬럼명에서 언더스코어 뒤에 숫자가 오는 경우(addr_1 등) camelCase 변환이 누락되어 언더스코어가 남던 문제 수정 (Refs: PR #28)
+  - 컬럼 COMMENT 본문에 "primary key" 문구가 있을 때 해당 컬럼이 PK로 오분류되어 생성 SQL의 WHERE 절이 잘못되던 문제 수정 (Refs: PR #27)
   - COMMENT·DEFAULT 문자열 안의 콤마·괄호 때문에 컬럼 분리가 깨져 DDL 파싱과 CRUD 코드 생성이 실패하던 문제 수정 (Refs: PR #34)
 - Project Generation
   - POM 생성 시 입력값(프로젝트명·groupId 등)에 `$`가 포함되면 `String.replace`의 치환 특수 시퀀스로 해석되어 pom.xml이 손상되던 문제 수정 (Refs: PR #25)

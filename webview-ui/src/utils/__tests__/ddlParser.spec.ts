@@ -40,6 +40,20 @@ describe("parseDDL", () => {
 		expect(result.attributes.map((attribute) => attribute.columnName)).toEqual(["code_id", "code_nm", "use_yn"])
 	})
 
+	it("should not treat a column as primary key when only its comment mentions primary key", () => {
+		const result = parseDDL(`
+			CREATE TABLE notes (
+				id INT PRIMARY KEY,
+				note VARCHAR(200) COMMENT 'this is the primary key column'
+			);
+		`)
+
+		expect(result.pkAttributes).toHaveLength(1)
+		expect(result.pkAttributes[0].columnName).toBe("id")
+		expect(result.attributes.find((attribute) => attribute.columnName === "note")?.isPrimaryKey).toBe(false)
+		expect(result.attributes[0].isPrimaryKey).toBe(true)
+	})
+
 	it("should ignore an opening parenthesis inside a string literal", () => {
 		const result = parseDDL(`
 			CREATE TABLE notices (

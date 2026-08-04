@@ -233,8 +233,10 @@ export function parseDDL(ddl: string): ParsedDDL {
 		// 데이터 타입에서 크기 정보 제거
 		const dataType = RegExp(/^\w+/).exec(rawDataType)?.[0] ?? rawDataType
 
-		// PRIMARY KEY 확인
-		const isPrimaryKey = primaryKeyColumns.includes(columnName) || columnDef.toUpperCase().includes("PRIMARY KEY")
+		// PRIMARY KEY 확인 (COMMENT 문자열 본문은 제외해 'primary key' 문구가 든 주석의 오탐 방지)
+		const columnDefWithoutComment = columnDef.replace(/COMMENT\s+'(?:''|[^'])*'/i, "")
+		const isPrimaryKey =
+			primaryKeyColumns.includes(columnName) || columnDefWithoutComment.toUpperCase().includes("PRIMARY KEY")
 
 		// camelCase 이름 생성
 		const ccName = convertToCamelCase(columnName)
