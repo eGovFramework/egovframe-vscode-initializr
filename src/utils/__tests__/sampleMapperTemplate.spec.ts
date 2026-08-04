@@ -30,7 +30,8 @@ interface Fixture {
 
 const bindSearchPattern = `<bind name="searchPattern" value="'%' + searchKeyword + '%'"/>`
 
-// Mirrors the subset of registerHandlebarsHelpers in codeGenerator.ts used by this template.
+// Mirrors the subset of registerHandlebarsHelpers in codeGeneratorUtils.ts used by this template.
+// unless는 Handlebars 내장 헬퍼라 등록하지 않는다(프로덕션도 오버라이드하지 않음).
 function registerTemplateHelpers() {
 	Handlebars.registerHelper("eq", function (a: any, b: any) {
 		return a === b
@@ -42,14 +43,6 @@ function registerTemplateHelpers() {
 
 	Handlebars.registerHelper("setVar", function (varName: any, varValue: any, options: any) {
 		options.data.root[varName] = varValue
-	})
-
-	Handlebars.registerHelper("unless", function (this: any, conditional: any, options: any) {
-		if (!conditional) {
-			return options.fn(this)
-		} else {
-			return options.inverse(this)
-		}
 	})
 }
 
