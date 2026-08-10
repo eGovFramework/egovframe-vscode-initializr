@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react"
 import { Button, TextField, Select, ProgressRing, Link } from "../../ui"
+import { getMessageText, isMessageForScope } from "@shared/webviewMessageRouting"
 import { vscode } from "../../../utils/vscode"
 import type { ArchCheckResults, ArchCheckSummary } from "@shared/archCheck"
 
@@ -79,25 +80,37 @@ const CheckArchView = () => {
 
 	// 컴포넌트 마운트 시 현재 워크스페이스 경로 요청
 	useEffect(() => {
-		vscode.postMessage({ type: "getWorkspacePath" })
+		vscode.postMessage({ type: "getWorkspacePath", scope: "archCheck" })
 
 		const handleMessage = (event: MessageEvent) => {
 			const message = event.data
 			switch (message.type) {
 				case "currentWorkspacePath":
+					if (!isMessageForScope(message, "archCheck")) {
+						break
+					}
 					if (message.text) {
 						setProjectPath(message.text)
 					}
 					break
 				case "selectedProjectPath":
+					if (!isMessageForScope(message, "archCheck")) {
+						break
+					}
 					if (message.text) {
 						setProjectPath(message.text)
 					}
 					break
 				case "archCheckProgress":
+					if (!isMessageForScope(message, "archCheck")) {
+						break
+					}
 					setCheckProgress(message.text || "")
 					break
 				case "archCheckResult":
+					if (!isMessageForScope(message, "archCheck")) {
+						break
+					}
 					setIsChecking(false)
 					if (message.success) {
 						setCheckResults(message.results || {})
@@ -109,8 +122,11 @@ const CheckArchView = () => {
 					}
 					break
 				case "error":
+					if (!isMessageForScope(message, "archCheck")) {
+						break
+					}
 					setIsChecking(false)
-					setError(message.text || "An unknown error occurred.")
+					setError(getMessageText(message) || "An unknown error occurred.")
 					setCheckProgress("")
 					break
 			}
@@ -121,7 +137,7 @@ const CheckArchView = () => {
 	}, [])
 
 	const handleSelectProjectPath = () => {
-		vscode.postMessage({ type: "selectProjectPath" })
+		vscode.postMessage({ type: "selectProjectPath", scope: "archCheck" })
 	}
 
 	const handleStartArchCheck = () => {

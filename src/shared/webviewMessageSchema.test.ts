@@ -104,6 +104,10 @@ describe("parseWebviewMessage", () => {
 			scope: "projects",
 		})
 		expect(parseOk({ type: "getEgovSettings", scope: "settings" })).toEqual({ type: "getEgovSettings", scope: "settings" })
+		expect(parseOk({ type: "selectProjectPath", scope: "archCheck" })).toEqual({
+			type: "selectProjectPath",
+			scope: "archCheck",
+		})
 		expect(parseOk({ type: "selectOutputPath" })).toEqual({ type: "selectOutputPath" })
 		parseFail({ type: "selectOutputPath", scope: "unknown" })
 	})

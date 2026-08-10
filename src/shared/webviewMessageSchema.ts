@@ -128,7 +128,7 @@ const archCheckResultsSchema = z.object({
 	Mapper: archCheckSummarySchema.optional(),
 })
 
-const webviewScopeSchema = z.enum(["projects", "code", "config", "settings"])
+const webviewScopeSchema = z.enum(["projects", "code", "config", "settings", "archCheck"])
 
 /** 페이로드 없이 type만 전달하는 단순 요청 메시지 */
 const simpleMessage = <T extends string>(type: T) => z.object({ type: z.literal(type) })
@@ -148,7 +148,7 @@ export const webviewMessageSchema = z.discriminatedUnion("type", [
 	simpleMessage("getExtensionInfo"),
 	simpleMessage("getProjectTemplates"),
 	simpleMessage("getConfigTemplates"),
-	simpleMessage("selectProjectPath"),
+	scopedRequest("selectProjectPath"),
 	z.object({
 		type: z.literal("generateProject"),
 		projectConfig: projectConfigSchema,

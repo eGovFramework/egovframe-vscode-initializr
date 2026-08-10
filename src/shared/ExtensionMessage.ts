@@ -141,14 +141,17 @@ export type ExtensionMessage =
 	| {
 			type: "selectedProjectPath"
 			text: string
+			scope?: WebviewScope
 	  }
 	| {
 			type: "archCheckProgress"
 			text: string
+			scope?: WebviewScope
 	  }
 	| {
 			type: "archCheckResult"
 			success: boolean
 			results?: ArchCheckResults
 			error?: string
+			scope?: WebviewScope
 	  }

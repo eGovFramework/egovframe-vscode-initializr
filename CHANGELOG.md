@@ -1,6 +1,8 @@
 # Changelog
 
 ## Unreleased
+- Architecture Check
+  - CheckArch 탭이 탭 스코프 체계(PR #36)에서 빠져 다른 탭의 실패가 CheckArch 탭 오류로 표시되고, 아키텍처 점검 오류가 스코프 없이 발신되어 모든 탭의 오류 표시·오류 화면으로 번지던 문제 수정 (Refs: PR #36)
 - Code Generation
   - DDL 입력 내용을 기반으로 테이블, 컬럼, PK/FK, 1:N 관계를 표시하는 ERD Preview 추가 (Refs: PR #10)
   - DDL COMMENT를 파싱해 VO 필드 주석에 반영 (Refs: PR #18)

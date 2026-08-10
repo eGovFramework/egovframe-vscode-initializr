@@ -708,6 +708,7 @@ export class Controller {
 						await this.postMessageToWebview({
 							type: "selectedProjectPath",
 							text: folders[0].fsPath,
+							scope: message.scope,
 						})
 					}
 				} catch (error) {
@@ -715,6 +716,7 @@ export class Controller {
 					await this.postMessageToWebview({
 						type: "error",
 						text: "Failed to select project path",
+						scope: message.scope ?? "archCheck",
 					})
 				}
 				break
@@ -731,6 +733,7 @@ export class Controller {
 							this.postMessageToWebview({
 								type: "archCheckProgress",
 								text: progressMessage,
+								scope: "archCheck",
 							})
 						}
 
@@ -740,6 +743,7 @@ export class Controller {
 							type: "archCheckResult",
 							success: true,
 							results,
+							scope: "archCheck",
 						})
 					} catch (error) {
 						console.error("Architecture check error:", error)
@@ -747,12 +751,14 @@ export class Controller {
 							type: "archCheckResult",
 							success: false,
 							error: error instanceof Error ? error.message : "Architecture check failed",
+							scope: "archCheck",
 						})
 					}
 				} else {
 					await this.postMessageToWebview({
 						type: "error",
 						text: "No project path provided for architecture check",
+						scope: "archCheck",
 					})
 				}
 				break
