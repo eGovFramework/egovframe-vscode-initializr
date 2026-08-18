@@ -89,9 +89,9 @@
 	</h2>
 
 	<form:form id="detailForm" name="detailForm" modelAttribute="{{voInstanceName}}">
-    <input type="hidden" id="searchCondition" name="searchCondition" value="{{concat "${" voInstanceName ".searchCondition}"}}" />
-    <input type="hidden" id="searchKeyword" name="searchKeyword" value="{{concat "${" voInstanceName ".searchKeyword}"}}" />
-    <input type="hidden" id="pageIndex" name="pageIndex" value="{{concat "${" voInstanceName ".pageIndex}"}}" />
+    <input type="hidden" id="searchCondition" name="searchCondition" value="<c:out value='{{concat "${" voInstanceName ".searchCondition}"}}'/>" />
+    <input type="hidden" id="searchKeyword" name="searchKeyword" value="<c:out value='{{concat "${" voInstanceName ".searchKeyword}"}}'/>" />
+    <input type="hidden" id="pageIndex" name="pageIndex" value="<c:out value='{{concat "${" voInstanceName ".pageIndex}"}}'/>" />
 
 		<div class="conts-wrap">
 			<div class="fieldset input-form">
