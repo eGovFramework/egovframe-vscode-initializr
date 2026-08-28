@@ -118,7 +118,7 @@ export async function checkFileExistence(selectedOutputFolderPath: string, formD
 export async function renderTemplate(templateFilePath: string, context: any): Promise<string> {
 	// Get default package name from settings
 	const defaultPackageName = vscode.workspace
-		.getConfiguration("egovframe")
+		.getConfiguration("egovframeInitializr")
 		.get<string>("defaultPackageName", "egovframework.example.sample")
 
 	// Enrich context with default values
