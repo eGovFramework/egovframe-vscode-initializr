@@ -14,6 +14,7 @@
   - 생성된 MyBatis Mapper의 LIKE 검색이 문자열 결합에 `||`를 사용해 MySQL 기본 설정(PIPES_AS_CONCAT 미적용)에서 검색 조건이 무시되고 검색어와 무관하게 전체 행이 반환되던 문제 수정 — 방언 중립인 `<bind>`로 교체 (Refs: PR #35)
   - 코드 생성 실패 사유가 "알 수 없는 오류"로 대체되던 문제 수정 — 익스텐션 → 웹뷰 응답에 탭 스코프를 부여하고 실패 사유 페이로드를 text로 통일. 다른 탭의 실패가 Config 탭 오류 화면이나 Output Path 덮어쓰기로 번지지 않고, 프로젝트 템플릿 로드 실패는 Projects 탭에 표시된다 (Refs: PR #36)
   - Java 패키지명과 groupId 검증을 통일해 연속된 점과 숫자로 시작하는 세그먼트를 거부하도록 수정 (Refs: PR #37)
+  - 생성된 JSP 화면이 요청 파라미터를 이스케이프 없이 출력해 반사형 XSS가 가능하던 문제 수정 — 등록/수정 화면의 검색 조건 hidden 필드와 목록 화면의 검색어 입력 필드를 `c:out`으로 감쌈 (Refs: PR #39)
 - Config Generation
   - AOP 트랜잭션 설정 템플릿에서 txAdvisor의 잘못된 직접 메서드 호출 수정 (Refs: PR #12)
   - TransactionForm의 READ_UNCOMMITTED 오타 수정 (Refs: PR #9)

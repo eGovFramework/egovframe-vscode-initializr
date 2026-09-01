@@ -115,7 +115,7 @@
 							</select>
 						</div>
 						<div class="form-conts btn-ico-wrap searchKeyword">
-							<input type="text" id="searchKeyword" name="searchKeyword" value="{{concat "${" voInstanceName ".searchKeyword}"}}" class="krds-input medium" placeholder="Search keyword">
+							<input type="text" id="searchKeyword" name="searchKeyword" value="<c:out value='{{concat "${" voInstanceName ".searchKeyword}"}}'/>" class="krds-input medium" placeholder="Search keyword">
 							<button type="button" class="krds-btn medium icon" onclick="fn_egov_selectList()">
 								<span class="sr-only">search" />Search</span>
 								<i class="svg-icon ico-sch"></i>
