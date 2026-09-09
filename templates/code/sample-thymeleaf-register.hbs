@@ -8,8 +8,8 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title th:if="registerFlag == 'modify'">{{className}} Update</title>
-    <title th:if="registerFlag == 'create'">{{className}} Regist</title>
+    <title th:if="${registerFlag == 'modify'}">{{className}} Update</title>
+    <title th:if="${registerFlag == 'create'}">{{className}} Regist</title>
 
     <!-- KRDS CSS -->
 	<link rel="stylesheet" type="text/css" th:href="@{/css/component/output.css}">
