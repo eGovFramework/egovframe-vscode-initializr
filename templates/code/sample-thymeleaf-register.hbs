@@ -83,7 +83,6 @@
 	        <div class="fieldset input-form">
 				{{#each attributes}}
 				  {{#if isPrimaryKey}}
-                <div class="form-group" th:if="{{concat "${" @root.voInstanceName "." ccName " != null}"}}">
                 <div class="form-group" th:if="{{concat "${not #strings.isEmpty(" @root.voInstanceName "." ccName ")}"}}">
                     <div class="form-tit">
                         <label for="{{ccName}}">{{pcName}}</label>
