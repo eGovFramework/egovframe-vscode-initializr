@@ -1,6 +1,7 @@
 import { Button, TextArea, Link, ProgressRing, TextField } from "../../ui"
 import { useState, useEffect, useRef, useMemo } from "react"
 import { useTranslation } from "react-i18next"
+import { useLatest } from "react-use"
 import { parseDDL, validateDDL, ParsedDDL } from "@shared/ddlParser"
 import { parseErdModel } from "@shared/erdParser"
 import { getTemplateContext } from "@shared/templateContext"
@@ -86,6 +87,8 @@ const CodeView = () => {
 	const monacoRef = useRef<typeof monaco | null>(null)
 	// DDL 검증 디바운스 타이머
 	const ddlValidationTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+	// 메시지 리스너는 마운트 시점 값에 묶이므로 최신 상태를 따로 참조한다
+	const stateRef = useLatest(state)
 	const erdModel = useMemo(() => {
 		if (!isValid || !ddlContent.trim()) {
 			return null
@@ -382,8 +385,11 @@ const CodeView = () => {
 						if (message.settings && message.settings.defaultPackageName) {
 							console.log("Received egovSettings, setting packageName to:", message.settings.defaultPackageName)
 							setDefaultPackageName(message.settings.defaultPackageName)
-							setPackageName(message.settings.defaultPackageName)
-							setValidationErrors([]) // Clear validation errors
+							// 사용자가 고쳐 넣은 Package Name은 덮어쓰지 않는다. 기본값으로 되돌리는 것은 handleResetToDefaultPackageName의 몫이다
+							if (stateRef.current.packageName === stateRef.current.defaultPackageName) {
+								setPackageName(message.settings.defaultPackageName)
+								setValidationErrors([]) // Clear validation errors
+							}
 						}
 						break
 

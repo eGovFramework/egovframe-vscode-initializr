@@ -15,6 +15,7 @@
   - 생성된 JSP 화면이 요청 파라미터를 이스케이프 없이 출력해 반사형 XSS가 가능하던 문제 수정 — 등록/수정 화면의 검색 조건 hidden 필드와 목록 화면의 검색어 입력 필드를 `c:out`으로 감쌈 (Refs: PR #39)
   - 생성된 Thymeleaf 등록/수정 화면이 PK 컬럼마다 `<div>`를 하나 더 열고 닫지 않아 버튼 영역이 입력 필드 영역(fieldset) 안으로 들어가던 문제 수정 — PK 분기에 중복으로 열려 있던 `form-group` 여는 태그 제거 (Refs: PR #40)
   - 생성된 Thymeleaf 등록/수정 화면에 `<title>`이 하나도 출력되지 않던 문제 수정 — 두 `<title>`의 `th:if` 조건만 `${}` 없이 쓰여 registerFlag가 변수가 아닌 리터럴 토큰으로 평가되던 것을 같은 파일의 나머지 조건 표기에 맞춤 (Refs: PR #41)
+  - Code 탭이 설정 화면을 다녀오는 등 기본 설정(egovSettings)을 다시 받을 때 사용자가 입력한 Package Name을 기본값으로 덮어쓰던 문제 수정 — 값이 직전 기본값 그대로일 때만 설정값으로 채우고, 기본값 복원은 입력란 옆 버튼에 맡김 (Refs: PR #42)
 - Config Generation
   - AOP 트랜잭션 설정 템플릿에서 txAdvisor의 잘못된 직접 메서드 호출 수정 (Refs: PR #12)
   - TransactionForm의 READ_UNCOMMITTED 오타 수정 (Refs: PR #9)
