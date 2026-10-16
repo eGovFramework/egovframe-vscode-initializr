@@ -24,6 +24,7 @@
 - Internationalization
   - 웹뷰 UI(*.tsx) 다국어(i18n) 처리 (Refs: PR #29)
 - Project Generation
+  - egovframe-msa-common-components 템플릿 프로젝트에서 모바일 신분증 소스코드 제거
 - Security
 - Refactoring
   - 컬럼 유효성 검사 로직 분리 (Refs: PR #13)
