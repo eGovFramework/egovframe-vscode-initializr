@@ -1,6 +1,8 @@
 # Changelog
 
 ## Unreleased
+- Project Generation
+  - egovframe-msa-common-components 템플릿 프로젝트에서 모바일 신분증 소스코드 제거
 - Code Generation
   - DDL 입력 내용을 기반으로 테이블, 컬럼, PK/FK, 1:N 관계를 표시하는 ERD Preview 추가 (Refs: PR #10)
   - DDL COMMENT를 파싱해 VO 필드 주석에 반영 (Refs: PR #18)
