@@ -1,6 +1,8 @@
 # Changelog
 
 ## Unreleased
+- Project Generation
+  - egovframe-msa-common-components 템플릿 프로젝트에서 모바일 신분증 소스코드 제거
 - Code Generation
   - CRUD 안내 문구의 뷰 파일명 표기를 실제 생성 파일명과 일치시킴
   - 컬럼 COMMENT 본문에 "primary key" 문구가 있을 때 해당 컬럼이 PK로 오분류되어 생성 SQL의 WHERE 절이 잘못되던 문제 수정 (Refs: PR #27)
