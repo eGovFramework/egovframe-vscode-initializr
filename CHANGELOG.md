@@ -8,8 +8,24 @@
   - DDL COMMENT를 파싱해 VO 필드 주석에 반영 (Refs: PR #18)
   - NUMBER 타입을 정밀도/스케일 기반으로 매핑하고 누락된 SQL 타입 보강 (Refs: PR #19)
   - TEXT/BLOB/BYTE 타입을 각각 String/byte[]/byte[]로 변환하도록 매핑 추가 (Refs: PR #16)
-  - 컬럼 COMMENT 본문에 "primary key" 문구가 있을 때 해당 컬럼이 PK로 오분류되어 생성 SQL의 WHERE 절이 잘못되던 문제 수정 (Refs: PR #27)
   - ERD Preview에서 컬럼 COMMENT 본문의 "primary key"·"references" 문구를 제약조건으로 오인해 PK/FK가 잘못 표시되던 문제 수정 (Refs: PR #33)
+- Config Generation
+  - AOP 트랜잭션 설정 템플릿에서 txAdvisor의 잘못된 직접 메서드 호출 수정 (Refs: PR #12)
+  - TransactionForm의 READ_UNCOMMITTED 오타 수정 (Refs: PR #9)
+- Internationalization
+  - 웹뷰 UI(*.tsx) 다국어(i18n) 처리 (Refs: PR #29)
+- Project Generation
+- Security
+- Refactoring
+  - 컬럼 유효성 검사 로직 분리 (Refs: PR #13)
+  - 불필요한 try/catch(no-useless-catch) 제거 (codeGenerator.ts) (Refs: PR #24)
+
+## v5.0.7 (2026-10-16)
+- Project Generation
+  - egovframe-msa-common-components 템플릿 프로젝트에서 모바일 신분증 소스코드 제거
+- Code Generation
+  - CRUD 안내 문구의 뷰 파일명 표기를 실제 생성 파일명과 일치시킴
+  - 컬럼 COMMENT 본문에 "primary key" 문구가 있을 때 해당 컬럼이 PK로 오분류되어 생성 SQL의 WHERE 절이 잘못되던 문제 수정 (Refs: PR #27)
   - COMMENT·DEFAULT 문자열 안의 콤마·괄호 때문에 컬럼 분리가 깨져 DDL 파싱과 CRUD 코드 생성이 실패하던 문제 수정 (Refs: PR #34)
   - 생성된 MyBatis Mapper의 LIKE 검색이 문자열 결합에 `||`를 사용해 MySQL 기본 설정(PIPES_AS_CONCAT 미적용)에서 검색 조건이 무시되고 검색어와 무관하게 전체 행이 반환되던 문제 수정 — 방언 중립인 `<bind>`로 교체 (Refs: PR #35)
   - 코드 생성 실패 사유가 "알 수 없는 오류"로 대체되던 문제 수정 — 익스텐션 → 웹뷰 응답에 탭 스코프를 부여하고 실패 사유 페이로드를 text로 통일. 다른 탭의 실패가 Config 탭 오류 화면이나 Output Path 덮어쓰기로 번지지 않고, 프로젝트 템플릿 로드 실패는 Projects 탭에 표시된다 (Refs: PR #36)
@@ -18,17 +34,14 @@
   - 생성된 Thymeleaf 등록/수정 화면이 PK 컬럼마다 `<div>`를 하나 더 열고 닫지 않아 버튼 영역이 입력 필드 영역(fieldset) 안으로 들어가던 문제 수정 — PK 분기에 중복으로 열려 있던 `form-group` 여는 태그 제거 (Refs: PR #40)
   - 생성된 Thymeleaf 등록/수정 화면에 `<title>`이 하나도 출력되지 않던 문제 수정 — 두 `<title>`의 `th:if` 조건만 `${}` 없이 쓰여 registerFlag가 변수가 아닌 리터럴 토큰으로 평가되던 것을 같은 파일의 나머지 조건 표기에 맞춤 (Refs: PR #41)
   - Code 탭이 설정 화면을 다녀오는 등 기본 설정(egovSettings)을 다시 받을 때 사용자가 입력한 Package Name을 기본값으로 덮어쓰던 문제 수정 — 값이 직전 기본값 그대로일 때만 설정값으로 채우고, 기본값 복원은 입력란 옆 버튼에 맡김 (Refs: PR #42)
-- Config Generation
-  - AOP 트랜잭션 설정 템플릿에서 txAdvisor의 잘못된 직접 메서드 호출 수정 (Refs: PR #12)
-  - TransactionForm의 READ_UNCOMMITTED 오타 수정 (Refs: PR #9)
-- Internationalization
-  - 웹뷰 UI(*.tsx) 다국어(i18n) 처리 (Refs: PR #29)
-- Project Generation
-  - egovframe-msa-common-components 템플릿 프로젝트에서 모바일 신분증 소스코드 제거
 - Security
+  - adm-zip 0.6.0으로 업데이트하여 CVE-2026-39244 취약점 해소
 - Refactoring
-  - 컬럼 유효성 검사 로직 분리 (Refs: PR #13)
-  - 불필요한 try/catch(no-useless-catch) 제거 (codeGenerator.ts) (Refs: PR #24)
+  - 발신처 없는 switchEgovTab 메시지 리스너 제거
+  - TS 7.0 대비 웹뷰 tsconfig(tsconfig.app.json)의 deprecated baseUrl 제거 및 paths 상대화
+  - 발신자 없는 transferDDLToCodeView 메시지 경로 제거
+  - TS 7.0 대비 루트 tsconfig의 deprecated baseUrl 제거 및 paths 상대화
+  - 미사용 경로 별칭 @api·@integrations·@services·@packages 제거
 
 ## v5.0.6 (2026-07-15)
 - Code Generation
