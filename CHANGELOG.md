@@ -15,6 +15,7 @@
 - Internationalization
   - 웹뷰 UI(*.tsx) 다국어(i18n) 처리 (Refs: PR #29)
 - Project Generation
+  - modulith 카테고리 신설
 - Security
 - Refactoring
   - 컬럼 유효성 검사 로직 분리 (Refs: PR #13)

@@ -158,7 +158,7 @@
 		},
 		{
 			"templateId": "boot-web-project",
-			"displayName": "Boot Web Project",
+			"displayName": "Boot > Web Project",
 			"description": "Spring Boot based web project",
 			"category": "Boot",
 			"projectName": "egov-boot-web",
@@ -188,7 +188,7 @@
 		},
 		{
 			"templateId": "boot-simple-backend",
-			"displayName": "Boot Template > Simple Homepage (Backend)",
+			"displayName": "Boot > Simple Homepage (Backend)",
 			"description": "Spring Boot simple homepage backend",
 			"category": "Boot",
 			"projectName": "egov-boot-simple-backend",
@@ -218,7 +218,7 @@
 		},
 		{
 			"templateId": "boot-simple-frontend",
-			"displayName": "Boot Template > Simple Homepage (Frontend)",
+			"displayName": "Boot > Simple Homepage (Frontend)",
 			"description": "React-based frontend for simple homepage",
 			"category": "Boot",
 			"projectName": "egov-boot-simple-frontend",
@@ -247,7 +247,7 @@
 		},
 		{
 			"templateId": "msa-common-components",
-			"displayName": "MSA Boot Template > Common Components (KRDS)",
+			"displayName": "MSA > Common Components",
 			"description": "MSA common components with KRDS integration",
 			"category": "MSA",
 			"projectName": "egov-msa-boot-common-components",
@@ -276,7 +276,7 @@
 		},
 		{
 			"templateId": "msa-portal-backend",
-			"displayName": "MSA Boot Template > Portal (Backend)",
+			"displayName": "MSA > Portal (Backend)",
 			"description": "MSA portal backend services",
 			"category": "MSA",
 			"projectName": "egov-msa-portal-backend",
@@ -305,7 +305,7 @@
 		},
 		{
 			"templateId": "msa-portal-frontend",
-			"displayName": "MSA Boot Template > Portal (Frontend)",
+			"displayName": "MSA > Portal (Frontend)",
 			"description": "MSA portal frontend application",
 			"category": "MSA",
 			"projectName": "egov-msa-portal-frontend",
@@ -333,8 +333,27 @@
 			]
 		},
 		{
+			"templateId": "modulith-common-components",
+			"displayName": "Modulith > Common Components",
+			"description": "Spring Modulith based modular monolith common components project",
+			"category": "Modulith",
+			"projectName": "egov-modulith-common-components",
+			"latestVersion": "5.1.0-beta.1",
+			"versions": [
+				{
+					"version": "5.1.0-beta.1",
+					"fileName": "egovframe-modulith-common-components.zip",
+					"pomFile": "egovframe-modulith-common-components-pom.xml",
+					"releaseDate": "2026-11-26",
+					"isLatest": true,
+					"included": true,
+					"fileSize": "30MB"
+				}
+			]
+		},
+		{
 			"templateId": "mobile-web",
-			"displayName": "Mobile Web Project",
+			"displayName": "Mobile > Web Project",
 			"description": "Mobile web application project",
 			"category": "Mobile",
 			"projectName": "egov-mobile-web",
@@ -364,7 +383,7 @@
 		},
 		{
 			"templateId": "mobile-common-components",
-			"displayName": "Mobile Common Components Project",
+			"displayName": "Mobile > Common Components",
 			"description": "Mobile template common-components project with hybrid app support",
 			"category": "Mobile",
 			"projectName": "egov-mobile-common-components",
@@ -394,7 +413,7 @@
 		},
 		{
 			"templateId": "mobile-deviceapi",
-			"displayName": "DeviceAPI Web Project",
+			"displayName": "Mobile > DeviceAPI Web Project",
 			"description": "Device API integration web project",
 			"category": "Mobile",
 			"projectName": "egov-mobile-deviceapi",
@@ -424,7 +443,7 @@
 		},
 		{
 			"templateId": "batch-file-scheduler",
-			"displayName": "Boot Batch Template > Scheduler (File)",
+			"displayName": "Boot Batch > Scheduler (File)",
 			"description": "File-based batch scheduler project",
 			"category": "Batch",
 			"projectName": "egov-boot-batch-file-scheduler",
@@ -454,7 +473,7 @@
 		},
 		{
 			"templateId": "batch-file-commandline",
-			"displayName": "Boot Batch Template > CommandLine (File)",
+			"displayName": "Boot Batch > CommandLine (File)",
 			"description": "File-based command line batch project",
 			"category": "Batch",
 			"projectName": "egov-boot-batch-file-commandline",
@@ -484,7 +503,7 @@
 		},
 		{
 			"templateId": "batch-file-web",
-			"displayName": "Boot Batch Template > Web (File)",
+			"displayName": "Boot Batch > Web (File)",
 			"description": "File-based web batch project",
 			"category": "Batch",
 			"projectName": "egov-boot-batch-file-web",
@@ -514,7 +533,7 @@
 		},
 		{
 			"templateId": "batch-db-scheduler",
-			"displayName": "Boot Batch Template > Scheduler (DB)",
+			"displayName": "Boot Batch > Scheduler (DB)",
 			"description": "Database-based batch scheduler project",
 			"category": "Batch",
 			"projectName": "egov-boot-batch-db-scheduler",
@@ -544,7 +563,7 @@
 		},
 		{
 			"templateId": "batch-db-commandline",
-			"displayName": "Boot Batch Template > CommandLine (DB)",
+			"displayName": "Boot Batch > CommandLine (DB)",
 			"description": "Database-based command line batch project",
 			"category": "Batch",
 			"projectName": "egov-boot-batch-db-commandline",
@@ -574,7 +593,7 @@
 		},
 		{
 			"templateId": "batch-db-web",
-			"displayName": "Boot Batch Template > Web (DB)",
+			"displayName": "Boot Batch > Web (DB)",
 			"description": "Database-based web batch project",
 			"category": "Batch",
 			"projectName": "egov-boot-batch-db-web",

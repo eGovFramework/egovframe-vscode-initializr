@@ -79,6 +79,7 @@
 		"categoryTemplate": "미리 구성된 프로젝트 템플릿",
 		"categoryBoot": "Spring Boot 기반 프로젝트",
 		"categoryMSA": "마이크로서비스 아키텍처 프로젝트",
+		"categoryModulith": "Spring Modulith 기반 모듈러 모놀리스 프로젝트",
 		"categoryMobile": "모바일 및 하이브리드 앱 프로젝트",
 		"categoryBatch": "배치 처리 프로젝트",
 		"categoryAI": "AI 기반 애플리케이션 프로젝트",

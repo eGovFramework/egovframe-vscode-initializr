@@ -950,6 +950,9 @@ export const ProjectsView = () => {
 							<strong>MSA:</strong> {t("projects.categoryMSA")}
 						</li>
 						<li>
+							<strong>Modulith:</strong> {t("projects.categoryModulith")}
+						</li>
+						<li>
 							<strong>Mobile:</strong> {t("projects.categoryMobile")}
 						</li>
 						<li>
