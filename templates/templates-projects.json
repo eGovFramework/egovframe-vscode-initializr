@@ -12,13 +12,13 @@
 			"description": "Basic eGovFrame web application project",
 			"category": "Web",
 			"projectName": "egov-web",
-			"latestVersion": "5.0.0",
+			"latestVersion": "5.1.0-beta.1",
 			"versions": [
 				{
-					"version": "5.0.0",
+					"version": "5.1.0-beta.1",
 					"fileName": "egovframe-web.zip",
 					"pomFile": "egovframe-web-pom.xml",
-					"releaseDate": "2025-01-01",
+					"releaseDate": "2026-11-26",
 					"isLatest": true,
 					"included": true,
 					"fileSize": "12MB"
@@ -30,8 +30,8 @@
 					"releaseDate": "2024-09-01",
 					"isLatest": false,
 					"included": false,
-					"downloadUrl": "v4.3.1/egovframe-web-4.3.1.zip",
-					"pomDownloadUrl": "v4.3.1/egovframe-web-4.3.1-pom.xml",
+					"downloadUrl": "v4.3/egovframe-web-4.3.1.zip",
+					"pomDownloadUrl": "v4.3/egovframe-web-4.3.1-pom.xml",
 					"fileSize": "10MB"
 				}
 			]
@@ -42,13 +42,13 @@
 			"description": "Simple homepage template with basic functionalities",
 			"category": "Template",
 			"projectName": "egov-template-simple",
-			"latestVersion": "5.0.0",
+			"latestVersion": "5.1.0-beta.1",
 			"versions": [
 				{
-					"version": "5.0.0",
+					"version": "5.1.0-beta.1",
 					"fileName": "egovframe-template-simple.zip",
 					"pomFile": "egovframe-template-simple-pom.xml",
-					"releaseDate": "2025-01-01",
+					"releaseDate": "2026-11-26",
 					"isLatest": true,
 					"included": true,
 					"fileSize": "18MB"
@@ -60,8 +60,8 @@
 					"releaseDate": "2024-09-01",
 					"isLatest": false,
 					"included": false,
-					"downloadUrl": "v4.3.1/egovframe-template-simple-4.3.1.zip",
-					"pomDownloadUrl": "v4.3.1/egovframe-template-simple-4.3.1-pom.xml",
+					"downloadUrl": "v4.3/egovframe-template-simple-4.3.1.zip",
+					"pomDownloadUrl": "v4.3/egovframe-template-simple-4.3.1-pom.xml",
 					"fileSize": "16MB"
 				}
 			]
@@ -72,13 +72,13 @@
 			"description": "Portal site template for enterprise applications",
 			"category": "Template",
 			"projectName": "egov-template-portal",
-			"latestVersion": "5.0.0",
+			"latestVersion": "5.1.0-beta.1",
 			"versions": [
 				{
-					"version": "5.0.0",
+					"version": "5.1.0-beta.1",
 					"fileName": "egovframe-template-portal.zip",
 					"pomFile": "egovframe-template-portal-pom.xml",
-					"releaseDate": "2025-01-01",
+					"releaseDate": "2026-11-26",
 					"isLatest": true,
 					"included": true,
 					"fileSize": "20MB"
@@ -90,8 +90,8 @@
 					"releaseDate": "2024-09-01",
 					"isLatest": false,
 					"included": false,
-					"downloadUrl": "v4.3.1/egovframe-template-portal-4.3.1.zip",
-					"pomDownloadUrl": "v4.3.1/egovframe-template-portal-4.3.1-pom.xml",
+					"downloadUrl": "v4.3/egovframe-template-portal-4.3.1.zip",
+					"pomDownloadUrl": "v4.3/egovframe-template-portal-4.3.1-pom.xml",
 					"fileSize": "18MB"
 				}
 			]
@@ -102,13 +102,13 @@
 			"description": "Enterprise business application template",
 			"category": "Template",
 			"projectName": "egov-template-enterprise",
-			"latestVersion": "5.0.0",
+			"latestVersion": "5.1.0-beta.1",
 			"versions": [
 				{
-					"version": "5.0.0",
+					"version": "5.1.0-beta.1",
 					"fileName": "egovframe-template-enterprise.zip",
 					"pomFile": "egovframe-template-enterprise-pom.xml",
-					"releaseDate": "2025-01-01",
+					"releaseDate": "2026-11-26",
 					"isLatest": true,
 					"included": true,
 					"fileSize": "22MB"
@@ -120,8 +120,8 @@
 					"releaseDate": "2024-09-01",
 					"isLatest": false,
 					"included": false,
-					"downloadUrl": "v4.3.1/egovframe-template-enterprise-4.3.1.zip",
-					"pomDownloadUrl": "v4.3.1/egovframe-template-enterprise-4.3.1-pom.xml",
+					"downloadUrl": "v4.3/egovframe-template-enterprise-4.3.1.zip",
+					"pomDownloadUrl": "v4.3/egovframe-template-enterprise-4.3.1-pom.xml",
 					"fileSize": "20MB"
 				}
 			]
@@ -132,13 +132,13 @@
 			"description": "Comprehensive common-components all-in-one project template",
 			"category": "Template",
 			"projectName": "egov-template-common-components",
-			"latestVersion": "5.0.0",
+			"latestVersion": "5.1.0-beta.1",
 			"versions": [
 				{
-					"version": "5.0.0",
+					"version": "5.1.0-beta.1",
 					"fileName": "egovframe-template-common-components.zip",
 					"pomFile": "egovframe-template-common-components-pom.xml",
-					"releaseDate": "2025-01-01",
+					"releaseDate": "2026-11-26",
 					"isLatest": true,
 					"included": true,
 					"fileSize": "25MB"
@@ -150,8 +150,8 @@
 					"releaseDate": "2024-09-01",
 					"isLatest": false,
 					"included": false,
-					"downloadUrl": "v4.3.1/egovframe-template-common-components-4.3.1.zip",
-					"pomDownloadUrl": "v4.3.1/egovframe-template-common-components-4.3.1-pom.xml",
+					"downloadUrl": "v4.3/egovframe-template-common-components-4.3.1.zip",
+					"pomDownloadUrl": "v4.3/egovframe-template-common-components-4.3.1-pom.xml",
 					"fileSize": "23MB"
 				}
 			]
@@ -162,13 +162,13 @@
 			"description": "Spring Boot based web project",
 			"category": "Boot",
 			"projectName": "egov-boot-web",
-			"latestVersion": "5.0.0",
+			"latestVersion": "5.1.0-beta.1",
 			"versions": [
 				{
-					"version": "5.0.0",
+					"version": "5.1.0-beta.1",
 					"fileName": "egovframe-boot-web.zip",
 					"pomFile": "egovframe-boot-web-pom.xml",
-					"releaseDate": "2025-01-01",
+					"releaseDate": "2026-11-26",
 					"isLatest": true,
 					"included": true,
 					"fileSize": "15MB"
@@ -180,8 +180,8 @@
 					"releaseDate": "2024-09-01",
 					"isLatest": false,
 					"included": false,
-					"downloadUrl": "v4.3.1/egovframe-boot-web-4.3.1.zip",
-					"pomDownloadUrl": "v4.3.1/egovframe-boot-web-4.3.1-pom.xml",
+					"downloadUrl": "v4.3/egovframe-boot-web-4.3.1.zip",
+					"pomDownloadUrl": "v4.3/egovframe-boot-web-4.3.1-pom.xml",
 					"fileSize": "12MB"
 				}
 			]
@@ -192,13 +192,13 @@
 			"description": "Spring Boot simple homepage backend",
 			"category": "Boot",
 			"projectName": "egov-boot-simple-backend",
-			"latestVersion": "5.0.0",
+			"latestVersion": "5.1.0-beta.1",
 			"versions": [
 				{
-					"version": "5.0.0",
+					"version": "5.1.0-beta.1",
 					"fileName": "egovframe-boot-simple-backend.zip",
 					"pomFile": "egovframe-boot-simple-backend-pom.xml",
-					"releaseDate": "2025-01-01",
+					"releaseDate": "2026-11-26",
 					"isLatest": true,
 					"included": true,
 					"fileSize": "16MB"
@@ -210,8 +210,8 @@
 					"releaseDate": "2024-09-01",
 					"isLatest": false,
 					"included": false,
-					"downloadUrl": "v4.3.1/egovframe-boot-simple-backend-4.3.1.zip",
-					"pomDownloadUrl": "v4.3.1/egovframe-boot-simple-backend-4.3.1-pom.xml",
+					"downloadUrl": "v4.3/egovframe-boot-simple-backend-4.3.1.zip",
+					"pomDownloadUrl": "v4.3/egovframe-boot-simple-backend-4.3.1-pom.xml",
 					"fileSize": "14MB"
 				}
 			]
@@ -222,13 +222,13 @@
 			"description": "React-based frontend for simple homepage",
 			"category": "Boot",
 			"projectName": "egov-boot-simple-frontend",
-			"latestVersion": "5.0.0",
+			"latestVersion": "5.1.0-beta.1",
 			"versions": [
 				{
-					"version": "5.0.0",
+					"version": "5.1.0-beta.1",
 					"fileName": "egovframe-boot-simple-frontend.zip",
 					"pomFile": "",
-					"releaseDate": "2025-01-01",
+					"releaseDate": "2026-11-26",
 					"isLatest": true,
 					"included": true,
 					"fileSize": "12MB"
@@ -240,7 +240,7 @@
 					"releaseDate": "2024-09-01",
 					"isLatest": false,
 					"included": false,
-					"downloadUrl": "v4.3.1/egovframe-boot-simple-frontend-4.3.1.zip",
+					"downloadUrl": "v4.3/egovframe-boot-simple-frontend-4.3.1.zip",
 					"fileSize": "10MB"
 				}
 			]
@@ -251,13 +251,13 @@
 			"description": "MSA common components with KRDS integration",
 			"category": "MSA",
 			"projectName": "egov-msa-boot-common-components",
-			"latestVersion": "5.0.0",
+			"latestVersion": "5.1.0-beta.1",
 			"versions": [
 				{
-					"version": "5.0.0",
+					"version": "5.1.0-beta.1",
 					"fileName": "egovframe-msa-common-components.zip",
 					"pomFile": "",
-					"releaseDate": "2025-01-01",
+					"releaseDate": "2026-11-26",
 					"isLatest": true,
 					"included": true,
 					"fileSize": "30MB"
@@ -269,7 +269,7 @@
 					"releaseDate": "2024-09-01",
 					"isLatest": false,
 					"included": false,
-					"downloadUrl": "v4.3.1/egovframe-msa-common-components-4.3.1.zip",
+					"downloadUrl": "v4.3/egovframe-msa-common-components-4.3.1.zip",
 					"fileSize": "28MB"
 				}
 			]
@@ -280,13 +280,13 @@
 			"description": "MSA portal backend services",
 			"category": "MSA",
 			"projectName": "egov-msa-portal-backend",
-			"latestVersion": "5.0.0",
+			"latestVersion": "5.1.0-beta.1",
 			"versions": [
 				{
-					"version": "5.0.0",
+					"version": "5.1.0-beta.1",
 					"fileName": "egovframe-msa-portal-backend.zip",
 					"pomFile": "",
-					"releaseDate": "2025-01-01",
+					"releaseDate": "2026-11-26",
 					"isLatest": true,
 					"included": true,
 					"fileSize": "18MB"
@@ -298,7 +298,7 @@
 					"releaseDate": "2024-09-01",
 					"isLatest": false,
 					"included": false,
-					"downloadUrl": "v4.3.1/egovframe-msa-portal-backend-4.3.1.zip",
+					"downloadUrl": "v4.3/egovframe-msa-portal-backend-4.3.1.zip",
 					"fileSize": "16MB"
 				}
 			]
@@ -309,13 +309,13 @@
 			"description": "MSA portal frontend application",
 			"category": "MSA",
 			"projectName": "egov-msa-portal-frontend",
-			"latestVersion": "5.0.0",
+			"latestVersion": "5.1.0-beta.1",
 			"versions": [
 				{
-					"version": "5.0.0",
+					"version": "5.1.0-beta.1",
 					"fileName": "egovframe-msa-portal-frontend.zip",
 					"pomFile": "",
-					"releaseDate": "2025-01-01",
+					"releaseDate": "2026-11-26",
 					"isLatest": true,
 					"included": true,
 					"fileSize": "15MB"
@@ -327,7 +327,7 @@
 					"releaseDate": "2024-09-01",
 					"isLatest": false,
 					"included": false,
-					"downloadUrl": "v4.3.1/egovframe-msa-portal-frontend-4.3.1.zip",
+					"downloadUrl": "v4.3/egovframe-msa-portal-frontend-4.3.1.zip",
 					"fileSize": "13MB"
 				}
 			]
@@ -338,13 +338,13 @@
 			"description": "Mobile web application project",
 			"category": "Mobile",
 			"projectName": "egov-mobile-web",
-			"latestVersion": "5.0.0",
+			"latestVersion": "5.1.0-beta.1",
 			"versions": [
 				{
-					"version": "5.0.0",
+					"version": "5.1.0-beta.1",
 					"fileName": "egovframe-mobile-web.zip",
 					"pomFile": "egovframe-mobile-web-pom.xml",
-					"releaseDate": "2025-01-01",
+					"releaseDate": "2026-11-26",
 					"isLatest": true,
 					"included": true,
 					"fileSize": "14MB"
@@ -356,8 +356,8 @@
 					"releaseDate": "2024-09-01",
 					"isLatest": false,
 					"included": false,
-					"downloadUrl": "v4.3.1/egovframe-mobile-web-4.3.1.zip",
-					"pomDownloadUrl": "v4.3.1/egovframe-mobile-web-4.3.1-pom.xml",
+					"downloadUrl": "v4.3/egovframe-mobile-web-4.3.1.zip",
+					"pomDownloadUrl": "v4.3/egovframe-mobile-web-4.3.1-pom.xml",
 					"fileSize": "12MB"
 				}
 			]
@@ -368,13 +368,13 @@
 			"description": "Mobile template common-components project with hybrid app support",
 			"category": "Mobile",
 			"projectName": "egov-mobile-common-components",
-			"latestVersion": "5.0.0",
+			"latestVersion": "5.1.0-beta.1",
 			"versions": [
 				{
-					"version": "5.0.0",
+					"version": "5.1.0-beta.1",
 					"fileName": "egovframe-mobile-common-components.zip",
 					"pomFile": "egovframe-mobile-common-components-pom.xml",
-					"releaseDate": "2025-01-01",
+					"releaseDate": "2026-11-26",
 					"isLatest": true,
 					"included": true,
 					"fileSize": "16MB"
@@ -386,8 +386,8 @@
 					"releaseDate": "2024-09-01",
 					"isLatest": false,
 					"included": false,
-					"downloadUrl": "v4.3.1/egovframe-mobile-common-components-4.3.1.zip",
-					"pomDownloadUrl": "v4.3.1/egovframe-mobile-common-components-4.3.1-pom.xml",
+					"downloadUrl": "v4.3/egovframe-mobile-common-components-4.3.1.zip",
+					"pomDownloadUrl": "v4.3/egovframe-mobile-common-components-4.3.1-pom.xml",
 					"fileSize": "14MB"
 				}
 			]
@@ -398,13 +398,13 @@
 			"description": "Device API integration web project",
 			"category": "Mobile",
 			"projectName": "egov-mobile-deviceapi",
-			"latestVersion": "5.0.0",
+			"latestVersion": "5.1.0-beta.1",
 			"versions": [
 				{
-					"version": "5.0.0",
+					"version": "5.1.0-beta.1",
 					"fileName": "egovframe-mobile-deviceapi.zip",
 					"pomFile": "egovframe-mobile-deviceapi-pom.xml",
-					"releaseDate": "2025-01-01",
+					"releaseDate": "2026-11-26",
 					"isLatest": true,
 					"included": true,
 					"fileSize": "10MB"
@@ -416,8 +416,8 @@
 					"releaseDate": "2024-09-01",
 					"isLatest": false,
 					"included": false,
-					"downloadUrl": "v4.3.1/egovframe-mobile-deviceapi-4.3.1.zip",
-					"pomDownloadUrl": "v4.3.1/egovframe-mobile-deviceapi-4.3.1-pom.xml",
+					"downloadUrl": "v4.3/egovframe-mobile-deviceapi-4.3.1.zip",
+					"pomDownloadUrl": "v4.3/egovframe-mobile-deviceapi-4.3.1-pom.xml",
 					"fileSize": "8MB"
 				}
 			]
@@ -428,13 +428,13 @@
 			"description": "File-based batch scheduler project",
 			"category": "Batch",
 			"projectName": "egov-boot-batch-file-scheduler",
-			"latestVersion": "5.0.0",
+			"latestVersion": "5.1.0-beta.1",
 			"versions": [
 				{
-					"version": "5.0.0",
+					"version": "5.1.0-beta.1",
 					"fileName": "egovframe-boot-batch-file-scheduler.zip",
 					"pomFile": "egovframe-boot-batch-file-scheduler-pom.xml",
-					"releaseDate": "2025-01-01",
+					"releaseDate": "2026-11-26",
 					"isLatest": true,
 					"included": true,
 					"fileSize": "8MB"
@@ -446,8 +446,8 @@
 					"releaseDate": "2024-09-01",
 					"isLatest": false,
 					"included": false,
-					"downloadUrl": "v4.3.1/egovframe-boot-batch-file-scheduler-4.3.1.zip",
-					"pomDownloadUrl": "v4.3.1/egovframe-boot-batch-file-scheduler-4.3.1-pom.xml",
+					"downloadUrl": "v4.3/egovframe-boot-batch-file-scheduler-4.3.1.zip",
+					"pomDownloadUrl": "v4.3/egovframe-boot-batch-file-scheduler-4.3.1-pom.xml",
 					"fileSize": "7MB"
 				}
 			]
@@ -458,13 +458,13 @@
 			"description": "File-based command line batch project",
 			"category": "Batch",
 			"projectName": "egov-boot-batch-file-commandline",
-			"latestVersion": "5.0.0",
+			"latestVersion": "5.1.0-beta.1",
 			"versions": [
 				{
-					"version": "5.0.0",
+					"version": "5.1.0-beta.1",
 					"fileName": "egovframe-boot-batch-file-commandline.zip",
 					"pomFile": "egovframe-boot-batch-file-commandline-pom.xml",
-					"releaseDate": "2025-01-01",
+					"releaseDate": "2026-11-26",
 					"isLatest": true,
 					"included": true,
 					"fileSize": "7MB"
@@ -476,8 +476,8 @@
 					"releaseDate": "2024-09-01",
 					"isLatest": false,
 					"included": false,
-					"downloadUrl": "v4.3.1/egovframe-boot-batch-file-commandline-4.3.1.zip",
-					"pomDownloadUrl": "v4.3.1/egovframe-boot-batch-file-commandline-4.3.1-pom.xml",
+					"downloadUrl": "v4.3/egovframe-boot-batch-file-commandline-4.3.1.zip",
+					"pomDownloadUrl": "v4.3/egovframe-boot-batch-file-commandline-4.3.1-pom.xml",
 					"fileSize": "6MB"
 				}
 			]
@@ -488,13 +488,13 @@
 			"description": "File-based web batch project",
 			"category": "Batch",
 			"projectName": "egov-boot-batch-file-web",
-			"latestVersion": "5.0.0",
+			"latestVersion": "5.1.0-beta.1",
 			"versions": [
 				{
-					"version": "5.0.0",
+					"version": "5.1.0-beta.1",
 					"fileName": "egovframe-boot-batch-file-web.zip",
 					"pomFile": "egovframe-boot-batch-file-web-pom.xml",
-					"releaseDate": "2025-01-01",
+					"releaseDate": "2026-11-26",
 					"isLatest": true,
 					"included": true,
 					"fileSize": "10MB"
@@ -506,8 +506,8 @@
 					"releaseDate": "2024-09-01",
 					"isLatest": false,
 					"included": false,
-					"downloadUrl": "v4.3.1/egovframe-boot-batch-file-web-4.3.1.zip",
-					"pomDownloadUrl": "v4.3.1/egovframe-boot-batch-file-web-4.3.1-pom.xml",
+					"downloadUrl": "v4.3/egovframe-boot-batch-file-web-4.3.1.zip",
+					"pomDownloadUrl": "v4.3/egovframe-boot-batch-file-web-4.3.1-pom.xml",
 					"fileSize": "9MB"
 				}
 			]
@@ -518,13 +518,13 @@
 			"description": "Database-based batch scheduler project",
 			"category": "Batch",
 			"projectName": "egov-boot-batch-db-scheduler",
-			"latestVersion": "5.0.0",
+			"latestVersion": "5.1.0-beta.1",
 			"versions": [
 				{
-					"version": "5.0.0",
+					"version": "5.1.0-beta.1",
 					"fileName": "egovframe-boot-batch-db-scheduler.zip",
 					"pomFile": "egovframe-boot-batch-db-scheduler-pom.xml",
-					"releaseDate": "2025-01-01",
+					"releaseDate": "2026-11-26",
 					"isLatest": true,
 					"included": true,
 					"fileSize": "9MB"
@@ -536,8 +536,8 @@
 					"releaseDate": "2024-09-01",
 					"isLatest": false,
 					"included": false,
-					"downloadUrl": "v4.3.1/egovframe-boot-batch-db-scheduler-4.3.1.zip",
-					"pomDownloadUrl": "v4.3.1/egovframe-boot-batch-db-scheduler-4.3.1-pom.xml",
+					"downloadUrl": "v4.3/egovframe-boot-batch-db-scheduler-4.3.1.zip",
+					"pomDownloadUrl": "v4.3/egovframe-boot-batch-db-scheduler-4.3.1-pom.xml",
 					"fileSize": "8MB"
 				}
 			]
@@ -548,13 +548,13 @@
 			"description": "Database-based command line batch project",
 			"category": "Batch",
 			"projectName": "egov-boot-batch-db-commandline",
-			"latestVersion": "5.0.0",
+			"latestVersion": "5.1.0-beta.1",
 			"versions": [
 				{
-					"version": "5.0.0",
+					"version": "5.1.0-beta.1",
 					"fileName": "egovframe-boot-batch-db-commandline.zip",
 					"pomFile": "egovframe-boot-batch-db-commandline-pom.xml",
-					"releaseDate": "2025-01-01",
+					"releaseDate": "2026-11-26",
 					"isLatest": true,
 					"included": true,
 					"fileSize": "8MB"
@@ -566,8 +566,8 @@
 					"releaseDate": "2024-09-01",
 					"isLatest": false,
 					"included": false,
-					"downloadUrl": "v4.3.1/egovframe-boot-batch-db-commandline-4.3.1.zip",
-					"pomDownloadUrl": "v4.3.1/egovframe-boot-batch-db-commandline-4.3.1-pom.xml",
+					"downloadUrl": "v4.3/egovframe-boot-batch-db-commandline-4.3.1.zip",
+					"pomDownloadUrl": "v4.3/egovframe-boot-batch-db-commandline-4.3.1-pom.xml",
 					"fileSize": "7MB"
 				}
 			]
@@ -578,13 +578,13 @@
 			"description": "Database-based web batch project",
 			"category": "Batch",
 			"projectName": "egov-boot-batch-db-web",
-			"latestVersion": "5.0.0",
+			"latestVersion": "5.1.0-beta.1",
 			"versions": [
 				{
-					"version": "5.0.0",
+					"version": "5.1.0-beta.1",
 					"fileName": "egovframe-boot-batch-db-web.zip",
 					"pomFile": "egovframe-boot-batch-db-web-pom.xml",
-					"releaseDate": "2025-01-01",
+					"releaseDate": "2026-11-26",
 					"isLatest": true,
 					"included": true,
 					"fileSize": "11MB"
@@ -596,8 +596,8 @@
 					"releaseDate": "2024-09-01",
 					"isLatest": false,
 					"included": false,
-					"downloadUrl": "v4.3.1/egovframe-boot-batch-db-web-4.3.1.zip",
-					"pomDownloadUrl": "v4.3.1/egovframe-boot-batch-db-web-4.3.1-pom.xml",
+					"downloadUrl": "v4.3/egovframe-boot-batch-db-web-4.3.1.zip",
+					"pomDownloadUrl": "v4.3/egovframe-boot-batch-db-web-4.3.1-pom.xml",
 					"fileSize": "10MB"
 				}
 			]
@@ -608,13 +608,13 @@
 			"description": "RAG Project Using Spring AI and Redis Stack",
 			"category": "AI",
 			"projectName": "egov-ai-rag-springai",
-			"latestVersion": "5.0.0",
+			"latestVersion": "5.1.0-beta.1",
 			"versions": [
 				{
-					"version": "5.0.0",
+					"version": "5.1.0-beta.1",
 					"fileName": "egovframe-ai-rag-springai.zip",
 					"pomFile": "egovframe-ai-rag-springai-pom.xml",
-					"releaseDate": "2025-01-01",
+					"releaseDate": "2026-11-26",
 					"isLatest": true,
 					"included": true,
 					"fileSize": "15MB"
@@ -627,13 +627,13 @@
 			"description": "RAG Project Using Langchain4j and PostgreSQL",
 			"category": "AI",
 			"projectName": "egov-ai-rag-langchain4j",
-			"latestVersion": "5.0.0",
+			"latestVersion": "5.1.0-beta.1",
 			"versions": [
 				{
-					"version": "5.0.0",
+					"version": "5.1.0-beta.1",
 					"fileName": "egovframe-ai-rag-langchain4j.zip",
 					"pomFile": "egovframe-ai-rag-langchain4j-pom.xml",
-					"releaseDate": "2025-01-01",
+					"releaseDate": "2026-11-26",
 					"isLatest": true,
 					"included": true,
 					"fileSize": "15MB"
