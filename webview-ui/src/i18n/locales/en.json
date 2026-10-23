@@ -85,7 +85,8 @@
 		"categoryAI": "AI-powered application projects",
 		"generationStarted": "Starting project generation...",
 		"generationSuccess": "Project generated successfully at:",
-		"generationFailed": "Generation failed:"
+		"generationFailed": "Generation failed:",
+		"templateIntegrityHint": "The downloaded template does not match the hash recorded in this extension, so it was not extracted. Update the extension to the latest version, or run \"eGovFrame: Clear Template Cache\" and try again."
 	},
 	"code": {
 		"title": "Generate eGovFrame Code from DDL",

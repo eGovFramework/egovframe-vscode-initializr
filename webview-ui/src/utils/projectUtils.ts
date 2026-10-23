@@ -1,3 +1,5 @@
+import type { ProjectGenerationErrorCode } from "@shared/ExtensionMessage"
+
 // Version information for a template
 export interface TemplateVersion {
 	version: string
@@ -213,4 +215,22 @@ export function createProjectGenerationMessage(config: ProjectConfig, method: "f
 		},
 		method,
 	}
+}
+
+/** 번역 함수 (react-i18next의 t와 호환) */
+export type Translate = (key: string) => string
+
+/**
+ * 프로젝트 생성 실패 상태 문구를 만든다. 기본 실패 문구 뒤에 호스트가 보낸 사유를 붙이고,
+ * 사유 코드에 대응하는 안내(예: 템플릿 무결성 실패 → 확장 업데이트)가 있으면 다음 줄에 덧붙인다.
+ */
+export function formatProjectGenerationFailure(
+	t: Translate,
+	result: { error?: string; errorCode?: ProjectGenerationErrorCode },
+): string {
+	const base = `❌ ${t("projects.generationFailed")} ${result.error ?? ""}`.trimEnd()
+	if (result.errorCode === "templateIntegrity") {
+		return `${base}\n${t("projects.templateIntegrityHint")}`
+	}
+	return base
 }

@@ -12,6 +12,7 @@ import {
 	convertManifestToTemplates,
 	createGenerateProjectByCommandMessage,
 	createProjectGenerationMessage,
+	formatProjectGenerationFailure,
 	getTemplatesByCategory,
 	validateProjectConfig,
 } from "../../../utils/projectUtils"
@@ -137,7 +138,7 @@ export const ProjectsView = () => {
 						setProjectName("")
 						setValidationErrors([])
 					} else {
-						setGenerationStatus(`❌ ${t("projects.generationFailed")} ${message.error}`)
+						setGenerationStatus(formatProjectGenerationFailure(t, message))
 					}
 					break
 				case "projectGenerationProgress":
@@ -357,6 +358,7 @@ export const ProjectsView = () => {
 							padding: "10px",
 							borderRadius: "3px",
 							fontSize: "12px",
+							whiteSpace: "pre-line",
 						}}>
 						{generationStatus}
 					</div>

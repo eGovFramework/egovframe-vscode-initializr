@@ -85,7 +85,8 @@
 		"categoryAI": "AI 기반 애플리케이션 프로젝트",
 		"generationStarted": "프로젝트 생성을 시작합니다...",
 		"generationSuccess": "프로젝트가 성공적으로 생성되었습니다:",
-		"generationFailed": "생성 실패:"
+		"generationFailed": "생성 실패:",
+		"templateIntegrityHint": "다운로드한 템플릿이 이 확장에 기록된 해시와 일치하지 않아 압축을 풀지 않았습니다. 확장을 최신 버전으로 업데이트하거나, \"eGovFrame: Clear Template Cache\" 명령으로 캐시를 삭제한 뒤 다시 시도해 주세요."
 	},
 	"code": {
 		"title": "DDL로 eGovFrame 코드 생성",

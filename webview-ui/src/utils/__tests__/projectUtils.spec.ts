@@ -4,6 +4,7 @@ import {
 	categoriesFromProjectTemplates,
 	getTemplatesByCategory,
 	createProjectGenerationMessage,
+	formatProjectGenerationFailure,
 } from "../projectUtils"
 import type { ProjectTemplate } from "../projectUtils"
 
@@ -293,5 +294,23 @@ describe("createProjectGenerationMessage", () => {
 		expect(() =>
 			createProjectGenerationMessage({ ...config, template: makeTemplate({ templateId: "boot-web-project" }) }, "form"),
 		).toThrow()
+	})
+})
+
+describe("formatProjectGenerationFailure", () => {
+	const t = (key: string) => `[${key}]`
+
+	it("기본 실패 문구 뒤에 호스트가 보낸 사유를 붙인다", () => {
+		expect(formatProjectGenerationFailure(t, { error: "HTTP 404" })).toBe("❌ [projects.generationFailed] HTTP 404")
+	})
+
+	it("무결성 실패(templateIntegrity)에는 확장 업데이트 안내를 다음 줄에 덧붙인다", () => {
+		expect(formatProjectGenerationFailure(t, { error: "Integrity check failed", errorCode: "templateIntegrity" })).toBe(
+			"❌ [projects.generationFailed] Integrity check failed\n[projects.templateIntegrityHint]",
+		)
+	})
+
+	it("사유가 없으면 'undefined'를 출력하지 않는다", () => {
+		expect(formatProjectGenerationFailure(t, {})).toBe("❌ [projects.generationFailed]")
 	})
 })
