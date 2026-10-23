@@ -17,23 +17,17 @@ import type { TemplateContext } from "./templateContext"
 // 페이로드 타입
 // ---------------------------------------------------------------------------
 
-/** 프로젝트 생성 템플릿 정보 (templates/templates-projects.json 항목 중 생성에 필요한 부분집합) */
+/**
+ * 프로젝트 생성 템플릿 선택 정보 — 웹뷰는 선택한 템플릿의 식별자와 버전만 보낸다.
+ * 파일명·다운로드 경로·해시 같은 "어떻게 가져오는지"는 확장 호스트가
+ * templates/templates-projects.json(확장에 번들된 manifest)에서 확정한다.
+ */
 export interface ProjectTemplatePayload {
 	displayName: string
-	/** templates/projects/examples/ 아래의 ZIP 파일명 */
-	fileName: string
-	/** templates/projects/pom/ 아래의 POM 템플릿 파일명. POM이 없는 템플릿은 빈 문자열 */
-	pomFile: string
 	/** templates-projects.json manifest의 템플릿 식별자 */
-	templateId?: string
+	templateId: string
 	/** 선택한 템플릿 버전 (예: "4.3.1") */
-	version?: string
-	/** true면 확장에 ZIP이 포함됨, false면 downloadUrl로 내려받아야 함 */
-	included?: boolean
-	/** included가 false일 때의 ZIP 다운로드 URL (절대 URL 또는 manifest baseUrl 기준 상대 경로) */
-	downloadUrl?: string
-	/** included가 false일 때의 POM 템플릿 다운로드 URL */
-	pomDownloadUrl?: string
+	version: string
 }
 
 /** 프로젝트 생성 폼 입력 값 */

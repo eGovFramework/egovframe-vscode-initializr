@@ -1,62 +1,15 @@
 import * as vscode from "vscode"
 import * as path from "path"
-import * as fs from "fs-extra"
+import { clearTemplateCache, listTemplateCacheFiles } from "../utils/templateCache"
 
 /**
- * Clear template cache directories
- */
-async function clearCacheDirectories(extensionPath: string): Promise<{ cleared: number; size: number }> {
-	const cachePaths = [
-		path.join(extensionPath, "templates", "projects", "examples", "cache"),
-		path.join(extensionPath, "templates", "projects", "pom", "cache"),
-	]
-
-	let totalCleared = 0
-	let totalSize = 0
-
-	for (const cachePath of cachePaths) {
-		if (await fs.pathExists(cachePath)) {
-			const files = await fs.readdir(cachePath)
-			for (const file of files) {
-				const filePath = path.join(cachePath, file)
-				const stats = await fs.stat(filePath)
-				totalSize += stats.size
-				await fs.remove(filePath)
-				totalCleared++
-			}
-		}
-	}
-
-	return { cleared: totalCleared, size: totalSize }
-}
-
-/**
- * Get cache info
+ * Get cache info (files are listed relative to templates/projects, e.g. examples/cache/4.3.1/x.zip)
  */
 async function getCacheInfo(extensionPath: string): Promise<{ files: string[]; size: number; path: string }> {
-	const cachePaths = [
-		path.join(extensionPath, "templates", "projects", "examples", "cache"),
-		path.join(extensionPath, "templates", "projects", "pom", "cache"),
-	]
-
-	const files: string[] = []
-	let totalSize = 0
-
-	for (const cachePath of cachePaths) {
-		if (await fs.pathExists(cachePath)) {
-			const cacheFiles = await fs.readdir(cachePath)
-			for (const file of cacheFiles) {
-				const filePath = path.join(cachePath, file)
-				const stats = await fs.stat(filePath)
-				totalSize += stats.size
-				files.push(file)
-			}
-		}
-	}
-
+	const cacheFiles = await listTemplateCacheFiles(extensionPath)
 	return {
-		files,
-		size: totalSize,
+		files: cacheFiles.map((file) => file.relativePath),
+		size: cacheFiles.reduce((sum, file) => sum + file.size, 0),
 		path: path.join(extensionPath, "templates", "projects", "*/cache"),
 	}
 }
@@ -75,7 +28,7 @@ export function registerClearTemplateCacheCommand(context: vscode.ExtensionConte
 
 		if (answer === "캐시 삭제") {
 			try {
-				const result = await clearCacheDirectories(context.extensionPath)
+				const result = await clearTemplateCache(context.extensionPath)
 				const sizeInMB = (result.size / 1024 / 1024).toFixed(2)
 
 				if (result.cleared > 0) {

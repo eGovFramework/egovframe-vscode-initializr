@@ -7,6 +7,11 @@
 import type { ArchCheckResults } from "./archCheck"
 import type { WebviewScope } from "./WebviewMessage"
 
+/** 프로젝트 생성 실패 사유 분류 — 웹뷰가 사유별 안내 문구를 고르는 데 쓴다 */
+export type ProjectGenerationErrorCode =
+	/** 내려받은 템플릿이 manifest에 기록된 sha256과 다르거나, 해시가 기록되어 있지 않아 다운로드를 거부함 */
+	"templateIntegrity"
+
 export type ExtensionMessage =
 	| {
 			type: "action"
@@ -33,6 +38,7 @@ export type ExtensionMessage =
 			text: string
 			projectPath?: string
 			error?: string
+			errorCode?: ProjectGenerationErrorCode
 	  }
 	| {
 			type: "success" | "error"

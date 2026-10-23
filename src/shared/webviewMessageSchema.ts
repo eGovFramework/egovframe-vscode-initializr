@@ -17,8 +17,6 @@ import { PROJECT_NAME_PATTERN } from "../utils/pathSafety"
 import type { WebviewMessage } from "./WebviewMessage"
 
 // 단일 경로 컴포넌트로만 쓸 수 있는 파일명: 경로 구분자(/, \)가 없고, 점으로 시작하거나 연속된 점(..)을 포함할 수 없다
-const SAFE_ZIP_FILE_PATTERN = /^(?!\.)(?!.*\.\.)[A-Za-z0-9._-]+\.zip$/
-const SAFE_XML_FILE_PATTERN = /^(?!\.)(?!.*\.\.)[A-Za-z0-9._-]+\.xml$/
 const SAFE_HBS_FILE_PATTERN = /^(?!\.)(?!.*\.\.)[A-Za-z0-9._-]+\.hbs$/
 const TEMPLATE_FOLDER_PATTERN = /^[A-Za-z0-9_-]+$/
 // 웹뷰 validateCodeConfig와 동일한 Java 패키지명 규칙 — 점으로 구분된 각 세그먼트가 소문자로 시작해야 한다
@@ -27,18 +25,13 @@ const JAVA_PACKAGE_PATTERN = /^[a-z][a-z0-9]*(\.[a-z][a-z0-9]*)*$/
 // templates-context-xml.json은 "변형 템플릿 없음"을 빈 문자열로 표기하므로 빈 문자열도 허용한다
 const optionalHbsFileSchema = z.literal("").or(z.string().regex(SAFE_HBS_FILE_PATTERN)).optional()
 
+// 웹뷰는 템플릿의 식별자와 버전만 보낸다. 파일명·다운로드 경로·해시는 호스트가 (templateId, version)으로
+// 확장에 번들된 manifest를 조회해 확정하므로, 웹뷰가 임의의 다운로드 URL이나 캐시 경로를 지정할 수 없다.
+// 선언되지 않은 키(fileName, downloadUrl 등)는 z.object가 제거한다.
 const projectTemplateSchema = z.object({
 	displayName: z.string(),
-	fileName: z.string().regex(SAFE_ZIP_FILE_PATTERN),
-	pomFile: z.literal("").or(z.string().regex(SAFE_XML_FILE_PATTERN)),
-	// 버전별 프로젝트 생성 필드 — fileName/pomFile은 로컬·캐시 경로 구성에도 쓰이므로
-	// 위 패턴 검증이 그대로 다운로드 캐시 경로(CWE-22)를 방어한다.
-	// downloadUrl/pomDownloadUrl은 URL 구성에만 쓰이고 파일 경로 구성에는 쓰이지 않는다.
-	templateId: z.string().optional(),
-	version: z.string().optional(),
-	included: z.boolean().optional(),
-	downloadUrl: z.string().optional(),
-	pomDownloadUrl: z.string().optional(),
+	templateId: z.string(),
+	version: z.string(),
 })
 
 const projectConfigSchema = z.object({

@@ -191,6 +191,10 @@ export function createGenerateProjectByCommandMessage() {
 }
 
 export function createProjectGenerationMessage(config: ProjectConfig, method: "form" | "command") {
+	const { templateId, version } = config.template
+	if (!templateId || !version) {
+		throw new Error("Selected template is missing its templateId or version")
+	}
 	return {
 		type: "generateProject" as const,
 		projectConfig: {
@@ -200,16 +204,11 @@ export function createProjectGenerationMessage(config: ProjectConfig, method: "f
 			version: config.version,
 			url: config.url,
 			outputPath: config.outputPath,
+			// 템플릿은 식별자와 버전만 보낸다. 파일명·다운로드 경로는 확장 호스트가 manifest에서 확정한다.
 			template: {
 				displayName: config.template.displayName,
-				fileName: config.template.fileName,
-				pomFile: config.template.pomFile,
-				// Version-related fields for download support
-				templateId: config.template.templateId,
-				version: config.template.version,
-				included: config.template.included,
-				downloadUrl: config.template.downloadUrl,
-				pomDownloadUrl: config.template.pomDownloadUrl,
+				templateId,
+				version,
 			},
 		},
 		method,

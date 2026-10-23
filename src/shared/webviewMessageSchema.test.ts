@@ -25,10 +25,11 @@ const validProjectConfig = {
 	version: "1.0.0",
 	url: "https://www.egovframe.go.kr",
 	outputPath: "/Users/dev/workspace",
+	// 웹뷰는 선택한 템플릿의 식별자와 버전만 보낸다 — 파일명·다운로드 경로는 호스트가 manifest에서 조회한다
 	template: {
 		displayName: "eGovFrame Web Project",
-		fileName: "egovframe-web.zip",
-		pomFile: "egovframe-web-pom.xml",
+		templateId: "web-project",
+		version: "5.1.0-beta.1",
 	},
 }
 
@@ -159,29 +160,46 @@ describe("parseWebviewMessage", () => {
 			}
 		})
 
-		it("template.fileName은 경로 구분자 없는 .zip 파일명만 허용한다", () => {
-			for (const fileName of ["../../../etc/passwd", "evil/x.zip", "..\\x.zip", "x.txt", "..zip", ""]) {
-				parseFail({
-					type: "generateProject",
-					projectConfig: { ...validProjectConfig, template: { ...validProjectConfig.template, fileName } },
-					method: "form",
-				})
-			}
-		})
-
-		it("template.pomFile은 빈 문자열 또는 경로 구분자 없는 .xml 파일명만 허용한다", () => {
-			parseOk({
+		it("template에는 templateId와 version이 모두 필요하다", () => {
+			const { templateId, version, ...withoutIds } = validProjectConfig.template
+			parseFail({ type: "generateProject", projectConfig: { ...validProjectConfig, template: withoutIds }, method: "form" })
+			parseFail({
 				type: "generateProject",
-				projectConfig: { ...validProjectConfig, template: { ...validProjectConfig.template, pomFile: "" } },
+				projectConfig: { ...validProjectConfig, template: { ...withoutIds, templateId } },
 				method: "form",
 			})
-			for (const pomFile of ["../x.xml", "a/b.xml", "x.hbs"]) {
-				parseFail({
-					type: "generateProject",
-					projectConfig: { ...validProjectConfig, template: { ...validProjectConfig.template, pomFile } },
-					method: "form",
-				})
+			parseFail({
+				type: "generateProject",
+				projectConfig: { ...validProjectConfig, template: { ...withoutIds, version } },
+				method: "form",
+			})
+			parseFail({
+				type: "generateProject",
+				projectConfig: { ...validProjectConfig, template: { ...validProjectConfig.template, version: 431 } },
+				method: "form",
+			})
+		})
+
+		it("웹뷰가 보낸 파일명·다운로드 필드는 수신 시 제거된다 (호스트가 manifest에서 다시 조회한다)", () => {
+			const message = parseOk({
+				type: "generateProject",
+				projectConfig: {
+					...validProjectConfig,
+					template: {
+						...validProjectConfig.template,
+						fileName: "../../evil.zip",
+						pomFile: "../evil-pom.xml",
+						included: false,
+						downloadUrl: "https://evil.example/payload.zip",
+						pomDownloadUrl: "http://evil.example/pom.xml",
+					},
+				},
+				method: "form",
+			})
+			if (message.type !== "generateProject") {
+				throw new Error("unexpected message type")
 			}
+			expect(message.projectConfig.template).toEqual(validProjectConfig.template)
 		})
 
 		it("templateFolder와 템플릿 파일명의 탈출 시도를 거부한다", () => {

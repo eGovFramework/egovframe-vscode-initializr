@@ -112,7 +112,8 @@ export class Controller {
 			// Form-based Project Generation
 			case "generateProject": {
 				if (message.projectConfig && message.method) {
-					const { generateEgovProject, openProjectInVSCode } = await import("../../utils/projectGenerator")
+					const { generateEgovProject } = await import("../../utils/projectGenerator")
+					const { loadProjectTemplatesManifest, resolveProjectTemplate } = await import("../../utils/templateManifest")
 
 					try {
 						// Send progress updates to webview
@@ -123,30 +124,15 @@ export class Controller {
 							})
 						}
 
-						// Read manifest to get repository baseUrl
-						let repositoryBaseUrl: string | undefined
-						try {
-							const manifestJsonPath = vscode.Uri.joinPath(
-								this.context.extensionUri,
-								"templates",
-								"templates-projects.json",
-							)
-							const manifestJsonContent = await vscode.workspace.fs.readFile(manifestJsonPath)
-							const manifest = JSON.parse(manifestJsonContent.toString())
-							repositoryBaseUrl = manifest.repository?.baseUrl
-						} catch (manifestError) {
-							console.warn("Could not read manifest for baseUrl, using default:", manifestError)
-						}
-
-						// Add repositoryBaseUrl to projectConfig
-						const projectConfigWithBaseUrl = {
-							...message.projectConfig,
-							repositoryBaseUrl,
-						}
+						// 웹뷰가 보낸 template은 (templateId, version) 조회 키로만 쓴다. 파일명·다운로드 경로·해시는
+						// 확장에 번들된 manifest에서 확정하므로 웹뷰가 임의의 URL이나 캐시 경로를 지정할 수 없다.
+						const { template: selectedTemplate, ...projectFields } = message.projectConfig
+						const manifest = await loadProjectTemplatesManifest(this.context.extensionPath)
+						const template = resolveProjectTemplate(manifest, selectedTemplate.templateId, selectedTemplate.version)
 
 						// Generate the project
 						const result = await generateEgovProject(
-							projectConfigWithBaseUrl, // { projectName: string, artifactId: string, groupId: string, version: string(초기값 "1.0.0"), url: string(초기값 "http://www.egovframe.go.kr"), outputPath: string, template: {displayName: string, fileName: string, pomFile: string}, repositoryBaseUrl: string }
+							{ ...projectFields, template },
 							this.context.extensionPath,
 							sendProgress,
 						)
@@ -154,10 +140,11 @@ export class Controller {
 						// Send result to webview
 						await this.postMessageToWebview({
 							type: "projectGenerationResult",
-							success: result.success, // boolean
+							success: result.success,
 							text: result.message,
 							projectPath: result.projectPath,
 							error: result.error,
+							errorCode: result.errorCode,
 						})
 
 						if (result.error) {
