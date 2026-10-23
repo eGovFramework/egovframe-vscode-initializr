@@ -16,7 +16,12 @@
   - 웹뷰 UI(*.tsx) 다국어(i18n) 처리 (Refs: PR #29)
 - Project Generation
   - modulith 카테고리 신설
+  - 구버전(4.3.x) 템플릿 다운로드 캐시를 버전 디렉터리(`templates/projects/{examples,pom}/cache/<version>/`) 아래에 두어, manifest가 버전마다 같은 파일명을 써도 서로 덮어쓰지 않도록 변경
+  - 템플릿 무결성 검증에 실패하면 Projects 탭에 확장 업데이트·캐시 삭제 안내를 표시
 - Security
+  - GitHub Releases에서 내려받는 구버전 템플릿 ZIP·POM의 sha256을 manifest(`templates-projects.json`의 `sha256`/`pomSha256`)에 기록하고, 다운로드 직후와 캐시 사용 시마다 대조해 일치할 때만 압축 해제 — 해시가 기록되지 않은 항목은 다운로드를 거부하고, 불일치한 캐시는 삭제 후 한 번 다시 받음
+  - 템플릿 다운로드가 웹뷰가 보낸 downloadUrl·파일명을 그대로 신뢰하던 문제 수정 — 웹뷰는 templateId·version만 보내고 호스트가 번들 manifest에서 다운로드 경로·파일명을 확정
+  - 템플릿 다운로드에 https 강제, 리다이렉트 횟수 상한(5회)·https 유지, 응답 크기 상한(200MB), 소켓 타임아웃을 적용하고 임시 파일에 받아 검증 후 캐시로 이동
 - Refactoring
   - 컬럼 유효성 검사 로직 분리 (Refs: PR #13)
   - 불필요한 try/catch(no-useless-catch) 제거 (codeGenerator.ts) (Refs: PR #24)
