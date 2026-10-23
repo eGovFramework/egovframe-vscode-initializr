@@ -73,6 +73,9 @@ src/standalone/server-setup.ts
 
 # ─────────────── AI 코딩 도구 ───────────────
 
+# Codex 등
+.agents/
+
 # JetBrains (IntelliJ 등)
 .idea/
 *.iml
@@ -94,6 +97,7 @@ bin/
 
 # Cline / Roo Code
 .cline/
+.clinerules/
 .roo/
 
 # Windsurf
@@ -117,3 +121,11 @@ CLAUDE.md
 
 # Codex
 .codex/
+
+# ─────────────── SDD ───────────────
+
+# OpenSpec
+openspec/
+
+# spec-kit
+specs/
