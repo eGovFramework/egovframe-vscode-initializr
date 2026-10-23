@@ -1,16 +1,16 @@
 import * as vscode from "vscode"
-import * as path from "path"
-import { clearTemplateCache, listTemplateCacheFiles } from "../utils/templateCache"
+import { clearTemplateCache, getTemplateCacheRoot, listTemplateCacheFiles } from "../utils/templateCache"
 
 /**
- * Get cache info (files are listed relative to templates/projects, e.g. examples/cache/4.3.1/x.zip)
+ * Get cache info. The cache lives under the extension's globalStorage
+ * (<globalStorageUri>/template-cache) and files are listed relative to that root, e.g. examples/4.3.1/x.zip
  */
-async function getCacheInfo(extensionPath: string): Promise<{ files: string[]; size: number; path: string }> {
-	const cacheFiles = await listTemplateCacheFiles(extensionPath)
+async function getCacheInfo(cacheRoot: string): Promise<{ files: string[]; size: number; path: string }> {
+	const cacheFiles = await listTemplateCacheFiles(cacheRoot)
 	return {
 		files: cacheFiles.map((file) => file.relativePath),
 		size: cacheFiles.reduce((sum, file) => sum + file.size, 0),
-		path: path.join(extensionPath, "templates", "projects", "*/cache"),
+		path: cacheRoot,
 	}
 }
 
@@ -28,7 +28,7 @@ export function registerClearTemplateCacheCommand(context: vscode.ExtensionConte
 
 		if (answer === "캐시 삭제") {
 			try {
-				const result = await clearTemplateCache(context.extensionPath)
+				const result = await clearTemplateCache(getTemplateCacheRoot(context.globalStorageUri.fsPath))
 				const sizeInMB = (result.size / 1024 / 1024).toFixed(2)
 
 				if (result.cleared > 0) {
@@ -51,7 +51,7 @@ export function registerClearTemplateCacheCommand(context: vscode.ExtensionConte
 export function registerShowTemplateCacheInfoCommand(context: vscode.ExtensionContext): vscode.Disposable {
 	return vscode.commands.registerCommand("egovframe.showTemplateCacheInfo", async () => {
 		try {
-			const cacheInfo = await getCacheInfo(context.extensionPath)
+			const cacheInfo = await getCacheInfo(getTemplateCacheRoot(context.globalStorageUri.fsPath))
 			const sizeInMB = (cacheInfo.size / 1024 / 1024).toFixed(2)
 
 			if (cacheInfo.files.length === 0) {

@@ -14,8 +14,10 @@ import { SHA256_HEX_PATTERN } from "./templateManifest"
  *
  * - https만 허용하고 리다이렉트도 https로만 따라간다 (횟수 상한 있음)
  * - 응답 크기 상한을 Content-Length와 실제 수신 바이트 양쪽에서 적용한다
- * - 임시 파일(.part)에 받으면서 sha256을 계산하고, 확장에 번들된 manifest의 해시와 일치할 때만
- *   최종 경로로 옮긴다. 따라서 캐시 디렉터리에는 검증을 통과한 파일만 들어간다
+ * - 임시 파일(<파일명>.<pid>.part)에 받으면서 sha256을 계산하고, 확장에 번들된 manifest의 해시와
+ *   일치할 때만 최종 경로로 옮긴다. 따라서 캐시 디렉터리에는 검증을 통과한 파일만 들어간다.
+ *   임시 파일 이름에 프로세스 ID가 들어가므로 여러 VS Code 창이 같은 템플릿을 동시에 받아도
+ *   서로 덮어쓰지 않으며, 비정상 종료로 하루 넘게 남은 임시 파일은 다음 다운로드 때 정리한다
  * - 캐시 파일을 쓸 때도 해시를 다시 확인해, 확장 업데이트로 해시가 바뀌었거나 파일이 손상된
  *   경우 지우고 한 번 다시 받는다
  *
@@ -44,6 +46,8 @@ export const DEFAULT_DOWNLOAD_TIMEOUT_MS = 60_000
 
 const REDIRECT_STATUS_CODES = new Set([301, 302, 303, 307, 308])
 const USER_AGENT = "egovframe-vscode-initializr"
+/** 이보다 오래된 .part 잔여물은 비정상 종료가 남긴 것으로 보고 지운다 */
+const STALE_PART_MAX_AGE_MS = 24 * 60 * 60 * 1000
 
 /** https.request와 같은 모양의 전송 함수. 테스트에서 대역으로 바꿀 수 있다 */
 export type DownloadRequest = (
@@ -132,6 +136,44 @@ export async function sha256File(filePath: string): Promise<string> {
 	return hash.digest("hex")
 }
 
+function escapeRegExp(value: string): string {
+	return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+}
+
+/** 이 프로세스가 destPath를 받는 동안 쓰는 임시 파일 경로 */
+function partPathFor(destPath: string): string {
+	return `${destPath}.${process.pid}.part`
+}
+
+/**
+ * destPath를 받다가 남은 오래된 임시 파일(<파일명>.part, <파일명>.<pid>.part)을 지운다.
+ * 최근 것은 다른 창이 진행 중인 다운로드일 수 있으므로 남겨 둔다.
+ */
+async function removeStaleParts(destPath: string): Promise<void> {
+	const dir = path.dirname(destPath)
+	const pattern = new RegExp(`^${escapeRegExp(path.basename(destPath))}\\.(?:\\d+\\.)?part$`)
+	let entries: string[]
+	try {
+		entries = await fs.readdir(dir)
+	} catch {
+		return
+	}
+	const cutoff = Date.now() - STALE_PART_MAX_AGE_MS
+	for (const entry of entries) {
+		if (!pattern.test(entry)) {
+			continue
+		}
+		const entryPath = path.join(dir, entry)
+		try {
+			if ((await fs.stat(entryPath)).mtimeMs < cutoff) {
+				await fs.remove(entryPath)
+			}
+		} catch {
+			// 다른 프로세스가 막 지웠거나 잠근 파일 — 다음 기회에 정리한다
+		}
+	}
+}
+
 function toDownloadError(error: unknown): Error {
 	if (error instanceof TemplateDownloadError || error instanceof TemplateIntegrityError) {
 		return error
@@ -194,6 +236,9 @@ async function writeBody(
 	let lastPercent = -1
 
 	try {
+		// 본문을 읽기 전에 임시 파일이 실제로 열려 있게 한다 — 열기 실패를 먼저 드러내고,
+		// 다른 창이 .part 존재 여부로 진행 중인 다운로드를 알아볼 수 있다
+		await once(out, "open")
 		for await (const chunk of response) {
 			const buffer = chunk as Buffer
 			received += buffer.length
@@ -285,8 +330,8 @@ async function fetchToFile(url: string, partPath: string, options: DownloadOptio
 }
 
 /**
- * url의 내용을 destPath에 내려받는다. 임시 파일(.part)에 받아 sha256이 expectedSha256과 일치할 때만
- * destPath로 옮기고, 그렇지 않으면 임시 파일을 지우고 예외를 던진다.
+ * url의 내용을 destPath에 내려받는다. 임시 파일(<파일명>.<pid>.part)에 받아 sha256이 expectedSha256과
+ * 일치할 때만 destPath로 옮기고, 그렇지 않으면 임시 파일을 지우고 예외를 던진다.
  */
 export async function downloadVerifiedFile(
 	url: string,
@@ -295,9 +340,10 @@ export async function downloadVerifiedFile(
 	options: DownloadOptions = {},
 ): Promise<void> {
 	const expected = expectedSha256.toLowerCase()
-	const partPath = `${destPath}.part`
+	const partPath = partPathFor(destPath)
 
 	await fs.ensureDir(path.dirname(destPath))
+	await removeStaleParts(destPath)
 	await fs.remove(partPath)
 
 	let actual: string

@@ -114,6 +114,7 @@ export class Controller {
 				if (message.projectConfig && message.method) {
 					const { generateEgovProject } = await import("../../utils/projectGenerator")
 					const { loadProjectTemplatesManifest, resolveProjectTemplate } = await import("../../utils/templateManifest")
+					const { getTemplateCacheRoot } = await import("../../utils/templateCache")
 
 					try {
 						// Send progress updates to webview
@@ -130,12 +131,14 @@ export class Controller {
 						const manifest = await loadProjectTemplatesManifest(this.context.extensionPath)
 						const template = resolveProjectTemplate(manifest, selectedTemplate.templateId, selectedTemplate.version)
 
+						// 번들 템플릿은 확장 디렉터리에서, 내려받은 템플릿은 VS Code globalStorage의 캐시에서 읽는다
+						const paths = {
+							extensionPath: this.context.extensionPath,
+							templateCacheRoot: getTemplateCacheRoot(this.context.globalStorageUri.fsPath),
+						}
+
 						// Generate the project
-						const result = await generateEgovProject(
-							{ ...projectFields, template },
-							this.context.extensionPath,
-							sendProgress,
-						)
+						const result = await generateEgovProject({ ...projectFields, template }, paths, sendProgress)
 
 						// Send result to webview
 						await this.postMessageToWebview({

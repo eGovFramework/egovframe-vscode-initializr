@@ -267,13 +267,36 @@ describe("downloadVerifiedFile / ensureVerifiedFile", () => {
 		expect(await leftovers()).toEqual([])
 	})
 
-	it("이전 실행이 남긴 .part 파일이 있어도 새로 받아 덮어쓴다", async () => {
-		await fs.outputFile(`${destPath}.part`, "stale partial")
+	it("임시 파일 이름에 프로세스 ID를 넣어 다른 창의 동시 다운로드와 겹치지 않게 한다", async () => {
+		const transport = fakeTransport({ [ZIP_URL]: { status: 200, headers: { "content-length": String(body.length) }, body } })
+		const seenDuringDownload: string[] = []
+		const onProgress = (message: string) => {
+			if (message.startsWith("Downloading...")) {
+				seenDuringDownload.push(...fs.readdirSync(path.dirname(destPath)))
+			}
+		}
+
+		await downloadVerifiedFile(ZIP_URL, destPath, bodySha, { request: transport.request, onProgress })
+
+		expect(seenDuringDownload).toContain(`egovframe-boot-web.zip.${process.pid}.part`)
+		expect(await leftovers()).toEqual(["egovframe-boot-web.zip"])
+	})
+
+	it("하루 넘게 남아 있던 .part 잔여물은 지우고, 최근 .part(다른 창의 진행 중 다운로드일 수 있음)는 남겨 둔다", async () => {
+		const stale = `${destPath}.11111.part`
+		const legacyStale = `${destPath}.part`
+		const recent = `${destPath}.22222.part`
+		await fs.outputFile(stale, "stale partial")
+		await fs.outputFile(legacyStale, "stale partial without pid")
+		await fs.outputFile(recent, "another window is still downloading")
+		const twoDaysAgo = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000)
+		await fs.utimes(stale, twoDaysAgo, twoDaysAgo)
+		await fs.utimes(legacyStale, twoDaysAgo, twoDaysAgo)
 		const transport = fakeTransport({ [ZIP_URL]: { status: 200, body } })
 
 		await downloadVerifiedFile(ZIP_URL, destPath, bodySha, { request: transport.request })
 
-		expect(await leftovers()).toEqual(["egovframe-boot-web.zip"])
+		expect((await leftovers()).sort()).toEqual(["egovframe-boot-web.zip", "egovframe-boot-web.zip.22222.part"])
 	})
 
 	it("ensureVerifiedFile: 캐시 파일의 해시가 맞으면 네트워크 없이 그 경로를 돌려준다", async () => {

@@ -56,16 +56,26 @@ export interface ProjectGenerationResult {
 }
 
 /**
+ * 프로젝트 생성에 필요한 호스트 경로.
+ * 번들 템플릿은 확장 디렉터리(extensionPath)에서 읽고, 내려받은 템플릿은 VS Code globalStorage 아래의
+ * 캐시 루트(templateCacheRoot, templateCache.ts의 getTemplateCacheRoot 참고)에 둔다.
+ */
+export interface GenerationPaths {
+	extensionPath: string
+	templateCacheRoot: string
+}
+
+/**
  * Resolve the template ZIP to extract: the bundled file for included versions, otherwise a
  * hash-verified copy in the versioned download cache (downloaded when missing or stale).
  */
 async function getOrDownloadTemplate(
 	template: ResolvedProjectTemplate,
-	extensionPath: string,
+	paths: GenerationPaths,
 	progressCallback?: (message: string) => void,
 ): Promise<string> {
 	if (template.included) {
-		const localPath = path.join(extensionPath, "templates", "projects", "examples", template.fileName)
+		const localPath = path.join(paths.extensionPath, "templates", "projects", "examples", template.fileName)
 		if (!(await fs.pathExists(localPath))) {
 			throw new Error(`Bundled template not found: ${template.fileName}`)
 		}
@@ -78,7 +88,7 @@ async function getOrDownloadTemplate(
 	const label = `${template.fileName} (${template.templateId} ${template.version})`
 	const expectedSha256 = requireSha256(template.sha256, label)
 	const url = buildTemplateDownloadUrl(template.repositoryBaseUrl, template.downloadUrl)
-	const cachedPath = getTemplateCachePath(extensionPath, "examples", template.version, template.fileName)
+	const cachedPath = getTemplateCachePath(paths.templateCacheRoot, "examples", template.version, template.fileName)
 
 	progressCallback?.("📥 Preparing template from GitHub Releases...")
 	return ensureVerifiedFile(url, cachedPath, expectedSha256, { onProgress: progressCallback })
@@ -91,7 +101,7 @@ async function getOrDownloadTemplate(
  */
 async function getOrDownloadPomTemplate(
 	template: ResolvedProjectTemplate,
-	extensionPath: string,
+	paths: GenerationPaths,
 	progressCallback?: (message: string) => void,
 ): Promise<string | null> {
 	if (!template.pomFile) {
@@ -99,7 +109,7 @@ async function getOrDownloadPomTemplate(
 	}
 
 	if (template.included) {
-		const localPath = path.join(extensionPath, "templates", "projects", "pom", template.pomFile)
+		const localPath = path.join(paths.extensionPath, "templates", "projects", "pom", template.pomFile)
 		if (!(await fs.pathExists(localPath))) {
 			throw new Error(`POM template not found: ${template.pomFile}`)
 		}
@@ -114,7 +124,7 @@ async function getOrDownloadPomTemplate(
 	const label = `${template.pomFile} (${template.templateId} ${template.version})`
 	const expectedSha256 = requireSha256(template.pomSha256, label)
 	const url = buildTemplateDownloadUrl(template.repositoryBaseUrl, template.pomDownloadUrl)
-	const cachedPath = getTemplateCachePath(extensionPath, "pom", template.version, template.pomFile)
+	const cachedPath = getTemplateCachePath(paths.templateCacheRoot, "pom", template.version, template.pomFile)
 
 	progressCallback?.("📥 Preparing POM template from GitHub Releases...")
 	return ensureVerifiedFile(url, cachedPath, expectedSha256, { onProgress: progressCallback })
@@ -130,7 +140,7 @@ export type GenerateProjectInput = Omit<ProjectConfigPayload, "template"> & { te
 
 export async function generateEgovProject(
 	config: GenerateProjectInput,
-	extensionPath: string,
+	paths: GenerationPaths,
 	progressCallback?: (message: string) => void,
 ): Promise<ProjectGenerationResult> {
 	try {
@@ -180,7 +190,7 @@ export async function generateEgovProject(
 
 		// Get template file (download if needed)
 		progressCallback?.("Preparing template...")
-		const zipFilePath = await getOrDownloadTemplate(config.template, extensionPath, progressCallback)
+		const zipFilePath = await getOrDownloadTemplate(config.template, paths, progressCallback)
 
 		// Check if template file exists after download attempt
 		if (!(await fs.pathExists(zipFilePath))) {
@@ -207,7 +217,7 @@ export async function generateEgovProject(
 
 		// Generate POM file if needed
 		if (config.template.pomFile) {
-			await generatePomFile(config, projectRoot, extensionPath, progressCallback)
+			await generatePomFile(config, projectRoot, paths, progressCallback)
 		}
 
 		// updatePackageNames 함수 주석처리
@@ -318,14 +328,14 @@ async function processFilesRecursively(projectRoot: string, placeholders: Record
 async function generatePomFile(
 	config: GenerateProjectInput,
 	projectRoot: string,
-	extensionPath: string,
+	paths: GenerationPaths,
 	progressCallback?: (message: string) => void,
 ): Promise<void> {
 	progressCallback?.("📝 Generating Maven POM file...")
 
 	// Get POM template file (download if needed). Bundled and downloaded versions can share a file
 	// name, so there is deliberately no fallback to the bundled POM when the download path fails.
-	const templatePath = await getOrDownloadPomTemplate(config.template, extensionPath, progressCallback)
+	const templatePath = await getOrDownloadPomTemplate(config.template, paths, progressCallback)
 	if (!templatePath) {
 		return
 	}
