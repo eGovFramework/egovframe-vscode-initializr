@@ -182,6 +182,8 @@
 					"included": false,
 					"downloadUrl": "v4.3/egovframe-boot-web.zip",
 					"pomDownloadUrl": "v4.3/egovframe-boot-web-pom.xml",
+					"sha256": "46b1d649bee0d3b71d7a430f6f090ff49fa5446bcef5154c30543744566302b0",
+					"pomSha256": "8197e367ab307d5d03bd75ecd52edfb875ea01f18e4fc86d71b0cea45dab0a73",
 					"fileSize": "12MB"
 				}
 			]
