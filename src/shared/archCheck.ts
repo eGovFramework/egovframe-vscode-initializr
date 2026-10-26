@@ -17,6 +17,12 @@ export interface ArchCheckResult {
 	check3: boolean
 	result: "OK" | "NotFound"
 	type: "Controller" | "Service" | "DAO" | "Mapper"
+	/** Controller 전용: 매핑 어노테이션이 붙은 public 메서드 수 (check2 상세 표시용) */
+	mappedMethodCount?: number
+	/** Controller 전용: 점검 대상 public 메서드 수 */
+	methodCount?: number
+	/** Controller 전용: 클래스 레벨 @RequestMapping이 있어 메서드 매핑 없이도 통과했는지 */
+	hasClassLevelMapping?: boolean
 }
 
 /** 레이어(Controller/Service/DAO/Mapper)별 점검 요약 */

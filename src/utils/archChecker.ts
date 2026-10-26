@@ -156,6 +156,12 @@ function findRegexPatternIgnoringComments(lines: string[], pattern: RegExp): boo
 interface ControllerCheckResult {
 	hasControllerAnnotation: boolean
 	hasAllMappings: boolean
+	/** 점검 대상 public 메서드 수 */
+	methodCount: number
+	/** 매핑 어노테이션이 붙은 public 메서드 수 */
+	mappedMethodCount: number
+	/** 클래스 레벨 @RequestMapping 존재 여부 */
+	hasClassLevelMapping: boolean
 }
 
 /**
@@ -169,6 +175,9 @@ function checkControllerMethods(filePath: string): ControllerCheckResult {
 	const result: ControllerCheckResult = {
 		hasControllerAnnotation: false,
 		hasAllMappings: false,
+		methodCount: 0,
+		mappedMethodCount: 0,
+		hasClassLevelMapping: false,
 	}
 
 	try {
@@ -189,6 +198,7 @@ function checkControllerMethods(filePath: string): ControllerCheckResult {
 
 		// 2. 클래스 레벨 @RequestMapping 확인 (있으면 메서드 레벨 mapping은 선택 사항)
 		const hasClassLevelRequestMapping = checkClassLevelRequestMapping(lines)
+		result.hasClassLevelMapping = hasClassLevelRequestMapping
 		if (hasClassLevelRequestMapping) {
 			console.log(`✅ ${path.basename(filePath)} has class-level @RequestMapping`)
 		}
@@ -277,6 +287,9 @@ function checkControllerMethods(filePath: string): ControllerCheckResult {
 				}
 			}
 		}
+
+		result.methodCount = methodCount
+		result.mappedMethodCount = methodsWithMapping
 
 		// Mapping 검증 로직:
 		// 1. 클래스 레벨에 @RequestMapping이 있으면 OK
@@ -638,12 +651,19 @@ async function checkLayer(
 
 			// 3. 각 패턴별로 검사 (주석 제외 처리)
 			let checks: boolean[]
+			// Controller 전용 상세 집계 (매핑된 메서드 수 / 점검 대상 메서드 수 / 클래스 레벨 매핑 여부)
+			let methodCounts: Pick<ArchCheckResult, "mappedMethodCount" | "methodCount" | "hasClassLevelMapping"> = {}
 
 			// 모든 레이어는 주석을 무시하는 파일 기반 검사 사용
 			switch (layerType) {
 				case "Controller":
 					const controllerResult = checkControllerMethods(filePath)
 					checks = [controllerResult.hasControllerAnnotation, controllerResult.hasAllMappings, false]
+					methodCounts = {
+						mappedMethodCount: controllerResult.mappedMethodCount,
+						methodCount: controllerResult.methodCount,
+						hasClassLevelMapping: controllerResult.hasClassLevelMapping,
+					}
 					break
 				case "Service":
 					checks = checkServiceFile(filePath)
@@ -692,6 +712,7 @@ async function checkLayer(
 				check3: checks[2] || false,
 				result,
 				type: layerType,
+				...methodCounts,
 			})
 		}
 	} catch (error) {
@@ -816,6 +837,23 @@ function formatCheckValue(value: boolean, isUsed: boolean): string {
 }
 
 /**
+ * Controller의 Mapping(check2) 열을 CSV용으로 포맷팅 — 웹뷰 Detailed Results와 같은 규칙
+ * 실패 FAIL, 클래스 레벨 @RequestMapping으로 통과 'Class level', 일부 메서드만 매핑 'a/b', 전부 매핑 PASS
+ */
+function formatMappingCheckValue(item: ArchCheckResult): string {
+	if (!item.check2) {
+		return "FAIL"
+	}
+	if (item.hasClassLevelMapping) {
+		return "Class level"
+	}
+	if (item.mappedMethodCount !== undefined && item.methodCount !== undefined && item.mappedMethodCount < item.methodCount) {
+		return `${item.mappedMethodCount}/${item.methodCount}`
+	}
+	return "PASS"
+}
+
+/**
  * 아키텍처 점검 결과를 CSV 형식으로 저장
  */
 function saveReport(
@@ -832,7 +870,8 @@ function saveReport(
 		// 각 파일별 결과
 		for (const item of resultList) {
 			const check1Str = formatCheckValue(item.check1, layerInfo.used[0])
-			const check2Str = formatCheckValue(item.check2, layerInfo.used[1])
+			const check2Str =
+				resultType === "Controller" ? formatMappingCheckValue(item) : formatCheckValue(item.check2, layerInfo.used[1])
 			const check3Str = formatCheckValue(item.check3, layerInfo.used[2])
 
 			const report = `${item.parentPath},${item.fileName},${check1Str},${check2Str},${check3Str},${item.result}\n`

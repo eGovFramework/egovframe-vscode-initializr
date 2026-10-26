@@ -2,7 +2,13 @@ import * as fs from "fs"
 import * as os from "os"
 import * as path from "path"
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest"
-import { checkEgovArchitecture, EXCLUDED_DIRECTORY_NAMES, type ArchCheckResults } from "../archChecker"
+import {
+	checkEgovArchitecture,
+	exportArchResults,
+	EXCLUDED_DIRECTORY_NAMES,
+	type ArchCheckResult,
+	type ArchCheckResults,
+} from "../archChecker"
 import { resolveRipgrepPath } from "../ripgrepPath"
 
 /** 저장소 node_modules에 npm이 설치한 @vscode/ripgrep 플랫폼 패키지의 rg가 있으면 ripgrep 경로도 검증한다 */
@@ -139,6 +145,51 @@ describe("판정 규칙 (fs 경로)", () => {
 		expect(results.Controller).toMatchObject({ totalFiles: 4, passedFiles: 2, failedFiles: 2 })
 	})
 
+	it("Controller: 결과에 매핑된 메서드 수·점검 대상 메서드 수·클래스 레벨 매핑 여부를 싣는다", async () => {
+		const root = makeProject({
+			[`${SRC}/web/UserController.java`]: `@Controller\npublic class UserController {\n\t@GetMapping("/list")\n\tpublic String list() { return "l"; }\n\t@PostMapping("/add")\n\tpublic String add() { return "a"; }\n\tpublic String helper() { return "h"; }\n}\n`,
+			[`${SRC}/web/BoardController.java`]: `@RestController\n@RequestMapping("/board")\npublic class BoardController {\n\tpublic String list() { return "l"; }\n}\n`,
+			[`${SRC}/web/NoMappingController.java`]: `@Controller\npublic class NoMappingController {\n\tpublic String list() { return "l"; }\n}\n`,
+			[`${SRC}/web/EmptyController.java`]: `@Controller\n@RequestMapping("/empty")\npublic class EmptyController {\n}\n`,
+			[`${SRC}/service/impl/UserServiceImpl.java`]: `@Service\npublic class UserServiceImpl extends EgovAbstractServiceImpl implements UserService {}\n`,
+		})
+		const results = await checkEgovArchitecture(root)
+
+		// 매핑 2개 + 헬퍼 1개 → 2/3, 현재 규칙대로 OK
+		expect(resultOf(results, "Controller", "UserController.java")).toMatchObject({
+			check2: true,
+			mappedMethodCount: 2,
+			methodCount: 3,
+			hasClassLevelMapping: false,
+		})
+		// 클래스 레벨 @RequestMapping으로 통과 (메서드 매핑은 0/1)
+		expect(resultOf(results, "Controller", "BoardController.java")).toMatchObject({
+			check2: true,
+			mappedMethodCount: 0,
+			methodCount: 1,
+			hasClassLevelMapping: true,
+		})
+		// 실패한 파일에도 집계값은 실린다
+		expect(resultOf(results, "Controller", "NoMappingController.java")).toMatchObject({
+			check2: false,
+			mappedMethodCount: 0,
+			methodCount: 1,
+			hasClassLevelMapping: false,
+		})
+		// public 메서드가 없으면 0/0, 클래스 레벨 매핑으로 통과
+		expect(resultOf(results, "Controller", "EmptyController.java")).toMatchObject({
+			check2: true,
+			mappedMethodCount: 0,
+			methodCount: 0,
+			hasClassLevelMapping: true,
+		})
+		// 다른 레이어의 결과에는 Controller 전용 필드가 없다
+		const service = resultOf(results, "Service", "UserServiceImpl.java")
+		expect(service).not.toHaveProperty("mappedMethodCount")
+		expect(service).not.toHaveProperty("methodCount")
+		expect(service).not.toHaveProperty("hasClassLevelMapping")
+	})
+
 	it("Service: extends(직접 또는 EgovCommonServiceImpl 경유) ∧ @Service ∧ implements", async () => {
 		const root = makeProject({
 			[`${SRC}/service/impl/UserServiceImpl.java`]: `@Service("userService")\npublic class UserServiceImpl extends EgovAbstractServiceImpl implements UserService {}\n`,
@@ -208,5 +259,95 @@ describe("판정 규칙 (fs 경로)", () => {
 describe("EXCLUDED_DIRECTORY_NAMES", () => {
 	it("빌드 산출물과 의존성 디렉터리를 포함한다", () => {
 		expect(EXCLUDED_DIRECTORY_NAMES).toEqual(["node_modules", "target", "build", "out", "dist"])
+	})
+})
+
+describe("CSV 내보내기", () => {
+	const controller = (
+		fileName: string,
+		fields: { check2: boolean; mappedMethodCount: number; methodCount: number; hasClassLevelMapping: boolean },
+	): ArchCheckResult => ({
+		filePath: `/p/web/${fileName}`,
+		fileName,
+		parentPath: "/p/web",
+		check1: true,
+		check3: false,
+		result: fields.check2 ? "OK" : "NotFound",
+		type: "Controller",
+		...fields,
+	})
+
+	function readCsv(dir: string, layer: string): string[] {
+		const file = fs.readdirSync(dir).find((f) => f.startsWith(`Result_${layer}_`) && f.endsWith(".csv"))
+		if (!file) {
+			throw new Error(`${layer} CSV not written`)
+		}
+		return fs.readFileSync(path.join(dir, file), "utf8").trimEnd().split("\n")
+	}
+
+	it("Controller의 Mapping Annotation 열은 화면과 같은 규칙(FAIL / Class level / a/b / PASS)으로 쓴다", async () => {
+		const outDir = makeProject({})
+		const results: ArchCheckResults = {
+			Controller: {
+				totalFiles: 4,
+				passedFiles: 3,
+				failedFiles: 1,
+				results: [
+					controller("NoMappingController.java", {
+						check2: false,
+						mappedMethodCount: 0,
+						methodCount: 1,
+						hasClassLevelMapping: false,
+					}),
+					controller("ClassLevelController.java", {
+						check2: true,
+						mappedMethodCount: 0,
+						methodCount: 1,
+						hasClassLevelMapping: true,
+					}),
+					controller("PartialController.java", {
+						check2: true,
+						mappedMethodCount: 2,
+						methodCount: 3,
+						hasClassLevelMapping: false,
+					}),
+					controller("FullController.java", {
+						check2: true,
+						mappedMethodCount: 3,
+						methodCount: 3,
+						hasClassLevelMapping: false,
+					}),
+				],
+			},
+			Service: {
+				totalFiles: 1,
+				passedFiles: 1,
+				failedFiles: 0,
+				results: [
+					{
+						filePath: "/p/service/UserServiceImpl.java",
+						fileName: "UserServiceImpl.java",
+						parentPath: "/p/service",
+						check1: true,
+						check2: true,
+						check3: true,
+						result: "OK",
+						type: "Service",
+					},
+				],
+			},
+		}
+
+		await exportArchResults(results, outDir)
+
+		expect(readCsv(outDir, "Controller")).toEqual([
+			"Path,FileName,@Controller,Mapping Annotation,-,Result",
+			"/p/web,NoMappingController.java,PASS,FAIL,-,NotFound",
+			"/p/web,ClassLevelController.java,PASS,Class level,-,OK",
+			"/p/web,PartialController.java,PASS,2/3,-,OK",
+			"/p/web,FullController.java,PASS,PASS,-,OK",
+		])
+		// 다른 레이어는 종전대로 PASS/FAIL만 쓴다
+		expect(readCsv(outDir, "Service")[1]).toBe("/p/service,UserServiceImpl.java,PASS,PASS,PASS,OK")
 	})
 })

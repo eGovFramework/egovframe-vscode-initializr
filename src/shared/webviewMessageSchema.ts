@@ -105,6 +105,9 @@ const archCheckResultSchema = z.object({
 	check3: z.boolean(),
 	result: z.enum(["OK", "NotFound"]),
 	type: z.enum(["Controller", "Service", "DAO", "Mapper"]),
+	mappedMethodCount: z.number().int().nonnegative().optional(),
+	methodCount: z.number().int().nonnegative().optional(),
+	hasClassLevelMapping: z.boolean().optional(),
 })
 
 const archCheckSummarySchema = z.object({

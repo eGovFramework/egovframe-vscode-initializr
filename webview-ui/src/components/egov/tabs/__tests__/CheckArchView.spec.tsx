@@ -52,3 +52,71 @@ describe("CheckArchView 메시지 스코프", () => {
 		await waitFor(() => expect(input).toHaveValue("/arch/project"))
 	})
 })
+
+const controllerResult = (
+	fileName: string,
+	fields: { check2: boolean; mappedMethodCount: number; methodCount: number; hasClassLevelMapping: boolean },
+) => ({
+	filePath: `/p/src/main/java/egov/web/${fileName}`,
+	fileName,
+	parentPath: "/p/src/main/java/egov/web",
+	check1: true,
+	check3: false,
+	result: fields.check2 ? "OK" : "NotFound",
+	type: "Controller",
+	...fields,
+})
+
+describe("CheckArchView Detailed Results", () => {
+	it("Controller의 Mapping 칸: 실패 ✗, 클래스 레벨 매핑은 'Class level', 일부 메서드만 매핑되면 a/b, 전부 매핑되면 ✓", async () => {
+		render(<CheckArchView />)
+
+		dispatch({
+			type: "archCheckResult",
+			scope: "archCheck",
+			success: true,
+			results: {
+				Controller: {
+					totalFiles: 4,
+					passedFiles: 3,
+					failedFiles: 1,
+					results: [
+						controllerResult("PartialController.java", {
+							check2: true,
+							mappedMethodCount: 2,
+							methodCount: 3,
+							hasClassLevelMapping: false,
+						}),
+						controllerResult("FullController.java", {
+							check2: true,
+							mappedMethodCount: 3,
+							methodCount: 3,
+							hasClassLevelMapping: false,
+						}),
+						controllerResult("ClassLevelController.java", {
+							check2: true,
+							mappedMethodCount: 0,
+							methodCount: 1,
+							hasClassLevelMapping: true,
+						}),
+						controllerResult("NoMappingController.java", {
+							check2: false,
+							mappedMethodCount: 0,
+							methodCount: 1,
+							hasClassLevelMapping: false,
+						}),
+					],
+				},
+			},
+		})
+
+		await waitFor(() => expect(screen.getByText("PartialController.java")).toBeInTheDocument())
+		expect(screen.getByText("2/3")).toBeInTheDocument()
+		expect(screen.queryByText("3/3")).not.toBeInTheDocument()
+		expect(screen.getByText("Class level")).toBeInTheDocument()
+		expect(screen.queryByText("0/1")).not.toBeInTheDocument()
+		// ✓: @Controller 칸 4개 + FullController의 Mapping 칸 1개
+		expect(screen.getAllByText("✓")).toHaveLength(5)
+		expect(screen.getAllByText("✗")).toHaveLength(1)
+	})
+})

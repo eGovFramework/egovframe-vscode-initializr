@@ -2,7 +2,7 @@ import { useState, useEffect } from "react"
 import { Button, TextField, Select, ProgressRing, Link } from "../../ui"
 import { getMessageText, isMessageForScope } from "@shared/webviewMessageRouting"
 import { vscode } from "../../../utils/vscode"
-import type { ArchCheckResults, ArchCheckSummary } from "@shared/archCheck"
+import type { ArchCheckResult, ArchCheckResults, ArchCheckSummary } from "@shared/archCheck"
 
 const CheckArchView = () => {
 	const [projectPath, setProjectPath] = useState<string>("")
@@ -29,7 +29,7 @@ const CheckArchView = () => {
 	}
 
 	// Check 결과 표시 함수
-	const renderCheckResult = (checkValue: boolean, isUsed: boolean) => {
+	const renderCheckResult = (checkValue: boolean, isUsed: boolean, detail?: string) => {
 		if (!isUsed) {
 			return {
 				symbol: "-",
@@ -37,9 +37,24 @@ const CheckArchView = () => {
 			}
 		}
 		return {
-			symbol: checkValue ? "✓" : "✗",
+			symbol: checkValue ? (detail ?? "✓") : "✗",
 			color: checkValue ? "var(--vscode-terminal-ansiGreen)" : "var(--vscode-errorForeground)",
 		}
+	}
+
+	// Controller의 Mapping(check2) 통과 시 상세 표시:
+	// 클래스 레벨 @RequestMapping으로 통과하면 'Class level', 일부 메서드만 매핑되면 '매핑된 수/점검 대상 수', 전부 매핑되면 ✓
+	const getMappingDetail = (result: ArchCheckResult): string | undefined => {
+		if (result.type !== "Controller") {
+			return undefined
+		}
+		if (result.hasClassLevelMapping) {
+			return "Class level"
+		}
+		if (result.mappedMethodCount === undefined || result.methodCount === undefined) {
+			return undefined
+		}
+		return result.mappedMethodCount < result.methodCount ? `${result.mappedMethodCount}/${result.methodCount}` : undefined
 	}
 
 	// 레이어별 Check 설명 정의
@@ -507,7 +522,11 @@ const CheckArchView = () => {
 								{currentResults.results.map((result, index) => {
 									const usedChecks = getUsedChecks(result.type)
 									const check1Display = renderCheckResult(result.check1, usedChecks.check1)
-									const check2Display = renderCheckResult(result.check2, usedChecks.check2)
+									const check2Display = renderCheckResult(
+										result.check2,
+										usedChecks.check2,
+										getMappingDetail(result),
+									)
 									const check3Display = renderCheckResult(result.check3, usedChecks.check3)
 
 									return (
