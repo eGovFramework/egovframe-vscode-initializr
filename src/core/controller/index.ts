@@ -717,6 +717,12 @@ export class Controller {
 				if (message.projectPath) {
 					try {
 						const { checkEgovArchitecture } = await import("../../utils/archChecker")
+						const { resolveRipgrepPath } = await import("../../utils/ripgrepPath")
+						// VS Code가 함께 설치한 rg(없으면 개발 환경의 node_modules @vscode/ripgrep 플랫폼 패키지). 못 찾으면 엔진이 fs 탐색으로 대체한다
+						const rgPath = resolveRipgrepPath({
+							appRoot: vscode.env.appRoot,
+							extensionPath: this.context.extensionPath,
+						})
 
 						// Progress callback to send updates to webview
 						const progressCallback = (progressMessage: string) => {
@@ -727,7 +733,7 @@ export class Controller {
 							})
 						}
 
-						const results = await checkEgovArchitecture(message.projectPath, progressCallback)
+						const results = await checkEgovArchitecture(message.projectPath, progressCallback, { rgPath })
 
 						await this.postMessageToWebview({
 							type: "archCheckResult",

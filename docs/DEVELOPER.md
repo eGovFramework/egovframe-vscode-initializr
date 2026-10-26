@@ -223,6 +223,7 @@ const csp = [
 - **타입스크립트 컴파일**: 네이티브 TS 지원
 - **경로 별칭**: `@core`, `@utils`, `@shared` 등 단축 경로
 - **감시 모드**: 개발 중 자동 리빌드
+- **ripgrep**: 아키텍처 점검은 rg를 배포하지 않고 `src/utils/ripgrepPath.ts`가 네 단계로 찾는다. (1) Cline 확장과 같은 고정 후보 6개(`vscode.env.appRoot` 아래 `@vscode/ripgrep-universal/bin/<platform>-<arch>/rg`, `@vscode/ripgrep/bin/rg`, `vscode-ripgrep/bin/rg`), (2) `@vscode/ripgrep*` 패키지 디렉터리 나열, (3) 시스템 rg(`/usr/bin`, `/opt/homebrew/bin`, `/usr/local/bin`, PATH), (4) 저장소 `node_modules/@vscode/ripgrep-<platform>-<arch>/bin/rg`(devDependency `@vscode/ripgrep` 1.18.0이 설치하는 플랫폼 패키지, Extension Development Host용). 모두 없으면 fs 재귀 탐색으로 대체한다. 이 프로젝트는 esbuild CJS 번들 방식인 반면 `@vscode/ripgrep`은 ESM 전용이기 때문에 런타임에 import하거나 번들하면 안 된다
 - **WASM 파일 복사**: Tree-sitter 언어 파서용
 
 #### 빌드 명령어

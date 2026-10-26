@@ -1,36 +1,58 @@
 import * as fs from "fs"
 import * as path from "path"
 import { spawn } from "child_process"
-import { rgPath } from "@vscode/ripgrep"
 import type { ArchCheckResult, ArchCheckResults, ArchCheckSummary } from "../shared/archCheck"
 
 // 결과 타입은 웹뷰·메시지 계약과 공유하므로 src/shared/archCheck.ts에 정의한다
 export type { ArchCheckResult, ArchCheckResults, ArchCheckSummary } from "../shared/archCheck"
 
+/** 점검 실행 옵션 */
+export interface ArchCheckOptions {
+	/**
+	 * ripgrep 실행 파일 경로. 확장 호스트가 VS Code에 설치된 rg를 src/utils/ripgrepPath.ts로 찾아
+	 * 넘긴다. 없거나 존재하지 않으면 fs 재귀 탐색으로 대체한다.
+	 */
+	rgPath?: string
+}
+
 /**
- * vscode-ripgrep 패키지가 사용 가능한지 확인
+ * 파일 수집에서 제외하는 디렉터리 이름 (빌드 산출물·의존성).
+ * ripgrep 경로와 fs 대체 경로 모두에 같은 규칙을 적용해 두 경로의 결과가 같도록 한다.
+ * 숨김 디렉터리(.으로 시작, .git 포함)는 별도로 항상 제외한다.
  */
-function isRipgrepAvailable(): boolean {
+export const EXCLUDED_DIRECTORY_NAMES = ["node_modules", "target", "build", "out", "dist"] as const
+
+/**
+ * 주어진 ripgrep 실행 파일 경로가 실제로 존재하는지 확인
+ */
+function isRipgrepAvailable(rgPath: string | undefined): rgPath is string {
 	try {
-		// @vscode/ripgrep 패키지가 제공하는 rgPath가 존재하는지 확인
-		return typeof rgPath === "string" && fs.existsSync(rgPath)
+		return typeof rgPath === "string" && rgPath.length > 0 && fs.existsSync(rgPath)
 	} catch {
 		return false
 	}
 }
 
 /**
- * vscode-ripgrep을 사용하여 패턴과 매칭되는 파일 목록을 가져옴
+ * 레이어 글롭(*Controller.java)에서 파일명 접미어(Controller.java)를 얻는다
  */
-function findFilesWithRipgrep(projectPath: string, filePattern: string): Promise<string[]> {
-	return new Promise((resolve) => {
-		if (!rgPath || typeof rgPath !== "string") {
-			console.log("ripgrep path not available")
-			resolve([])
-			return
-		}
+function globToSuffix(filePattern: string): string {
+	return filePattern.replace(/^\*+/, "")
+}
 
-		const args = ["--files", "--glob", filePattern, projectPath]
+/**
+ * ripgrep을 사용하여 패턴과 매칭되는 파일 목록을 가져옴
+ * - 글롭은 파일 이름 기준이며 대소문자를 구분한다
+ * - 숨김 디렉터리는 ripgrep 기본 동작으로, 빌드 산출물 디렉터리는 제외 글롭으로 건너뛴다
+ * - 종료 코드 0(매칭 있음)일 때만 목록을 쓰고, 1(매칭 없음)·2(오류)·spawn 실패는 빈 목록
+ */
+function findFilesWithRipgrep(rgPath: string, projectPath: string, filePattern: string): Promise<string[]> {
+	return new Promise((resolve) => {
+		const args = ["--files", "--glob", filePattern]
+		for (const dir of EXCLUDED_DIRECTORY_NAMES) {
+			args.push("--glob", `!**/${dir}`)
+		}
+		args.push(projectPath)
 		const rg = spawn(rgPath, args, { stdio: ["ignore", "pipe", "ignore"] })
 
 		let output = ""
@@ -60,26 +82,33 @@ function findFilesWithRipgrep(projectPath: string, filePattern: string): Promise
 }
 
 /**
- * fallback: fs를 사용한 파일 찾기 (ripgrep이 없는 경우)
+ * fallback: fs를 사용한 파일 찾기 (ripgrep 바이너리가 없는 경우)
+ * - 파일 이름이 접미어(Controller.java 등)로 끝나는 파일만 고른다 (대소문자 구분)
+ * - 숨김 디렉터리(.git 등)와 EXCLUDED_DIRECTORY_NAMES는 들어가지 않는다
+ * - 심볼릭 링크는 따라가지 않는다 (ripgrep 기본 동작과 같음)
  */
-function findFilesWithFs(dirPath: string, fileRegex: string): string[] {
+function findFilesWithFs(dirPath: string, fileSuffix: string): string[] {
 	const results: string[] = []
 
 	try {
-		const files = fs.readdirSync(dirPath)
+		const entries = fs.readdirSync(dirPath, { withFileTypes: true })
 
-		for (const file of files) {
-			const fullPath = path.join(dirPath, file)
-			const stat = fs.statSync(fullPath)
+		for (const entry of entries) {
+			if (entry.isSymbolicLink()) {
+				continue
+			}
+			const fullPath = path.join(dirPath, entry.name)
 
-			if (stat.isFile()) {
-				if (new RegExp(fileRegex).test(fullPath)) {
+			if (entry.isFile()) {
+				if (entry.name.endsWith(fileSuffix)) {
 					results.push(fullPath)
 				}
-			} else if (stat.isDirectory()) {
+			} else if (entry.isDirectory()) {
+				if (entry.name.startsWith(".") || (EXCLUDED_DIRECTORY_NAMES as readonly string[]).includes(entry.name)) {
+					continue
+				}
 				// 재귀적으로 하위 디렉토리 탐색
-				const subResults = findFilesWithFs(fullPath, fileRegex)
-				results.push(...subResults)
+				results.push(...findFilesWithFs(fullPath, fileSuffix))
 			}
 		}
 	} catch (error) {
@@ -576,25 +605,24 @@ function isAbstractClass(filePath: string): boolean {
 
 /**
  * ripgrep 또는 fs를 사용하여 특정 레이어의 아키텍처 점검
+ * rgPath가 존재하는 파일이면 ripgrep으로, 아니면 fs 재귀 탐색으로 파일을 모은다
  */
 async function checkLayer(
 	projectPath: string,
 	filePattern: string,
-	contentPatterns: string[],
 	layerType: "Controller" | "Service" | "DAO" | "Mapper",
-	useRipgrep: boolean = true,
+	rgPath?: string,
 ): Promise<ArchCheckResult[]> {
 	const results: ArchCheckResult[] = []
 
 	try {
 		// 1. 파일 목록 가져오기
 		let fileList: string[]
-		if (useRipgrep && isRipgrepAvailable()) {
-			fileList = await findFilesWithRipgrep(projectPath, filePattern)
+		if (isRipgrepAvailable(rgPath)) {
+			fileList = await findFilesWithRipgrep(rgPath, projectPath, filePattern)
 		} else {
 			// fallback to fs-based search
-			const regexPattern = filePattern.replace(/\*/g, ".*").replace(/\./g, "\\.")
-			fileList = findFilesWithFs(projectPath, regexPattern)
+			fileList = findFilesWithFs(projectPath, globToSuffix(filePattern))
 		}
 
 		// 2. 각 파일에 대해 패턴 검사
@@ -674,31 +702,28 @@ async function checkLayer(
 }
 
 /**
- * ripgrep을 사용한 전체 아키텍처 점검 실행
+ * 전체 아키텍처 점검 실행
+ * options.rgPath에 존재하는 ripgrep 실행 파일을 주면 ripgrep으로, 아니면 fs 재귀 탐색으로 파일을 모은다
  */
 export async function checkEgovArchitecture(
 	projectPath: string,
 	progressCallback?: (message: string) => void,
+	options: ArchCheckOptions = {},
 ): Promise<ArchCheckResults> {
 	const results: ArchCheckResults = {}
-	const useRipgrep = isRipgrepAvailable()
+	const rgPath = isRipgrepAvailable(options.rgPath) ? options.rgPath : undefined
+	const useRipgrep = rgPath !== undefined
 
 	if (useRipgrep) {
-		console.log("🚀 Using @vscode/ripgrep for fast architecture checking")
+		console.log(`🚀 Using ripgrep (${rgPath}) for fast architecture checking`)
 	} else {
-		console.log("⚠️ @vscode/ripgrep not available, falling back to fs-based search")
+		console.log("⚠️ ripgrep binary not available, falling back to fs-based search")
 	}
 
 	try {
 		// 1. Controller 점검
-		progressCallback?.(`🔍 Checking Controller layer${useRipgrep ? " with @vscode/ripgrep" : ""}...`)
-		const controllerResults = await checkLayer(
-			projectPath,
-			"*Controller.java",
-			["@Controller", "@(RequestMapping|GetMapping|PostMapping|PutMapping|DeleteMapping|PatchMapping)", ""],
-			"Controller",
-			useRipgrep,
-		)
+		progressCallback?.(`🔍 Checking Controller layer${useRipgrep ? " with ripgrep" : ""}...`)
+		const controllerResults = await checkLayer(projectPath, "*Controller.java", "Controller", rgPath)
 
 		const controllerPassed = controllerResults.filter((r) => r.result === "OK").length
 		results.Controller = {
@@ -709,14 +734,8 @@ export async function checkEgovArchitecture(
 		}
 
 		// 2. Service 점검
-		progressCallback?.(`🔍 Checking Service layer${useRipgrep ? " with @vscode/ripgrep" : ""}...`)
-		const serviceResults = await checkLayer(
-			projectPath,
-			"*ServiceImpl.java",
-			["extends.*EgovAbstractServiceImpl", "@Service", "implements.*Service"],
-			"Service",
-			useRipgrep,
-		)
+		progressCallback?.(`🔍 Checking Service layer${useRipgrep ? " with ripgrep" : ""}...`)
+		const serviceResults = await checkLayer(projectPath, "*ServiceImpl.java", "Service", rgPath)
 
 		const servicePassed = serviceResults.filter((r) => r.result === "OK").length
 		results.Service = {
@@ -727,14 +746,8 @@ export async function checkEgovArchitecture(
 		}
 
 		// 3. DAO 점검
-		progressCallback?.(`🔍 Checking DAO layer${useRipgrep ? " with @vscode/ripgrep" : ""}...`)
-		const daoResults = await checkLayer(
-			projectPath,
-			"*DAO.java",
-			["@Repository.*extends.*EgovAbstractDAO", "@Repository.*extends.*EgovAbstractMapper", ""],
-			"DAO",
-			useRipgrep,
-		)
+		progressCallback?.(`🔍 Checking DAO layer${useRipgrep ? " with ripgrep" : ""}...`)
+		const daoResults = await checkLayer(projectPath, "*DAO.java", "DAO", rgPath)
 
 		const daoPassed = daoResults.filter((r) => r.result === "OK").length
 		results.DAO = {
@@ -745,8 +758,8 @@ export async function checkEgovArchitecture(
 		}
 
 		// 4. Mapper 점검
-		progressCallback?.(`🔍 Checking Mapper layer${useRipgrep ? " with @vscode/ripgrep" : ""}...`)
-		const mapperResults = await checkLayer(projectPath, "*Mapper.java", ["@Mapper", "", ""], "Mapper", useRipgrep)
+		progressCallback?.(`🔍 Checking Mapper layer${useRipgrep ? " with ripgrep" : ""}...`)
+		const mapperResults = await checkLayer(projectPath, "*Mapper.java", "Mapper", rgPath)
 
 		const mapperPassed = mapperResults.filter((r) => r.result === "OK").length
 		results.Mapper = {
@@ -756,7 +769,7 @@ export async function checkEgovArchitecture(
 			results: mapperResults,
 		}
 
-		progressCallback?.(`✅ Architecture check completed${useRipgrep ? " with @vscode/ripgrep" : ""}`)
+		progressCallback?.(`✅ Architecture check completed${useRipgrep ? " with ripgrep" : ""}`)
 		return results
 	} catch (error) {
 		console.error("Architecture check error:", error)
