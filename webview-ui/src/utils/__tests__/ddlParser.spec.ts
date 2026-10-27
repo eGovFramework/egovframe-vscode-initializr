@@ -113,16 +113,68 @@ describe("ddlParser", () => {
 		const result = parseDDL(`
 			CREATE TABLE files (
 				id INT,
-				metadata JSONB
+				metadata UNKNOWN_TYPE
 			);
 		`)
 
 		expect(result.attributes[1]).toMatchObject({
 			columnName: "metadata",
-			dataType: "JSONB",
+			dataType: "UNKNOWN_TYPE",
 			javaType: "java.lang.Object",
 		})
 	})
+
+	it("should map PostgreSQL aliases and preserve JSONB as Object", () => {
+		const result = parseDDL(`
+			CREATE TABLE post (
+				id UUID PRIMARY KEY,
+				thumbnail BYTEA,
+				meta JSONB,
+				content JSON,
+				created TIMESTAMPTZ(6),
+				small_count INT2,
+				count int4,
+				large_count INT8,
+				code CHARACTER(5),
+				padded BPCHAR(10)
+			);
+		`)
+
+		expect(result.attributes.map(({ columnName, dataType, javaType }) => ({ columnName, dataType, javaType }))).toEqual([
+			{ columnName: "id", dataType: "UUID", javaType: "java.lang.String" },
+			{ columnName: "thumbnail", dataType: "BYTEA", javaType: "byte[]" },
+			{ columnName: "meta", dataType: "JSONB", javaType: "java.lang.Object" },
+			{ columnName: "content", dataType: "JSON", javaType: "java.lang.String" },
+			{ columnName: "created", dataType: "TIMESTAMPTZ", javaType: "java.sql.Timestamp" },
+			{ columnName: "small_count", dataType: "INT2", javaType: "java.lang.Short" },
+			{ columnName: "count", dataType: "INT4", javaType: "java.lang.Integer" },
+			{ columnName: "large_count", dataType: "INT8", javaType: "java.lang.Long" },
+			{ columnName: "code", dataType: "CHARACTER", javaType: "java.lang.String" },
+			{ columnName: "padded", dataType: "BPCHAR", javaType: "java.lang.String" },
+		])
+		expect(result.pkAttributes).toEqual([result.attributes[0]])
+	})
+
+	it.each(["CHARACTER VARYING(50)", "character varying ( 50 )", "CHARACTER\n VARYING(50)", "CHARACTER VARYING"])(
+		"should preserve the multiword type %s without consuming constraints",
+		(sqlType) => {
+			const result = parseDDL(`
+			CREATE TABLE names (
+				name ${sqlType} NOT NULL DEFAULT 'VARYING' COMMENT 'Display name'
+			);
+		`)
+
+			expect(result.attributes).toEqual([
+				expect.objectContaining({
+					columnName: "name",
+					dataType: "CHARACTER VARYING",
+					javaType: "java.lang.String",
+					comment: "Display name",
+					isPrimaryKey: false,
+				}),
+			])
+		},
+	)
 
 	it("should map MySQL text types to java.lang.String", () => {
 		const result = parseDDL(`

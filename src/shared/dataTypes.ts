@@ -9,6 +9,8 @@ const predefinedDataTypes: { [key: string]: string } = {
 	NVARCHAR: "java.lang.String",
 	NVARCHAR2: "java.lang.String",
 	CHAR: "java.lang.String",
+	CHARACTER: "java.lang.String",
+	BPCHAR: "java.lang.String",
 	NCHAR: "java.lang.String",
 	TEXT: "java.lang.String",
 	MEDIUMTEXT: "java.lang.String",
@@ -18,9 +20,12 @@ const predefinedDataTypes: { [key: string]: string } = {
 	// Integer types
 	INT: "java.lang.Integer",
 	INTEGER: "java.lang.Integer",
+	INT4: "java.lang.Integer",
 	MEDIUMINT: "java.lang.Integer",
 	BIGINT: "java.lang.Long",
+	INT8: "java.lang.Long",
 	SMALLINT: "java.lang.Short",
+	INT2: "java.lang.Short",
 	TINYINT: "java.lang.Byte",
 	// NUMBER(Oracle)는 정밀도/스케일에 따라 매핑이 달라져 getJavaClassName에서 처리
 
@@ -41,6 +46,7 @@ const predefinedDataTypes: { [key: string]: string } = {
 	TIME: "java.sql.Time",
 	DATETIME: "java.util.Date",
 	TIMESTAMP: "java.sql.Timestamp",
+	TIMESTAMPTZ: "java.sql.Timestamp",
 
 	// Boolean types
 	BOOLEAN: "java.lang.Boolean",
@@ -58,6 +64,12 @@ const predefinedDataTypes: { [key: string]: string } = {
 	BLOB: "byte[]",
 	BINARY: "byte[]",
 	VARBINARY: "byte[]",
+
+	// UUID/JSON은 드라이버의 getObject 반환형 대신 문자열 VO 필드로 생성한다.
+	UUID: "java.lang.String",
+	JSON: "java.lang.String",
+	// JSONB는 드라이버별 객체/사용자 TypeHandler 선택이 필요하므로 Object를 유지한다.
+	JSONB: "java.lang.Object",
 
 	// PostgreSQL specific types
 	BYTEA: "byte[]",

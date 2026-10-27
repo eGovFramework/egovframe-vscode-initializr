@@ -336,7 +336,10 @@ export function parseDDL(ddl: string): ParsedDDL {
 		// 기본 컬럼 정보 추출 (백틱 처리 추가)
 		const parts = columnDef.split(" ").filter((part) => part.trim()) // 빈 문자열 제거
 		const columnName = parts[0]?.replace(/[`"']/g, "") // 백틱과 따옴표 제거
-		const rawDataType = parts[1] ? parts[1].toUpperCase() : ""
+		// CHARACTER VARYING은 하나의 타입명으로 보존하되 뒤의 DEFAULT/제약조건은 읽지 않는다.
+		const typeDefinition = columnDef.slice(columnDef.indexOf(" ") + 1)
+		const characterVaryingType = /^CHARACTER\s+VARYING\b(?:\s*\(\s*\d+\s*\))?/i.exec(typeDefinition)?.[0]
+		const rawDataType = (characterVaryingType ?? parts[1] ?? "").toUpperCase()
 
 		// 컬럼명 유효성 검사
 		if (!columnName || columnName.trim() === "") {
@@ -349,7 +352,7 @@ export function parseDDL(ddl: string): ParsedDDL {
 		}
 
 		// 데이터 타입에서 크기 정보 제거
-		const dataType = RegExp(/^\w+/).exec(rawDataType)?.[0] ?? rawDataType
+		const dataType = RegExp(/^CHARACTER VARYING\b|^\w+/).exec(rawDataType)?.[0] ?? rawDataType
 
 		// PRIMARY KEY 확인 (COMMENT 문자열 본문은 제외해 'primary key' 문구가 든 주석의 오탐 방지)
 		const columnDefWithoutComment = columnDef.replace(/COMMENT\s+'(?:''|[^'])*'/i, "")

@@ -64,6 +64,26 @@ describe("getJavaClassName", () => {
 		expect(getJavaClassName("SET")).toBe("java.lang.String")
 	})
 
+	it.each([
+		["UUID", "java.lang.String"],
+		["JSON", "java.lang.String"],
+		["JSONB", "java.lang.Object"],
+		["INT2", "java.lang.Short"],
+		["INT4", "java.lang.Integer"],
+		["INT8", "java.lang.Long"],
+		["TIMESTAMPTZ", "java.sql.Timestamp"],
+		["TIMESTAMPTZ(6)", "java.sql.Timestamp"],
+		["TIMESTAMP WITH TIME ZONE", "java.sql.Timestamp"],
+		["CHARACTER", "java.lang.String"],
+		["CHARACTER(5)", "java.lang.String"],
+		["CHARACTER VARYING(50)", "java.lang.String"],
+		["BPCHAR", "java.lang.String"],
+		["BPCHAR(5)", "java.lang.String"],
+	])("지원하는 타입 %s를 %s로 변환한다", (sqlType, javaType) => {
+		expect(getJavaClassName(sqlType)).toBe(javaType)
+		expect(getJavaClassName(sqlType.toLowerCase())).toBe(javaType)
+	})
+
 	it("소문자 타입명을 대소문자 무관하게 처리한다", () => {
 		expect(getJavaClassName("varchar")).toBe("java.lang.String")
 		expect(getJavaClassName("int")).toBe("java.lang.Integer")
@@ -71,7 +91,6 @@ describe("getJavaClassName", () => {
 	})
 
 	it("알 수 없는 타입은 java.lang.Object를 반환한다", () => {
-		expect(getJavaClassName("JSONB")).toBe("java.lang.Object")
 		expect(getJavaClassName("UNKNOWN_TYPE")).toBe("java.lang.Object")
 		expect(getJavaClassName("XML")).toBe("java.lang.Object")
 	})

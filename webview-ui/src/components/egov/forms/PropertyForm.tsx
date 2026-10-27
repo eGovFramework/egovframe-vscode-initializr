@@ -8,7 +8,6 @@ import {
 	validateFileName,
 	validateRequiredFields,
 	validateSpecialCharacters,
-	validateNumber,
 } from "../../../utils/codeUtils"
 
 const PropertyForm: React.FC<FormComponentProps> = ({ onSubmit, onCancel, template, initialData }) => {
@@ -135,14 +134,6 @@ const PropertyForm: React.FC<FormComponentProps> = ({ onSubmit, onCancel, templa
 		const specialCharacterMessage = validateSpecialCharacters(notSpecialCharactersFields, formData)
 		if (specialCharacterMessage) {
 			setValidationError(specialCharacterMessage)
-			return
-		}
-
-		// 5. 숫자 유효성 검증
-		const numberFields: Array<{ field: string; label: string }> = [{ field: "txtValue", label: "Value" }]
-		const numberMessage = validateNumber(numberFields, formData)
-		if (numberMessage) {
-			setValidationError(numberMessage)
 			return
 		}
 

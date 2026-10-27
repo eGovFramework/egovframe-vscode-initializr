@@ -118,6 +118,13 @@ CREATE TABLE orders (
 - 미리보기 확인 후 "Generate Code" 버튼 클릭
 - 선택된 출력 경로(프로젝트)에 미리 정의된 디렉터리 구조에 맞춰 CRUD 파일 생성
 
+## Property 설정 생성
+
+Configuration에서 Property 설정을 선택하면 XML 또는 JavaConfig를 생성할 수 있습니다.
+Internal Properties의 Value에는 `hello` 같은 문자열과 `10` 같은 숫자 형태의 문자열을 입력할 수 있습니다.
+External File을 선택할 때는 Property File Name과 Encoding을 지정하세요. 이전에 입력한 내부 Value는 외부 파일 설정에 사용되지 않습니다.
+Generate를 누른 뒤 출력 폴더를 선택하면 해당 형식의 설정 파일이 생성됩니다.
+
 ## 라이선스
 
 이 프로젝트는 Apache-2.0 라이선스 하에 배포됩니다. 자세한 내용은 [LICENSE](LICENSE) 파일을 참조하세요.
