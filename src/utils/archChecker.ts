@@ -405,6 +405,25 @@ function findJavaFile(searchPath: string, fileName: string): string | null {
 }
 
 /**
+ * 주석이 아닌 줄에서 `extends <부모 클래스명>`의 부모 클래스 단순 이름을 찾는다.
+ * 제네릭 인자(`extends Base<T>`)와 완전 한정 이름(`extends a.b.Base`)은 마지막 식별자만 취한다.
+ */
+function findExtendsParentIgnoringComments(lines: string[]): string | null {
+	for (const line of lines) {
+		const trimmed = line.trim()
+		if (trimmed.startsWith("//") || trimmed.startsWith("/*") || trimmed.startsWith("*")) {
+			continue
+		}
+		const match = trimmed.match(/\bextends\s+([\w.]+)/)
+		if (match) {
+			const segments = match[1].split(".")
+			return segments[segments.length - 1]
+		}
+	}
+	return null
+}
+
+/**
  * 부모 클래스 파일에서 특정 클래스를 상속받는지 확인 (재귀적 상속 체인 추적)
  * maxDepth를 통해 무한 루프를 방지하며, 다단계 상속도 추적 가능
  */
@@ -441,10 +460,9 @@ function checkParentClassExtends(
 			return true
 		}
 
-		// 직접 상속이 아닌 경우, 부모의 부모 클래스를 재귀적으로 추적
-		const grandParentMatch = content.match(/extends\s+(\w+)/)
-		if (grandParentMatch) {
-			const grandParentClassName = grandParentMatch[1]
+		// 직접 상속이 아닌 경우, 부모의 부모 클래스를 재귀적으로 추적 (주석에 적힌 extends는 무시)
+		const grandParentClassName = findExtendsParentIgnoringComments(lines)
+		if (grandParentClassName) {
 			// 프레임워크 기본 클래스가 아니라면 계속 추적
 			if (grandParentClassName !== targetClassName && grandParentClassName !== "Object") {
 				console.log(`🔍 Tracing inheritance: ${parentClassName} → ${grandParentClassName} → ... → ${targetClassName}?`)
@@ -462,8 +480,9 @@ function checkParentClassExtends(
 
 /**
  * Service 파일의 검증 (주석 제외)
- * 1. extends EgovAbstractServiceImpl 또는 EgovCommonServiceImpl 확인
- *    - EgovCommonServiceImpl인 경우, 해당 클래스가 EgovAbstractServiceImpl을 상속하는지 체크
+ * 1. extends EgovAbstractServiceImpl 확인
+ *    - 직접 상속이 아니면 부모 클래스(프로젝트마다 이름이 다른 공통 ServiceImpl 등)의 .java를
+ *      소스 루트에서 찾아 EgovAbstractServiceImpl까지 상속 체인을 추적
  * 2. @Service annotation 확인
  * 3. implements Service interface 확인
  */
@@ -472,8 +491,7 @@ function checkServiceFile(filePath: string): boolean[] {
 		const content = fs.readFileSync(filePath, "utf8")
 		const lines = content.split("\n")
 
-		// 1. extends 체크 (우선순위: EgovCommonServiceImpl > EgovAbstractServiceImpl)
-		const hasExtendsCommon = findRegexPatternIgnoringComments(lines, /extends.*EgovCommonServiceImpl/)
+		// 1. extends 체크
 		const hasExtendsAbstract = findRegexPatternIgnoringComments(lines, /extends.*EgovAbstractServiceImpl/)
 
 		let extendsCheck = false
@@ -481,16 +499,19 @@ function checkServiceFile(filePath: string): boolean[] {
 			// 직접 EgovAbstractServiceImpl을 상속한 경우
 			extendsCheck = true
 			console.log(`✅ ${path.basename(filePath)} directly extends EgovAbstractServiceImpl`)
-		} else if (hasExtendsCommon) {
-			// EgovCommonServiceImpl을 상속한 경우, 해당 클래스가 EgovAbstractServiceImpl을 상속하는지 체크
-			const projectPath = findSourceRoot(filePath)
-			const parentExtendsAbstract = checkParentClassExtends(projectPath, "EgovCommonServiceImpl", "EgovAbstractServiceImpl")
-			extendsCheck = parentExtendsAbstract
-			console.log(
-				`✅ ${path.basename(filePath)} extends EgovCommonServiceImpl, which extends EgovAbstractServiceImpl: ${parentExtendsAbstract}`,
-			)
 		} else {
-			console.log(`❌ ${path.basename(filePath)} does not extend EgovAbstractServiceImpl or EgovCommonServiceImpl`)
+			// 다른 클래스를 상속한 경우, 그 부모 클래스가 EgovAbstractServiceImpl을 상속하는지 체인을 추적
+			const parentClassName = findExtendsParentIgnoringComments(lines)
+			if (parentClassName && parentClassName !== "Object") {
+				const projectPath = findSourceRoot(filePath)
+				const parentExtendsAbstract = checkParentClassExtends(projectPath, parentClassName, "EgovAbstractServiceImpl")
+				extendsCheck = parentExtendsAbstract
+				console.log(
+					`${parentExtendsAbstract ? "✅" : "❌"} ${path.basename(filePath)} extends ${parentClassName}, which extends EgovAbstractServiceImpl: ${parentExtendsAbstract}`,
+				)
+			} else {
+				console.log(`❌ ${path.basename(filePath)} does not extend EgovAbstractServiceImpl`)
+			}
 		}
 
 		// 2. @Service annotation (주석 제외)

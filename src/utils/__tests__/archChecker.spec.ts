@@ -224,16 +224,36 @@ describe("판정 규칙 (fs 경로)", () => {
 		expect(results.Controller).toMatchObject({ totalFiles: 8, passedFiles: 3, failedFiles: 5 })
 	})
 
-	it("Service: extends(직접 또는 EgovCommonServiceImpl 경유) ∧ @Service ∧ implements", async () => {
+	it("Service: extends(직접 또는 프로젝트의 임의 중간 클래스 경유) ∧ @Service ∧ implements", async () => {
 		const root = makeProject({
 			[`${SRC}/service/impl/UserServiceImpl.java`]: `@Service("userService")\npublic class UserServiceImpl extends EgovAbstractServiceImpl implements UserService {}\n`,
-			[`${SRC}/cmmn/EgovCommonServiceImpl.java`]: `public abstract class EgovCommonServiceImpl extends EgovAbstractServiceImpl {}\n`,
-			[`${SRC}/service/impl/BoardServiceImpl.java`]: `@Service\npublic class BoardServiceImpl extends EgovCommonServiceImpl\n\t\timplements BoardService {}\n`,
+			// 중간 클래스 이름은 프로젝트마다 다르다: 고정 이름(EgovCommonServiceImpl)을 가정하면 안 된다
+			[`${SRC}/cmmn/ProjectBaseServiceImpl.java`]: `public abstract class ProjectBaseServiceImpl extends EgovAbstractServiceImpl {}\n`,
+			[`${SRC}/service/impl/BoardServiceImpl.java`]: `@Service\npublic class BoardServiceImpl extends ProjectBaseServiceImpl\n\t\timplements BoardService {}\n`,
+			// 2단계 경유: ChainServiceImpl → CmmnBase → ProjectBaseServiceImpl → EgovAbstractServiceImpl
+			[`${SRC}/cmmn/CmmnBase.java`]: `public abstract class CmmnBase extends ProjectBaseServiceImpl {}\n`,
+			[`${SRC}/service/impl/ChainServiceImpl.java`]: `@Service\npublic class ChainServiceImpl extends CmmnBase implements ChainService {}\n`,
+			// 부모가 EgovAbstractServiceImpl 계열이 아니면 실패
+			[`${SRC}/cmmn/OtherBase.java`]: `public abstract class OtherBase {}\n`,
+			[`${SRC}/service/impl/OtherServiceImpl.java`]: `@Service\npublic class OtherServiceImpl extends OtherBase implements OtherService {}\n`,
+			// 주석에 적힌 extends는 무시하고 코드의 extends만 본다
+			[`${SRC}/service/impl/CommentServiceImpl.java`]: `// legacy: extends EgovAbstractServiceImpl\n@Service\npublic class CommentServiceImpl extends OtherBase implements CommentService {}\n`,
+			// 중간 클래스 파일의 주석에 적힌 extends도 무시하고, 코드의 extends로 조부모를 추적한다
+			[`${SRC}/cmmn/CommentedMidBase.java`]: `/**\n * 과거에는 extends OtherBase 였음\n */\npublic abstract class CommentedMidBase extends ProjectBaseServiceImpl {}\n`,
+			[`${SRC}/service/impl/ViaCommentedMidServiceImpl.java`]: `@Service\npublic class ViaCommentedMidServiceImpl extends CommentedMidBase implements ViaCommentedMidService {}\n`,
 			[`${SRC}/service/impl/PlainServiceImpl.java`]: `@Service\npublic class PlainServiceImpl implements PlainService {}\n`,
 		})
 		const results = await checkEgovArchitecture(root)
 
-		expect(fileNames(results, "Service")).toEqual(["BoardServiceImpl.java", "PlainServiceImpl.java", "UserServiceImpl.java"])
+		expect(fileNames(results, "Service")).toEqual([
+			"BoardServiceImpl.java",
+			"ChainServiceImpl.java",
+			"CommentServiceImpl.java",
+			"OtherServiceImpl.java",
+			"PlainServiceImpl.java",
+			"UserServiceImpl.java",
+			"ViaCommentedMidServiceImpl.java",
+		])
 		expect(resultOf(results, "Service", "UserServiceImpl.java")).toMatchObject({
 			check1: true,
 			check2: true,
@@ -246,6 +266,15 @@ describe("판정 규칙 (fs 경로)", () => {
 			check3: true,
 			result: "OK",
 		})
+		expect(resultOf(results, "Service", "ChainServiceImpl.java")).toMatchObject({
+			check1: true,
+			check2: true,
+			check3: true,
+			result: "OK",
+		})
+		expect(resultOf(results, "Service", "OtherServiceImpl.java")).toMatchObject({ check1: false, result: "NotFound" })
+		expect(resultOf(results, "Service", "CommentServiceImpl.java")).toMatchObject({ check1: false, result: "NotFound" })
+		expect(resultOf(results, "Service", "ViaCommentedMidServiceImpl.java")).toMatchObject({ check1: true, result: "OK" })
 		expect(resultOf(results, "Service", "PlainServiceImpl.java")).toMatchObject({
 			check1: false,
 			check2: true,
