@@ -283,6 +283,46 @@ describe("판정 규칙 (fs 경로)", () => {
 		})
 	})
 
+	it("Service check3: 클래스 선언부의 implements 목록에 Service로 끝나는 인터페이스가 있어야 한다", async () => {
+		const head = "@Service\npublic class"
+		const base = "extends EgovAbstractServiceImpl"
+		const root = makeProject({
+			[`${SRC}/service/impl/MultiServiceImpl.java`]: `${head} MultiServiceImpl ${base} implements Serializable, MultiService {}\n`,
+			[`${SRC}/service/impl/WrappedServiceImpl.java`]: `${head} WrappedServiceImpl ${base}\n\t\timplements\n\t\tWrappedService {\n}\n`,
+			[`${SRC}/service/impl/FqnServiceImpl.java`]: `${head} FqnServiceImpl<T> ${base} implements egov.sample.service.FqnService<T> {}\n`,
+			[`${SRC}/service/impl/GenericServiceImpl.java`]: `${head} GenericServiceImpl ${base} implements Comparator<Map<String, Object>>, GenericService {}\n`,
+			// 선언부 밖(메서드 본문·필드)의 Service는 보지 않는다
+			[`${SRC}/service/impl/LooseServiceImpl.java`]: `${head} LooseServiceImpl ${base} implements Serializable {\n\tpublic String name() {\n\t\treturn "Service";\n\t}\n}\n`,
+			[`${SRC}/service/impl/InjectServiceImpl.java`]: `${head} InjectServiceImpl ${base} implements Serializable {\n\t@Resource\n\tprivate UserService userService;\n}\n`,
+			// Service로 끝나지 않는 이름은 Service 인터페이스가 아니다
+			[`${SRC}/service/impl/HelperServiceImpl.java`]: `${head} HelperServiceImpl ${base} implements ServiceHelper {}\n`,
+			[`${SRC}/service/impl/ListenerServiceImpl.java`]: `${head} ListenerServiceImpl ${base} implements ApplicationListener<ServiceEvent> {}\n`,
+			[`${SRC}/service/impl/NoneServiceImpl.java`]: `${head} NoneServiceImpl ${base} {}\n`,
+			// 파일 이름과 같은 클래스의 선언부만 본다 (앞에 다른 최상위 클래스가 있어도)
+			[`${SRC}/service/impl/TopServiceImpl.java`]: `class Helper implements Runnable {}\n${head} TopServiceImpl ${base} implements TopService {}\n`,
+			[`${SRC}/service/impl/OtherTopServiceImpl.java`]: `class Helper implements HelperService {}\n${head} OtherTopServiceImpl ${base} {}\n`,
+		})
+		const results = await checkEgovArchitecture(root)
+
+		const check3Of = (name: string) => resultOf(results, "Service", name)?.check3
+		expect(check3Of("MultiServiceImpl.java")).toBe(true)
+		expect(check3Of("WrappedServiceImpl.java")).toBe(true)
+		expect(check3Of("FqnServiceImpl.java")).toBe(true)
+		expect(check3Of("GenericServiceImpl.java")).toBe(true)
+		expect(check3Of("TopServiceImpl.java")).toBe(true)
+		expect(check3Of("LooseServiceImpl.java")).toBe(false)
+		expect(check3Of("InjectServiceImpl.java")).toBe(false)
+		expect(check3Of("HelperServiceImpl.java")).toBe(false)
+		expect(check3Of("ListenerServiceImpl.java")).toBe(false)
+		expect(check3Of("NoneServiceImpl.java")).toBe(false)
+		expect(check3Of("OtherTopServiceImpl.java")).toBe(false)
+		expect(resultOf(results, "Service", "LooseServiceImpl.java")).toMatchObject({
+			check1: true,
+			check2: true,
+			result: "NotFound",
+		})
+	})
+
 	it("DAO: @Repository ∧ (EgovAbstractDAO ∨ EgovAbstractMapper), 중간 클래스 경유 상속 포함", async () => {
 		const root = makeProject({
 			[`${SRC}/dao/BaseDAO.java`]: `public abstract class BaseDAO extends EgovAbstractDAO {}\n`,

@@ -7,6 +7,7 @@
   - Controller 매핑 판정 결과에 매핑된 public 메서드 수와 점검 대상 메서드 수, 클래스 레벨 `@RequestMapping` 여부를 실어, 상세 결과의 Mapping 칸과 CSV의 Mapping Annotation 열에 FAIL / Class level / a/b / PASS로 표시. 판정 규칙은 그대로이며 일부 메서드만 매핑된 경우를 알아볼 수 있게 함
   - Controller의 비어 있던 check3를 DAO 주입 금지 조건("DAO X")으로 사용. 주석이 아닌 줄에서 `*DAO`·`*Dao`·프로젝트 안에 같은 이름의 `*Mapper.java`가 있는 `*Mapper` 타입의 필드·매개변수·지역 변수 선언을 찾으면 실패로 표시하고 판정식을 c1 ∧ c2 ∧ c3로 변경. 라이브러리 타입(`ObjectMapper` 등)은 오탐하지 않음
   - Service 점검의 상속(check1)이 중간 클래스 이름을 `EgovCommonServiceImpl`로 고정 가정해, 프로젝트가 다른 이름의 공통 ServiceImpl을 거쳐 `EgovAbstractServiceImpl`을 상속하면 NotFound로 판정하던 문제 수정. 주석이 아닌 줄의 `extends` 뒤 부모 클래스 이름을 그대로 읽어 소스 루트에서 상속 체인(최대 5단계)을 추적한다. 체인을 따라가며 조부모 이름을 읽을 때도 주석에 적힌 `extends`는 무시한다(Service·DAO 공통)
+  - Service 점검의 인터페이스 구현(check3)이 `implements` 뒤 파일 어디에든 `Service`라는 문자열(메서드 본문의 문자열 리터럴, 주입 필드의 타입 이름 등)만 있으면 통과시키던 문제 수정. 파일 이름과 같은 클래스의 선언부(`class` ~ 첫 `{`)에서 `implements` 목록을 파싱해, 제네릭 인자와 패키지 경로를 뗀 단순 이름이 `Service`로 끝나는 인터페이스가 하나 이상 있을 때만 통과한다. 여러 줄에 걸친 선언도 같은 경로로 처리하므로 종전의 2차 검사는 제거
   - CheckArch 탭이 탭 스코프 체계(PR #36)에서 빠져 다른 탭의 실패가 CheckArch 탭 오류로 표시되고, 아키텍처 점검 오류가 스코프 없이 발신되어 모든 탭의 오류 표시·오류 화면으로 번지던 문제 수정 (Refs: PR #36)
 - Code Generation
   - DDL 입력 내용을 기반으로 테이블, 컬럼, PK/FK, 1:N 관계를 표시하는 ERD Preview 추가 (Refs: PR #10)

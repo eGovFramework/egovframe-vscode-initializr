@@ -479,12 +479,88 @@ function checkParentClassExtends(
 }
 
 /**
+ * 주석이 아닌 줄을 이어 붙인 문자열에서 점검 대상 클래스의 선언부를 돌려준다.
+ * 선언부는 `class <클래스명>`부터 첫 `{` 직전까지이며, 파일 이름과 같은 클래스를 우선 찾고
+ * 없으면 첫 class 선언을 쓴다. 선언부 밖(필드·메서드 본문)은 판정에 쓰지 않는다.
+ */
+function extractClassDeclaration(lines: string[], className: string): string | null {
+	const joined = lines
+		.map((l) => l.trim())
+		.filter((l) => l.length > 0 && !l.startsWith("//") && !l.startsWith("/*") && !l.startsWith("*"))
+		.join(" ")
+	const escaped = className.replace(/[$]/g, "\\$&")
+	let start = joined.search(new RegExp(`\\bclass\\s+${escaped}\\b`))
+	if (start === -1) {
+		start = joined.search(/\bclass\s+\w+/)
+	}
+	if (start === -1) {
+		return null
+	}
+	const brace = joined.indexOf("{", start)
+	return brace === -1 ? joined.slice(start) : joined.slice(start, brace)
+}
+
+/** 꺾쇠(제네릭) 깊이가 0인 쉼표에서만 나눈다: `Comparator<Map<String, Object>>, FooService` → 2항목 */
+function splitTopLevelCommas(list: string): string[] {
+	const items: string[] = []
+	let depth = 0
+	let current = ""
+	for (const ch of list) {
+		if (ch === "<") {
+			depth++
+		} else if (ch === ">") {
+			depth = Math.max(0, depth - 1)
+		} else if (ch === "," && depth === 0) {
+			items.push(current)
+			current = ""
+			continue
+		}
+		current += ch
+	}
+	items.push(current)
+	return items
+}
+
+/** 제네릭 인자(`<...>`)를 떼고 패키지 경로를 뗀 단순 타입 이름을 돌려준다: `a.b.FooService<T>` → `FooService` */
+function toSimpleTypeName(typeText: string): string {
+	let depth = 0
+	let stripped = ""
+	for (const ch of typeText) {
+		if (ch === "<") {
+			depth++
+		} else if (ch === ">") {
+			depth = Math.max(0, depth - 1)
+		} else if (depth === 0) {
+			stripped += ch
+		}
+	}
+	const segments = stripped.trim().split(".")
+	return segments[segments.length - 1]
+}
+
+/**
+ * 클래스 선언부의 implements 목록에 단순 이름이 `Service`로 끝나는 인터페이스가 하나 이상 있는지 확인한다.
+ * `implements Serializable` 뒤 본문 어딘가의 "Service" 문자열이나 주입 필드 타입은 보지 않는다.
+ */
+function implementsServiceInterface(lines: string[], className: string): boolean {
+	const declaration = extractClassDeclaration(lines, className)
+	if (!declaration) {
+		return false
+	}
+	const match = declaration.match(/\bimplements\s+(.+)$/)
+	if (!match) {
+		return false
+	}
+	return splitTopLevelCommas(match[1]).some((item) => /Service$/.test(toSimpleTypeName(item)))
+}
+
+/**
  * Service 파일의 검증 (주석 제외)
  * 1. extends EgovAbstractServiceImpl 확인
  *    - 직접 상속이 아니면 부모 클래스(프로젝트마다 이름이 다른 공통 ServiceImpl 등)의 .java를
  *      소스 루트에서 찾아 EgovAbstractServiceImpl까지 상속 체인을 추적
  * 2. @Service annotation 확인
- * 3. implements Service interface 확인
+ * 3. 클래스 선언부의 implements 목록에 Service로 끝나는 인터페이스가 있는지 확인
  */
 function checkServiceFile(filePath: string): boolean[] {
 	try {
@@ -517,17 +593,8 @@ function checkServiceFile(filePath: string): boolean[] {
 		// 2. @Service annotation (주석 제외)
 		const hasServiceAnnotation = findPatternIgnoringComments(lines, "@Service")
 
-		// 3. implements Service (주석 제외, 여러 줄에 걸친 클래스 선언도 처리)
-		let hasImplements = findRegexPatternIgnoringComments(lines, /implements.*Service/)
-		if (!hasImplements) {
-			// 클래스 선언이 여러 줄에 걸쳐 있는 경우를 처리
-			// 주석이 아닌 라인만 합쳐서 implements...Service 패턴 확인
-			const nonCommentLines = lines
-				.map((l) => l.trim())
-				.filter((l) => !l.startsWith("//") && !l.startsWith("/*") && !l.startsWith("*"))
-				.join(" ")
-			hasImplements = /implements.*Service/.test(nonCommentLines)
-		}
+		// 3. 클래스 선언부의 implements 목록에 Service 인터페이스가 있는지 확인 (주석 제외, 여러 줄 선언 포함)
+		const hasImplements = implementsServiceInterface(lines, path.basename(filePath, ".java"))
 
 		console.log(
 			`✅ Service checks for ${path.basename(filePath)}: extends=${extendsCheck}, @Service=${hasServiceAnnotation}, implements=${hasImplements}`,
