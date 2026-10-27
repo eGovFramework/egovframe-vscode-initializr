@@ -190,6 +190,40 @@ describe("판정 규칙 (fs 경로)", () => {
 		expect(service).not.toHaveProperty("hasClassLevelMapping")
 	})
 
+	it("Controller: check3 'DAO X' — DAO/Dao 또는 프로젝트의 *Mapper 타입을 주입받으면(완전 한정 이름 포함) 실패한다", async () => {
+		const root = makeProject({
+			[`${SRC}/mapper/SampleMapper.java`]: `@Mapper\npublic interface SampleMapper {}\n`,
+			[`${SRC}/web/CleanController.java`]: `@Controller\npublic class CleanController {\n\t@Resource(name = "sampleService")\n\tprivate SampleService sampleService;\n\t@GetMapping("/a")\n\tpublic String a() { return "a"; }\n}\n`,
+			[`${SRC}/web/DaoFieldController.java`]: `@Controller\npublic class DaoFieldController {\n\t@Resource(name = "sampleDAO")\n\tprivate SampleDAO sampleDAO;\n\t@GetMapping("/a")\n\tpublic String a() { return "a"; }\n}\n`,
+			[`${SRC}/web/DaoLowerController.java`]: `@Controller\n@RequiredArgsConstructor\npublic class DaoLowerController {\n\tprivate final SampleDao sampleDao;\n\t@GetMapping("/a")\n\tpublic String a() { return "a"; }\n}\n`,
+			[`${SRC}/web/MapperController.java`]: `@Controller\npublic class MapperController {\n\t@Autowired\n\tprivate SampleMapper sampleMapper;\n\t@GetMapping("/a")\n\tpublic String a() { return "a"; }\n}\n`,
+			[`${SRC}/web/CtorController.java`]: `@Controller\npublic class CtorController {\n\tprivate final SampleService svc;\n\tpublic CtorController(SampleService svc, SampleDAO sampleDAO) {\n\t\tthis.svc = svc;\n\t}\n\t@GetMapping("/a")\n\tpublic String a() { return "a"; }\n}\n`,
+			[`${SRC}/web/JacksonController.java`]: `@RestController\npublic class JacksonController {\n\t@Autowired\n\tprivate ObjectMapper objectMapper;\n\t@GetMapping("/a")\n\tpublic String a() { return "a"; }\n}\n`,
+			[`${SRC}/web/CommentedDaoController.java`]: `@Controller\npublic class CommentedDaoController {\n\t// private SampleDAO sampleDAO;\n\t/**\n\t * SampleMapper sampleMapper;\n\t */\n\t@GetMapping("/a")\n\tpublic String a() { return "a"; }\n}\n`,
+			[`${SRC}/web/FqnController.java`]: `@Controller\npublic class FqnController {\n\t@Resource(name = "sampleDAO")\n\tprivate egov.sample.service.SampleDAO sampleDAO;\n\t@GetMapping("/a")\n\tpublic String a() { return "a"; }\n}\n`,
+		})
+		const results = await checkEgovArchitecture(root)
+
+		expect(resultOf(results, "Controller", "CleanController.java")).toMatchObject({ check3: true, result: "OK" })
+		expect(resultOf(results, "Controller", "DaoFieldController.java")).toMatchObject({
+			check1: true,
+			check2: true,
+			check3: false,
+			result: "NotFound",
+		})
+		expect(resultOf(results, "Controller", "DaoLowerController.java")).toMatchObject({ check3: false, result: "NotFound" })
+		// 프로젝트 안에 SampleMapper.java가 있으므로 DAO 역할의 Mapper 주입으로 본다
+		expect(resultOf(results, "Controller", "MapperController.java")).toMatchObject({ check3: false, result: "NotFound" })
+		expect(resultOf(results, "Controller", "CtorController.java")).toMatchObject({ check3: false, result: "NotFound" })
+		// 프로젝트에 없는 라이브러리 타입(ObjectMapper)은 DAO로 보지 않는다
+		expect(resultOf(results, "Controller", "JacksonController.java")).toMatchObject({ check3: true, result: "OK" })
+		// 주석 안의 선언은 무시한다
+		expect(resultOf(results, "Controller", "CommentedDaoController.java")).toMatchObject({ check3: true, result: "OK" })
+		// 패키지 경로를 다 적은 완전 한정 이름의 주입도 잡는다
+		expect(resultOf(results, "Controller", "FqnController.java")).toMatchObject({ check3: false, result: "NotFound" })
+		expect(results.Controller).toMatchObject({ totalFiles: 8, passedFiles: 3, failedFiles: 5 })
+	})
+
 	it("Service: extends(직접 또는 EgovCommonServiceImpl 경유) ∧ @Service ∧ implements", async () => {
 		const root = makeProject({
 			[`${SRC}/service/impl/UserServiceImpl.java`]: `@Service("userService")\npublic class UserServiceImpl extends EgovAbstractServiceImpl implements UserService {}\n`,
@@ -265,17 +299,26 @@ describe("EXCLUDED_DIRECTORY_NAMES", () => {
 describe("CSV 내보내기", () => {
 	const controller = (
 		fileName: string,
-		fields: { check2: boolean; mappedMethodCount: number; methodCount: number; hasClassLevelMapping: boolean },
-	): ArchCheckResult => ({
-		filePath: `/p/web/${fileName}`,
-		fileName,
-		parentPath: "/p/web",
-		check1: true,
-		check3: false,
-		result: fields.check2 ? "OK" : "NotFound",
-		type: "Controller",
-		...fields,
-	})
+		fields: {
+			check2: boolean
+			check3?: boolean
+			mappedMethodCount: number
+			methodCount: number
+			hasClassLevelMapping: boolean
+		},
+	): ArchCheckResult => {
+		const check3 = fields.check3 ?? true
+		return {
+			filePath: `/p/web/${fileName}`,
+			fileName,
+			parentPath: "/p/web",
+			check1: true,
+			result: fields.check2 && check3 ? "OK" : "NotFound",
+			type: "Controller",
+			...fields,
+			check3,
+		}
+	}
 
 	function readCsv(dir: string, layer: string): string[] {
 		const file = fs.readdirSync(dir).find((f) => f.startsWith(`Result_${layer}_`) && f.endsWith(".csv"))
@@ -285,13 +328,13 @@ describe("CSV 내보내기", () => {
 		return fs.readFileSync(path.join(dir, file), "utf8").trimEnd().split("\n")
 	}
 
-	it("Controller의 Mapping Annotation 열은 화면과 같은 규칙(FAIL / Class level / a/b / PASS)으로 쓴다", async () => {
+	it("Controller의 Mapping Annotation 열은 화면 규칙(FAIL / Class level / a/b / PASS)을, 'DAO X' 열은 PASS/FAIL을 쓴다", async () => {
 		const outDir = makeProject({})
 		const results: ArchCheckResults = {
 			Controller: {
-				totalFiles: 4,
+				totalFiles: 5,
 				passedFiles: 3,
-				failedFiles: 1,
+				failedFiles: 2,
 				results: [
 					controller("NoMappingController.java", {
 						check2: false,
@@ -313,6 +356,13 @@ describe("CSV 내보내기", () => {
 					}),
 					controller("FullController.java", {
 						check2: true,
+						mappedMethodCount: 3,
+						methodCount: 3,
+						hasClassLevelMapping: false,
+					}),
+					controller("DaoController.java", {
+						check2: true,
+						check3: false,
 						mappedMethodCount: 3,
 						methodCount: 3,
 						hasClassLevelMapping: false,
@@ -341,11 +391,12 @@ describe("CSV 내보내기", () => {
 		await exportArchResults(results, outDir)
 
 		expect(readCsv(outDir, "Controller")).toEqual([
-			"Path,FileName,@Controller,Mapping Annotation,-,Result",
-			"/p/web,NoMappingController.java,PASS,FAIL,-,NotFound",
-			"/p/web,ClassLevelController.java,PASS,Class level,-,OK",
-			"/p/web,PartialController.java,PASS,2/3,-,OK",
-			"/p/web,FullController.java,PASS,PASS,-,OK",
+			"Path,FileName,@Controller,Mapping Annotation,DAO X,Result",
+			"/p/web,NoMappingController.java,PASS,FAIL,PASS,NotFound",
+			"/p/web,ClassLevelController.java,PASS,Class level,PASS,OK",
+			"/p/web,PartialController.java,PASS,2/3,PASS,OK",
+			"/p/web,FullController.java,PASS,PASS,PASS,OK",
+			"/p/web,DaoController.java,PASS,PASS,FAIL,NotFound",
 		])
 		// 다른 레이어는 종전대로 PASS/FAIL만 쓴다
 		expect(readCsv(outDir, "Service")[1]).toBe("/p/service,UserServiceImpl.java,PASS,PASS,PASS,OK")

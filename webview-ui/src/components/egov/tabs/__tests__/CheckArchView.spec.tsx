@@ -55,20 +55,29 @@ describe("CheckArchView 메시지 스코프", () => {
 
 const controllerResult = (
 	fileName: string,
-	fields: { check2: boolean; mappedMethodCount: number; methodCount: number; hasClassLevelMapping: boolean },
-) => ({
-	filePath: `/p/src/main/java/egov/web/${fileName}`,
-	fileName,
-	parentPath: "/p/src/main/java/egov/web",
-	check1: true,
-	check3: false,
-	result: fields.check2 ? "OK" : "NotFound",
-	type: "Controller",
-	...fields,
-})
+	fields: {
+		check2: boolean
+		check3?: boolean
+		mappedMethodCount: number
+		methodCount: number
+		hasClassLevelMapping: boolean
+	},
+) => {
+	const check3 = fields.check3 ?? true
+	return {
+		filePath: `/p/src/main/java/egov/web/${fileName}`,
+		fileName,
+		parentPath: "/p/src/main/java/egov/web",
+		check1: true,
+		result: fields.check2 && check3 ? "OK" : "NotFound",
+		type: "Controller",
+		...fields,
+		check3,
+	}
+}
 
 describe("CheckArchView Detailed Results", () => {
-	it("Controller의 Mapping 칸: 실패 ✗, 클래스 레벨 매핑은 'Class level', 일부 메서드만 매핑되면 a/b, 전부 매핑되면 ✓", async () => {
+	it("Controller의 Mapping 칸(✗ / Class level / a/b / ✓)과 'DAO X' 칸(✓ / ✗)을 표시한다", async () => {
 		render(<CheckArchView />)
 
 		dispatch({
@@ -77,9 +86,9 @@ describe("CheckArchView Detailed Results", () => {
 			success: true,
 			results: {
 				Controller: {
-					totalFiles: 4,
+					totalFiles: 5,
 					passedFiles: 3,
-					failedFiles: 1,
+					failedFiles: 2,
 					results: [
 						controllerResult("PartialController.java", {
 							check2: true,
@@ -105,6 +114,13 @@ describe("CheckArchView Detailed Results", () => {
 							methodCount: 1,
 							hasClassLevelMapping: false,
 						}),
+						controllerResult("DaoController.java", {
+							check2: true,
+							check3: false,
+							mappedMethodCount: 3,
+							methodCount: 3,
+							hasClassLevelMapping: false,
+						}),
 					],
 				},
 			},
@@ -115,8 +131,12 @@ describe("CheckArchView Detailed Results", () => {
 		expect(screen.queryByText("3/3")).not.toBeInTheDocument()
 		expect(screen.getByText("Class level")).toBeInTheDocument()
 		expect(screen.queryByText("0/1")).not.toBeInTheDocument()
-		// ✓: @Controller 칸 4개 + FullController의 Mapping 칸 1개
-		expect(screen.getAllByText("✓")).toHaveLength(5)
-		expect(screen.getAllByText("✗")).toHaveLength(1)
+		// 표 머리글에 check3 이름이 보인다
+		expect(screen.getByText("DAO X")).toBeInTheDocument()
+		// ✓: @Controller 칸 5개 + Mapping 칸(Full, Dao) 2개 + DAO X 칸 4개
+		expect(screen.getAllByText("✓")).toHaveLength(11)
+		// ✗: NoMapping의 Mapping 칸 + Dao의 DAO X 칸
+		expect(screen.getAllByText("✗")).toHaveLength(2)
+		expect(screen.getAllByText("NotFound")).toHaveLength(2)
 	})
 })

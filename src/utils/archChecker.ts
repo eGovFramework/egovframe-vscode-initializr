@@ -579,6 +579,57 @@ function checkDAOFile(filePath: string): boolean[] {
  * Mapper 파일의 검증 (주석 제외)
  * 1. @Mapper 또는 @EgovMapper annotation 확인
  */
+/**
+ * 주입(필드·생성자/메서드 매개변수·지역 선언)된 타입 이름 패턴
+ * - 단어 경계에서 시작하는 대문자 타입 이름만 본다 (mySampleDAO 같은 변수 이름의 일부는 제외)
+ * - 패키지 경로를 다 적은 완전 한정 이름(egov.sample.SampleDAO sampleDAO)도 마지막 조각으로 매칭
+ * - 타입 뒤에 식별자가 오고 ; = , ) 또는 줄 끝으로 끝나는 선언만 매칭
+ */
+const INJECTED_TYPE_PATTERN = /\b([A-Z]\w*(?:DAO|Dao|Mapper))\s+[A-Za-z_$][\w$]*\s*(?:[;=,)]|$)/g
+
+/**
+ * Controller가 DAO 역할의 타입을 주입받는지 확인 (주석 제외)
+ * - *DAO / *Dao 타입은 항상 DAO로 본다
+ * - *Mapper 타입은 프로젝트 안에 같은 이름의 *Mapper.java가 있을 때만 DAO(MyBatis 매퍼)로 본다
+ *   (ObjectMapper 같은 라이브러리 타입을 오탐하지 않기 위함)
+ */
+function checkDaoInjection(filePath: string, mapperClassNames: ReadonlySet<string>): boolean {
+	try {
+		const content = fs.readFileSync(filePath, "utf8")
+		const lines = content.split("\n")
+
+		for (const rawLine of lines) {
+			const line = rawLine.trim()
+			if (line.startsWith("//") || line.startsWith("/*") || line.startsWith("*")) {
+				continue
+			}
+			for (const match of line.matchAll(INJECTED_TYPE_PATTERN)) {
+				const typeName = match[1]
+				const isDao = /(?:DAO|Dao)$/.test(typeName) || mapperClassNames.has(typeName)
+				if (isDao) {
+					console.log(`❌ ${path.basename(filePath)} injects DAO-role type '${typeName}'`)
+					return true
+				}
+			}
+		}
+		return false
+	} catch (error) {
+		console.error(`Error checking DAO injection in ${filePath}:`, error)
+		return false
+	}
+}
+
+/**
+ * 프로젝트 안의 *Mapper.java 파일 이름(확장자 제외)을 모은다 — Controller의 DAO 주입 검사에 쓴다
+ */
+async function collectMapperClassNames(projectPath: string, rgPath?: string): Promise<Set<string>> {
+	const filePattern = "*Mapper.java"
+	const files = isRipgrepAvailable(rgPath)
+		? await findFilesWithRipgrep(rgPath, projectPath, filePattern)
+		: findFilesWithFs(projectPath, globToSuffix(filePattern))
+	return new Set(files.map((file) => path.basename(file, ".java")))
+}
+
 function checkMapperFile(filePath: string): boolean[] {
 	try {
 		const content = fs.readFileSync(filePath, "utf8")
@@ -625,8 +676,10 @@ async function checkLayer(
 	filePattern: string,
 	layerType: "Controller" | "Service" | "DAO" | "Mapper",
 	rgPath?: string,
+	context: { mapperClassNames?: ReadonlySet<string> } = {},
 ): Promise<ArchCheckResult[]> {
 	const results: ArchCheckResult[] = []
+	const mapperClassNames = context.mapperClassNames ?? new Set<string>()
 
 	try {
 		// 1. 파일 목록 가져오기
@@ -658,7 +711,9 @@ async function checkLayer(
 			switch (layerType) {
 				case "Controller":
 					const controllerResult = checkControllerMethods(filePath)
-					checks = [controllerResult.hasControllerAnnotation, controllerResult.hasAllMappings, false]
+					// check3 'DAO X'는 소극 조건: DAO 역할 타입을 주입받지 않아야 통과
+					const injectsDao = checkDaoInjection(filePath, mapperClassNames)
+					checks = [controllerResult.hasControllerAnnotation, controllerResult.hasAllMappings, !injectsDao]
 					methodCounts = {
 						mappedMethodCount: controllerResult.mappedMethodCount,
 						methodCount: controllerResult.methodCount,
@@ -682,7 +737,7 @@ async function checkLayer(
 			let result: "OK" | "NotFound" = "NotFound"
 			switch (layerType) {
 				case "Controller":
-					if (checks[0] && checks[1]) {
+					if (checks[0] && checks[1] && checks[2]) {
 						result = "OK"
 					}
 					break
@@ -742,9 +797,10 @@ export async function checkEgovArchitecture(
 	}
 
 	try {
-		// 1. Controller 점검
+		// 1. Controller 점검 (DAO 주입 검사를 위해 프로젝트의 *Mapper.java 이름을 먼저 모은다)
 		progressCallback?.(`🔍 Checking Controller layer${useRipgrep ? " with ripgrep" : ""}...`)
-		const controllerResults = await checkLayer(projectPath, "*Controller.java", "Controller", rgPath)
+		const mapperClassNames = await collectMapperClassNames(projectPath, rgPath)
+		const controllerResults = await checkLayer(projectPath, "*Controller.java", "Controller", rgPath, { mapperClassNames })
 
 		const controllerPassed = controllerResults.filter((r) => r.result === "OK").length
 		results.Controller = {
@@ -805,8 +861,8 @@ function getLayerCheckInfo(layerType: "Controller" | "Service" | "DAO" | "Mapper
 	switch (layerType) {
 		case "Controller":
 			return {
-				columns: ["Path", "FileName", "@Controller", "Mapping Annotation", "-", "Result"],
-				used: [true, true, false], // check1, check2, check3 사용 여부
+				columns: ["Path", "FileName", "@Controller", "Mapping Annotation", "DAO X", "Result"],
+				used: [true, true, true], // check1, check2, check3 사용 여부
 			}
 		case "Service":
 			return {

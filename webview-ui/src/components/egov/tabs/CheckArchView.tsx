@@ -16,7 +16,7 @@ const CheckArchView = () => {
 	const getUsedChecks = (layerType: string) => {
 		switch (layerType) {
 			case "Controller":
-				return { check1: true, check2: true, check3: false }
+				return { check1: true, check2: true, check3: true }
 			case "Service":
 				return { check1: true, check2: true, check3: true }
 			case "DAO":
@@ -64,7 +64,7 @@ const CheckArchView = () => {
 				return {
 					check1: { short: "@Controller", full: "Must have @Controller annotation" },
 					check2: { short: "Mapping", full: "Must have @RequestMapping or mapping annotation" },
-					check3: { short: "-", full: "Not used for Controller layer" },
+					check3: { short: "DAO X", full: "Must not inject DAO/Dao/Mapper types (DAO belongs in ServiceImpl)" },
 				}
 			case "Service":
 				return {
@@ -643,6 +643,7 @@ const CheckArchView = () => {
 							<li>File name must follow *Controller.java pattern</li>
 							<li>Must have @Controller annotation</li>
 							<li>Must have mapping annotation (@RequestMapping, @GetMapping, @PostMapping, etc.)</li>
+							<li>Must not inject DAO/Dao/Mapper types (DAO belongs in ServiceImpl)</li>
 						</ul>
 					</div>
 					<div style={{ marginBottom: "12px" }}>
