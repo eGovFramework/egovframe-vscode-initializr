@@ -214,7 +214,7 @@ const csp = [
 
 ## 아키텍처 점검 엔진
 
-CheckArch 탭의 점검은 확장 호스트의 순수 모듈들이 수행합니다. 모든 모듈은 `vscode`를 import하지 않고 파일 읽기를 주입받으므로 root Vitest(`npm run test`)로 직접 검증합니다.
+CheckArch 탭의 점검은 확장 호스트의 순수 모듈들이 수행합니다. 모든 모듈은 `vscode`를 import하지 않습니다. 판정 모듈(`javaIndex`·`daoCheck`·`buildFileCheck`·`dataAccessConfigScan`)은 파일 읽기(`readFile`)를 주입받고 파서(`javaSource`·`mavenPom`·`gradleBuild`)는 텍스트를 받으며, 진입점 `archChecker.ts`가 ripgrep/fs로 파일을 직접 수집하고 읽기 캐시(`createCachedReader`)를 만들어 넘깁니다. 그래서 root Vitest(`npm run test`)로 직접 검증합니다.
 
 ### 모듈 구성
 
