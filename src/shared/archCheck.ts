@@ -19,6 +19,9 @@ export type CheckState = "pass" | "fail" | "skipped"
 /** eGovFrame 실행환경 세대 */
 export type RuntimeGeneration = "3.x" | "4.x" | "5.x"
 
+/** 실행환경 필수 라이브러리 4종의 모듈 키 */
+export type RequiredLibraryName = "ptl-mvc" | "fdl-cmmn" | "fdl-logging" | "psl-dataaccess"
+
 /** 단일 파일 점검 결과 */
 export interface ArchCheckResult {
 	filePath: string
@@ -81,9 +84,48 @@ export interface ArchCheckSummary {
 	skipped?: SkippedFile[]
 }
 
-/** 전체 점검 결과 — 점검한 레이어만 채워진다 */
+/** 전체 점검 결과 — 점검한 레이어만 채워진다 (project는 빌드 파일 점검, 2단계) */
 export interface ArchCheckResults {
 	Controller?: ArchCheckSummary
 	Service?: ArchCheckSummary
 	DAO?: ArchCheckSummary
+	project?: ProjectCheckSummary
+}
+
+/** 필수 라이브러리 판정 — unknown은 해석 불가(실패로 집계하지 않음) */
+export type RequiredLibraryStatus = "direct" | "transitive" | "excluded" | "missing" | "unknown"
+
+/** 실행환경 세대·버전을 정한 근거 */
+export type RuntimeSource = "property" | "bom" | "dependency-version" | "artifact-pattern" | "manual" | "none"
+
+/** 필수 라이브러리 1종의 판정 */
+export interface RequiredLibraryCheck {
+	name: RequiredLibraryName
+	status: RequiredLibraryStatus
+	/** transitive·excluded만: 직접 선언 → … → 대상 모듈 키 경로 */
+	via?: string[]
+	evidence: string
+}
+
+/** 빌드 파일(모듈) 1개의 점검 결과 */
+export interface BuildModuleCheck {
+	/** 프로젝트 루트 기준 상대 경로 (구분자 "/") */
+	buildFile: string
+	buildTool: "maven" | "gradle" | "gradle-kts"
+	/** 집계 pom(packaging pom + modules) — 판정하지 않고 Skipped */
+	aggregate: boolean
+	runtime: { generation: RuntimeGeneration | "unknown"; version?: string; source: RuntimeSource; evidence: string }
+	/** REQUIRED_LIBRARIES 순서로 4개 (aggregate면 []) */
+	requiredLibraries: RequiredLibraryCheck[]
+	result: "OK" | "NotFound" | "Unknown" | "Skipped"
+	notes?: string[]
+}
+
+/** 프로젝트 빌드 점검 종합 */
+export interface ProjectCheckSummary {
+	generation: RuntimeGeneration | "unknown"
+	version?: string
+	versionConsistency: { state: CheckState; versions: string[]; evidence: string }
+	modules: BuildModuleCheck[]
+	result: "OK" | "NotFound" | "Unknown"
 }

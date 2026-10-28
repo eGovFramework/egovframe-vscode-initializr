@@ -11,6 +11,7 @@ import {
 	type ArchCheckResult,
 	type ArchCheckResults,
 } from "../archChecker"
+import type { ProjectCheckSummary } from "../../shared/archCheck"
 import { resolveRipgrepPath } from "../ripgrepPath"
 
 /** 저장소 node_modules에 npm이 설치한 @vscode/ripgrep 플랫폼 패키지의 rg가 있으면 ripgrep 경로도 검증한다 */
@@ -28,11 +29,13 @@ function makeProject(files: Record<string, string>): string {
 	return root
 }
 
-function fileNames(results: ArchCheckResults, layer: keyof ArchCheckResults): string[] {
+type FileLayer = "Controller" | "Service" | "DAO"
+
+function fileNames(results: ArchCheckResults, layer: FileLayer): string[] {
 	return (results[layer]?.results ?? []).map((r) => r.fileName).sort()
 }
 
-function resultOf(results: ArchCheckResults, layer: keyof ArchCheckResults, fileName: string) {
+function resultOf(results: ArchCheckResults, layer: FileLayer, fileName: string) {
 	const found = results[layer]?.results.find((r) => r.fileName === fileName)
 	if (!found) {
 		throw new Error(`${fileName} not in ${layer} results`)
@@ -91,8 +94,13 @@ describe.each([
 		expect(fileNames(results, "DAO")).toEqual(["LowerDao.java", "UserDAO.java", "UserMapper.java"])
 		expect(results.Service?.totalFiles).toBe(0)
 		expect(results).not.toHaveProperty("Mapper")
-		expect(progress).toHaveLength(4)
-		expect(progress.every((m) => !m.includes("with ripgrep"))).toBe(true)
+		expect(progress).toEqual([
+			"🔍 Checking project build files...",
+			"🔍 Checking DAO / Mapper layer...",
+			"🔍 Checking Controller layer...",
+			"🔍 Checking Service layer...",
+			"✅ Architecture check completed",
+		])
 	})
 })
 
@@ -105,8 +113,13 @@ describe.skipIf(!bundledRg)("파일 수집: ripgrep 경로", () => {
 		expect(fileNames(results, "Controller")).toEqual(["IgnoredController.java", "UserController.java"])
 		expect(fileNames(results, "DAO")).toEqual(["LowerDao.java", "UserDAO.java", "UserMapper.java"])
 		expect(results).not.toHaveProperty("Mapper")
-		expect(progress).toHaveLength(4)
-		expect(progress.every((m) => m.includes("with ripgrep"))).toBe(true)
+		expect(progress).toEqual([
+			"🔍 Checking project build files with ripgrep...",
+			"🔍 Checking DAO / Mapper layer with ripgrep...",
+			"🔍 Checking Controller layer with ripgrep...",
+			"🔍 Checking Service layer with ripgrep...",
+			"✅ Architecture check completed with ripgrep",
+		])
 	})
 
 	/** 임시 디렉터리 아래 relativeRoot 위치에 프로젝트를 만든다 (프로젝트 상위 경로의 이름을 정하기 위함) */
@@ -474,7 +487,54 @@ describe("판정 규칙 (fs 경로)", () => {
 			expect(results[layer]).toEqual({ totalFiles: 0, passedFiles: 0, failedFiles: 0, results: [] })
 		}
 		expect(results.DAO).toEqual({ totalFiles: 0, passedFiles: 0, failedFiles: 0, results: [], skipped: [] })
-		expect(Object.keys(results).sort()).toEqual(["Controller", "DAO", "Service"])
+		expect(Object.keys(results).sort()).toEqual(["Controller", "DAO", "Service", "project"])
+	})
+})
+
+describe("Project 빌드 점검 (2단계)", () => {
+	const web5Pom = `<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0">
+<modelVersion>4.0.0</modelVersion>
+<parent><groupId>org.egovframe.web</groupId><artifactId>egovframe-web-config-parent</artifactId><version>5.0.0</version></parent>
+<groupId>egovframework</groupId><artifactId>web</artifactId><version>1.0.0</version><packaging>war</packaging>
+<dependencies>
+<dependency><groupId>org.egovframe.rte</groupId><artifactId>egovframe-rte-ptl-mvc</artifactId></dependency>
+<dependency><groupId>org.egovframe.rte</groupId><artifactId>egovframe-rte-psl-dataaccess</artifactId></dependency>
+</dependencies>
+</project>
+`
+	const web5Fixture = {
+		"pom.xml": web5Pom,
+		[`${SRC}/mapper/UserMapper.java`]: `import org.egovframe.rte.psl.dataaccess.mapper.EgovMapper;\n@EgovMapper\npublic interface UserMapper {}\n`,
+	}
+
+	it("빌드 파일이 없으면 project는 Unknown이고 모듈이 없다", async () => {
+		const results = await checkEgovArchitecture(
+			makeProject({ [`${SRC}/web/AController.java`]: "@Controller\nclass AController {}\n" }),
+		)
+		expect(results.project).toMatchObject({ generation: "unknown", modules: [], result: "Unknown" })
+	})
+
+	it("5.x web형 pom.xml이면 project가 OK·5.x이고 DAO check3는 파일이 속한 모듈의 세대로 판정한다", async () => {
+		const results = await checkEgovArchitecture(makeProject(web5Fixture))
+		expect(results.project).toMatchObject({ generation: "5.x", version: "5.0.0", result: "OK" })
+		expect(results.project?.modules.map((m) => m.buildFile)).toEqual(["pom.xml"])
+		expect(resultOf(results, "DAO", "UserMapper.java")).toMatchObject({
+			check3State: "pass",
+			check3Detail: "5.x",
+			result: "OK",
+		})
+	})
+
+	it("runtimeGeneration을 주면 pom과 무관하게 수동 세대가 project와 DAO check3에 적용된다", async () => {
+		const results = await checkEgovArchitecture(makeProject(web5Fixture), undefined, { runtimeGeneration: "4.x" })
+		expect(results.project?.generation).toBe("4.x")
+		expect(results.project?.modules[0].runtime.source).toBe("manual")
+		expect(resultOf(results, "DAO", "UserMapper.java")).toMatchObject({
+			check3State: "fail",
+			check3Detail: "@EgovMapper in 4.x project",
+			result: "NotFound",
+		})
 	})
 })
 
@@ -657,5 +717,82 @@ describe("CSV 내보내기", () => {
 			'"/p/odd,dir",OldMapper.java,Mapper IF,PASS,PASS (egov),FAIL (@Mapper → 5.x requires @EgovMapper),NotFound',
 		])
 		expect(fs.readdirSync(outDir).some((f) => f.startsWith("Result_Mapper_"))).toBe(false)
+	})
+
+	const projectSummary = (overrides: Partial<ProjectCheckSummary> = {}): ProjectCheckSummary => ({
+		generation: "5.x",
+		version: "5.0.0",
+		versionConsistency: { state: "pass", versions: ["5.0.0"], evidence: "managed by BOM egovframe-web-config-parent:5.0.0" },
+		modules: [
+			{
+				buildFile: "pom.xml",
+				buildTool: "maven",
+				aggregate: false,
+				runtime: {
+					generation: "5.x",
+					version: "5.0.0",
+					source: "bom",
+					evidence: "bom egovframe-web-config-parent:5.0.0 (assumed = rte version)",
+				},
+				requiredLibraries: [
+					{ name: "ptl-mvc", status: "direct", evidence: "declared org.egovframe.rte:egovframe-rte-ptl-mvc" },
+					{
+						name: "fdl-cmmn",
+						status: "transitive",
+						via: ["ptl-mvc", "fdl-cmmn"],
+						evidence: "via ptl-mvc > fdl-cmmn (static graph 5.0.x)",
+					},
+					{
+						name: "fdl-logging",
+						status: "transitive",
+						via: ["psl-dataaccess", "fdl-logging"],
+						evidence: "via psl-dataaccess > fdl-logging (static graph 5.0.x)",
+					},
+					{
+						name: "psl-dataaccess",
+						status: "direct",
+						evidence: "declared org.egovframe.rte:egovframe-rte-psl-dataaccess",
+					},
+				],
+				result: "OK",
+			},
+		],
+		result: "OK",
+		...overrides,
+	})
+
+	it("Project CSV는 Module,Item,Status,Evidence 머리글과 projectReportRows 행을 쓰고 쉼표가 든 셀만 인용한다", async () => {
+		const outDir = makeProject({})
+		await exportArchResults({ project: projectSummary() }, outDir)
+		expect(readCsv(outDir, "Project")).toEqual([
+			"Module,Item,Status,Evidence",
+			"pom.xml,runtime,5.0.0 (5.x),bom egovframe-web-config-parent:5.0.0 (assumed = rte version)",
+			"pom.xml,ptl-mvc,direct,declared org.egovframe.rte:egovframe-rte-ptl-mvc",
+			"pom.xml,fdl-cmmn,transitive,via ptl-mvc > fdl-cmmn (static graph 5.0.x)",
+			"pom.xml,fdl-logging,transitive,via psl-dataaccess > fdl-logging (static graph 5.0.x)",
+			"pom.xml,psl-dataaccess,direct,declared org.egovframe.rte:egovframe-rte-psl-dataaccess",
+			"pom.xml,result,OK,",
+			"*,version-consistency,PASS,managed by BOM egovframe-web-config-parent:5.0.0",
+			"*,result,OK,5.x 5.0.0",
+		])
+		const written = fs.readdirSync(outDir)
+		expect(written.filter((f) => f.startsWith("Result_"))).toHaveLength(1)
+		expect(written.some((f) => f.startsWith("Result_Mapper_") || f.startsWith("Result_project_"))).toBe(false)
+
+		const mixedDir = makeProject({})
+		await exportArchResults(
+			{
+				project: projectSummary({
+					version: undefined,
+					versionConsistency: { state: "fail", versions: ["5.0.0", "5.0.2"], evidence: "5.0.0, 5.0.2" },
+					result: "NotFound",
+				}),
+			},
+			mixedDir,
+		)
+		expect(readCsv(mixedDir, "Project").slice(-2)).toEqual([
+			'*,version-consistency,FAIL,"5.0.0, 5.0.2"',
+			"*,result,NotFound,5.x",
+		])
 	})
 })

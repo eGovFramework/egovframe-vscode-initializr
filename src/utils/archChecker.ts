@@ -7,8 +7,11 @@ import type {
 	ArchCheckSummary,
 	ArchLayer,
 	DaoStyle,
+	ProjectCheckSummary,
 	RuntimeGeneration,
 } from "../shared/archCheck"
+import { projectReportRows } from "../shared/archCheckReport"
+import { BUILD_FILE_PATTERNS, checkProjectBuild, generationForFile } from "./buildFileCheck"
 import { checkDaoLayer, type DaoLayerOutcome } from "./daoCheck"
 import { buildJavaIndex } from "./javaIndex"
 import { createCachedReader } from "./javaSource"
@@ -24,8 +27,8 @@ export interface ArchCheckOptions {
 	 */
 	rgPath?: string
 	/**
-	 * 실행환경 세대 수동 지정. 주면 DAO / Mapper 레이어의 check3(Version)를 그 세대 기준으로 판정하고,
-	 * 없으면 세대를 모르는 것으로 보고 check3를 n/a(skipped)로 둔다.
+	 * 실행환경 세대 수동 지정. 주면 빌드 파일 점검(project)과 DAO / Mapper 레이어의 check3(Version)를
+	 * 그 세대 기준으로 판정하고, 없으면 빌드 파일에서 판정한 세대(파일이 속한 모듈 → 프로젝트)를 쓴다.
 	 */
 	runtimeGeneration?: RuntimeGeneration
 }
@@ -802,7 +805,8 @@ function summarize(results: ArchCheckResult[]): ArchCheckSummary {
  * 전체 아키텍처 점검 실행
  * options.rgPath에 존재하는 ripgrep 실행 파일을 주면 ripgrep으로, 아니면 fs 재귀 탐색으로 파일을 모은다.
  * .java 파일은 한 번만 모아 색인하고, 레이어별 파일은 그 목록에서 파일 이름 접미어로 거른다.
- * 순서: DAO / Mapper(판정 대상 타입 이름이 Controller "DAO X"의 입력) → Controller → Service
+ * 순서: 빌드 파일(project — DAO check3 세대의 입력) → DAO / Mapper(판정 대상 타입 이름이 Controller "DAO X"의 입력)
+ * → Controller → Service
  */
 export async function checkEgovArchitecture(
 	projectPath: string,
@@ -821,31 +825,57 @@ export async function checkEgovArchitecture(
 	}
 
 	try {
-		// 1. .java 수집·색인 (경로별로 한 번만 읽는다)
+		// 경로별로 한 번만 읽는다 (빌드 파일·.java 공용)
 		const readFile = createCachedReader()
+
+		// 1. 빌드 파일 점검 — 모듈별 실행환경 세대·버전, 필수 라이브러리 4종, 버전 일관성
+		progressCallback?.(`🔍 Checking project build files${via}...`)
+		let project: ProjectCheckSummary
+		try {
+			const buildFiles = await collectProjectFiles(projectPath, BUILD_FILE_PATTERNS, rgPath)
+			project = checkProjectBuild({
+				projectPath,
+				files: buildFiles,
+				readFile,
+				manualGeneration: options.runtimeGeneration,
+			})
+		} catch (error) {
+			console.error("Error checking project build files:", error)
+			const message = error instanceof Error ? error.message : String(error)
+			project = {
+				generation: "unknown",
+				versionConsistency: { state: "skipped", versions: [], evidence: `error: ${message}` },
+				modules: [],
+				result: "Unknown",
+			}
+		}
+		results.project = project
+
+		// 2. .java 수집·색인
 		const javaFiles = await collectProjectFiles(projectPath, ["*.java"], rgPath)
 		const index = buildJavaIndex(javaFiles, readFile)
-		const generation = options.runtimeGeneration ?? "unknown"
 		const filesEndingWith = (suffixes: string[]) =>
 			javaFiles.filter((filePath) => suffixes.some((suffix) => path.basename(filePath).endsWith(suffix)))
+		// 수동 지정이 없으면 파일이 속한 모듈의 세대(속한 모듈이 없으면 프로젝트 세대)로 check3를 판정한다
+		const generationOf = (filePath: string) => options.runtimeGeneration ?? generationForFile(filePath, project, projectPath)
 
-		// 2. DAO / Mapper 통합 레이어 점검
+		// 3. DAO / Mapper 통합 레이어 점검
 		progressCallback?.(`🔍 Checking DAO / Mapper layer${via}...`)
 		let daoOutcome: DaoLayerOutcome = { results: [], skipped: [], judgedTypeNames: new Set() }
 		try {
-			daoOutcome = checkDaoLayer(filesEndingWith(DAO_LAYER_FILE_SUFFIXES), index, readFile, () => generation)
+			daoOutcome = checkDaoLayer(filesEndingWith(DAO_LAYER_FILE_SUFFIXES), index, readFile, generationOf)
 		} catch (error) {
 			console.error("Error checking DAO layer:", error)
 		}
 		results.DAO = { ...summarize(daoOutcome.results), skipped: daoOutcome.skipped }
 
-		// 3. Controller 점검 ("DAO X"는 DAO 레이어 판정 대상 타입 이름을 본다)
+		// 4. Controller 점검 ("DAO X"는 DAO 레이어 판정 대상 타입 이름을 본다)
 		progressCallback?.(`🔍 Checking Controller layer${via}...`)
 		results.Controller = summarize(
 			checkLayer(filesEndingWith(["Controller.java"]), "Controller", { daoTypeNames: daoOutcome.judgedTypeNames }),
 		)
 
-		// 4. Service 점검
+		// 5. Service 점검
 		progressCallback?.(`🔍 Checking Service layer${via}...`)
 		results.Service = summarize(checkLayer(filesEndingWith(["ServiceImpl.java"]), "Service"))
 
@@ -978,18 +1008,39 @@ function saveReport(resultType: ArchLayer, outputPath: string, resultList: ArchC
 }
 
 /**
- * 아키텍처 점검 결과를 CSV 파일로 내보내기
+ * 프로젝트 빌드 점검 결과를 CSV로 저장 — 행 규칙은 웹뷰와 공유하는 projectReportRows를 따른다
+ */
+function saveProjectReport(outputPath: string, summary: ProjectCheckSummary): void {
+	try {
+		let csvContent = "Module,Item,Status,Evidence\n"
+		for (const row of projectReportRows(summary)) {
+			csvContent += [row.module, row.item, row.status, row.evidence].map(csvCell).join(",") + "\n"
+		}
+		fs.writeFileSync(outputPath, csvContent, "utf8")
+		console.log(`Report saved to: ${outputPath}`)
+	} catch (error) {
+		console.error(`Error saving report to ${outputPath}:`, error)
+		throw error
+	}
+}
+
+const FILE_LAYERS: readonly ArchLayer[] = ["Controller", "Service", "DAO"]
+
+/**
+ * 아키텍처 점검 결과를 CSV 파일로 내보내기 — 레이어별 Result_<Layer>_<date>.csv와 Result_Project_<date>.csv
  */
 export async function exportArchResults(results: ArchCheckResults, projectPath: string): Promise<void> {
 	try {
 		const timestamp = new Date().toISOString().replace(/[:.]/g, "-").split("T")[0]
 
-		for (const [type, summary] of Object.entries(results)) {
+		for (const layer of FILE_LAYERS) {
+			const summary = results[layer]
 			if (summary && summary.results.length > 0) {
-				const fileName = `Result_${type}_${timestamp}.csv`
-				const outputPath = path.join(projectPath, fileName)
-				saveReport(type as ArchLayer, outputPath, summary.results)
+				saveReport(layer, path.join(projectPath, `Result_${layer}_${timestamp}.csv`), summary.results)
 			}
+		}
+		if (results.project) {
+			saveProjectReport(path.join(projectPath, `Result_Project_${timestamp}.csv`), results.project)
 		}
 
 		console.log("All reports exported successfully")

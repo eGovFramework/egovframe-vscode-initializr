@@ -135,10 +135,49 @@ const archCheckSummarySchema = z.object({
 	skipped: z.array(skippedFileSchema).optional(),
 })
 
+const runtimeGenerationSchema = z.enum(["3.x", "4.x", "5.x"])
+const generationOrUnknownSchema = z.enum(["3.x", "4.x", "5.x", "unknown"])
+
+// 프로젝트 빌드 점검 결과 — archCheck.ts의 RequiredLibraryCheck / BuildModuleCheck / ProjectCheckSummary와 1:1 대응
+const requiredLibraryCheckSchema = z.object({
+	name: z.enum(["ptl-mvc", "fdl-cmmn", "fdl-logging", "psl-dataaccess"]),
+	status: z.enum(["direct", "transitive", "excluded", "missing", "unknown"]),
+	via: z.array(z.string()).optional(),
+	evidence: z.string(),
+})
+
+const buildModuleCheckSchema = z.object({
+	buildFile: z.string(),
+	buildTool: z.enum(["maven", "gradle", "gradle-kts"]),
+	aggregate: z.boolean(),
+	runtime: z.object({
+		generation: generationOrUnknownSchema,
+		version: z.string().optional(),
+		source: z.enum(["property", "bom", "dependency-version", "artifact-pattern", "manual", "none"]),
+		evidence: z.string(),
+	}),
+	requiredLibraries: z.array(requiredLibraryCheckSchema),
+	result: z.enum(["OK", "NotFound", "Unknown", "Skipped"]),
+	notes: z.array(z.string()).optional(),
+})
+
+const projectCheckSummarySchema = z.object({
+	generation: generationOrUnknownSchema,
+	version: z.string().optional(),
+	versionConsistency: z.object({
+		state: z.enum(["pass", "fail", "skipped"]),
+		versions: z.array(z.string()),
+		evidence: z.string(),
+	}),
+	modules: z.array(buildModuleCheckSchema),
+	result: z.enum(["OK", "NotFound", "Unknown"]),
+})
+
 const archCheckResultsSchema = z.object({
 	Controller: archCheckSummarySchema.optional(),
 	Service: archCheckSummarySchema.optional(),
 	DAO: archCheckSummarySchema.optional(),
+	project: projectCheckSummarySchema.optional(),
 })
 
 const webviewScopeSchema = z.enum(["projects", "code", "config", "settings", "archCheck"])
@@ -223,6 +262,7 @@ export const webviewMessageSchema = z.discriminatedUnion("type", [
 	z.object({
 		type: z.literal("startArchCheck"),
 		projectPath: z.string(),
+		runtimeGeneration: runtimeGenerationSchema.optional(),
 	}),
 	z.object({
 		type: z.literal("exportArchResults"),

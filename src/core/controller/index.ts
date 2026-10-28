@@ -733,7 +733,10 @@ export class Controller {
 							})
 						}
 
-						const results = await checkEgovArchitecture(message.projectPath, progressCallback, { rgPath })
+						const results = await checkEgovArchitecture(message.projectPath, progressCallback, {
+							rgPath,
+							runtimeGeneration: message.runtimeGeneration,
+						})
 
 						await this.postMessageToWebview({
 							type: "archCheckResult",

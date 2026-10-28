@@ -350,4 +350,86 @@ describe("parseWebviewMessage", () => {
 			}),
 		).toContain("check3State")
 	})
+
+	it("startArchCheck의 runtimeGeneration은 3.x/4.x/5.x만 보존하고 그 외 값은 거부한다", () => {
+		expect(parseOk({ type: "startArchCheck", projectPath: "/p", runtimeGeneration: "5.x" })).toEqual({
+			type: "startArchCheck",
+			projectPath: "/p",
+			runtimeGeneration: "5.x",
+		})
+		expect(parseOk({ type: "startArchCheck", projectPath: "/p" })).toEqual({ type: "startArchCheck", projectPath: "/p" })
+		expect(parseFail({ type: "startArchCheck", projectPath: "/p", runtimeGeneration: "6.x" })).toContain("runtimeGeneration")
+	})
+
+	it("exportArchResults의 project(모듈·4종·일관성)는 strip되지 않고 왕복 보존된다", () => {
+		const project = {
+			generation: "5.x",
+			version: "5.0.0",
+			versionConsistency: {
+				state: "pass",
+				versions: ["5.0.0"],
+				evidence: "managed by BOM egovframe-web-config-parent:5.0.0",
+			},
+			modules: [
+				{
+					buildFile: "pom.xml",
+					buildTool: "maven",
+					aggregate: false,
+					runtime: {
+						generation: "5.x",
+						version: "5.0.0",
+						source: "bom",
+						evidence: "bom egovframe-web-config-parent:5.0.0 (assumed = rte version)",
+					},
+					requiredLibraries: [
+						{ name: "ptl-mvc", status: "direct", evidence: "declared org.egovframe.rte:egovframe-rte-ptl-mvc" },
+						{
+							name: "fdl-cmmn",
+							status: "transitive",
+							via: ["ptl-mvc", "fdl-cmmn"],
+							evidence: "via ptl-mvc > fdl-cmmn (static graph 5.0.x)",
+						},
+						{ name: "fdl-logging", status: "unknown", evidence: "unparsed: apply from" },
+						{ name: "psl-dataaccess", status: "missing", evidence: "not declared" },
+					],
+					result: "NotFound",
+					notes: ["profiles ignored"],
+				},
+			],
+			result: "NotFound",
+		}
+		const parsed = parseOk({ type: "exportArchResults", projectPath: "/p", results: { project } })
+		expect(parsed).toEqual({ type: "exportArchResults", projectPath: "/p", results: { project } })
+	})
+
+	it("exportArchResults의 project는 알 수 없는 enum 값을 거부한다", () => {
+		const module = {
+			buildFile: "pom.xml",
+			buildTool: "maven",
+			aggregate: false,
+			runtime: { generation: "5.x", source: "bom", evidence: "e" },
+			requiredLibraries: [{ name: "ptl-mvc", status: "direct", evidence: "e" }],
+			result: "OK",
+		}
+		const project = (overrides: object, moduleOverrides: object = {}) => ({
+			type: "exportArchResults",
+			projectPath: "/p",
+			results: {
+				project: {
+					generation: "5.x",
+					versionConsistency: { state: "pass", versions: [], evidence: "" },
+					modules: [{ ...module, ...moduleOverrides }],
+					result: "OK",
+					...overrides,
+				},
+			},
+		})
+		parseOk(project({}))
+		expect(parseFail(project({ result: "Skipped" }))).toContain("result")
+		expect(parseFail(project({ generation: "6.x" }))).toContain("generation")
+		expect(parseFail(project({}, { buildTool: "ant" }))).toContain("buildTool")
+		expect(parseFail(project({}, { requiredLibraries: [{ name: "fdl-idgnr", status: "direct", evidence: "e" }] }))).toContain(
+			"name",
+		)
+	})
 })

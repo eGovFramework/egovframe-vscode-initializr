@@ -1,0 +1,76 @@
+== all-5.0.x/Batch_org.egovframe.rte.bat.core_pom.xml
+   artifact=(parent):egovframe-rte-bat-core:(parent) parent=org.egovframe.rte:egovframe-rte-root:5.0.2 packaging=jar
+   dep org.egovframe.rte:egovframe-rte-fdl-cmmn:${org.egovframe.rte.version} scope=compile optional=false
+   dep org.egovframe.rte:egovframe-rte-fdl-idgnr:${org.egovframe.rte.version} scope=test optional=false
+   dep org.egovframe.rte:egovframe-rte-psl-dataaccess:${org.egovframe.rte.version} scope=compile optional=false
+== all-5.0.x/Foundation_org.egovframe.rte.fdl.access_pom.xml
+   artifact=(parent):egovframe-rte-fdl-access:(parent) parent=org.egovframe.rte:egovframe-rte-root:5.0.2 packaging=jar
+   dep org.egovframe.rte:egovframe-rte-fdl-cmmn:${org.egovframe.rte.version} scope=compile optional=false
+== all-5.0.x/Foundation_org.egovframe.rte.fdl.cmmn_pom.xml
+   artifact=(parent):egovframe-rte-fdl-cmmn:(parent) parent=org.egovframe.rte:egovframe-rte-root:5.0.2 packaging=jar
+   dep org.egovframe.rte:egovframe-rte-fdl-logging:${org.egovframe.rte.version} scope=compile optional=false
+== all-5.0.x/Foundation_org.egovframe.rte.fdl.crypto_pom.xml
+   artifact=(parent):egovframe-rte-fdl-crypto:(parent) parent=org.egovframe.rte:egovframe-rte-root:5.0.2 packaging=jar
+   dep org.egovframe.rte:egovframe-rte-fdl-property:${org.egovframe.rte.version} scope=compile optional=false
+== all-5.0.x/Foundation_org.egovframe.rte.fdl.excel_pom.xml
+   artifact=(parent):egovframe-rte-fdl-excel:(parent) parent=org.egovframe.rte:egovframe-rte-root:5.0.2 packaging=jar
+   dep org.egovframe.rte:egovframe-rte-fdl-cmmn:${org.egovframe.rte.version} scope=compile optional=false
+   dep org.egovframe.rte:egovframe-rte-fdl-filehandling:${org.egovframe.rte.version} scope=compile optional=false
+   dep org.egovframe.rte:egovframe-rte-psl-dataaccess:${org.egovframe.rte.version} scope=compile optional=false
+== all-5.0.x/Foundation_org.egovframe.rte.fdl.filehandling_pom.xml
+   artifact=(parent):egovframe-rte-fdl-filehandling:(parent) parent=org.egovframe.rte:egovframe-rte-root:5.0.2 packaging=jar
+   dep org.egovframe.rte:egovframe-rte-fdl-string:${org.egovframe.rte.version} scope=compile optional=false
+== all-5.0.x/Foundation_org.egovframe.rte.fdl.idgnr_pom.xml
+   artifact=(parent):egovframe-rte-fdl-idgnr:(parent) parent=org.egovframe.rte:egovframe-rte-root:5.0.2 packaging=jar
+   dep org.egovframe.rte:egovframe-rte-fdl-cmmn:${org.egovframe.rte.version} scope=compile optional=false
+== all-5.0.x/Foundation_org.egovframe.rte.fdl.logging_pom.xml
+   artifact=(parent):egovframe-rte-fdl-logging:(parent) parent=org.egovframe.rte:egovframe-rte-root:5.0.2 packaging=jar
+== all-5.0.x/Foundation_org.egovframe.rte.fdl.property_pom.xml
+   artifact=(parent):egovframe-rte-fdl-property:(parent) parent=org.egovframe.rte:egovframe-rte-root:5.0.2 packaging=jar
+   dep org.egovframe.rte:egovframe-rte-fdl-cmmn:${org.egovframe.rte.version} scope=compile optional=false
+== all-5.0.x/Foundation_org.egovframe.rte.fdl.reactive_pom.xml
+   artifact=(parent):egovframe-rte-fdl-reactive:(parent) parent=org.egovframe.rte:egovframe-rte-root:5.0.2 packaging=jar
+   dep org.egovframe.rte:egovframe-rte-fdl-logging:${org.egovframe.rte.version} scope=compile optional=false
+== all-5.0.x/Foundation_org.egovframe.rte.fdl.security_pom.xml
+   artifact=(parent):egovframe-rte-fdl-security:5.0.2 parent=org.egovframe.rte:egovframe-rte-root:5.0.2 packaging=jar
+   dep org.egovframe.rte:egovframe-rte-fdl-string:${org.egovframe.rte.version} scope=compile optional=false
+== all-5.0.x/Foundation_org.egovframe.rte.fdl.string_pom.xml
+   artifact=(parent):egovframe-rte-fdl-string:(parent) parent=org.egovframe.rte:egovframe-rte-root:5.0.2 packaging=jar
+   dep org.egovframe.rte:egovframe-rte-fdl-logging:${org.egovframe.rte.version} scope=compile optional=false
+== all-5.0.x/Foundation_org.egovframe.rte.fdl.xml_pom.xml
+   artifact=(parent):egovframe-rte-fdl-xml:(parent) parent=org.egovframe.rte:egovframe-rte-root:5.0.2 packaging=jar
+   dep org.egovframe.rte:egovframe-rte-fdl-logging:${org.egovframe.rte.version} scope=compile optional=false
+== all-5.0.x/Integration_org.egovframe.rte.itl.integration_pom.xml
+   artifact=(parent):egovframe-rte-itl-integration:(parent) parent=org.egovframe.rte:egovframe-rte-root:5.0.2 packaging=jar
+   dep org.egovframe.rte:egovframe-rte-fdl-logging:${org.egovframe.rte.version} scope=compile optional=false
+== all-5.0.x/Integration_org.egovframe.rte.itl.webservice_pom.xml
+   artifact=(parent):egovframe-rte-itl-webservice:(parent) parent=org.egovframe.rte:egovframe-rte-root:5.0.2 packaging=jar
+   dep org.egovframe.rte:egovframe-rte-itl-integration:${org.egovframe.rte.version} scope=compile optional=false
+== all-5.0.x/Persistence_org.egovframe.rte.psl.data.jpa_pom.xml
+   artifact=(parent):egovframe-rte-psl-data-jpa:(parent) parent=org.egovframe.rte:egovframe-rte-root:5.0.2 packaging=jar
+   dep org.egovframe.rte:egovframe-rte-psl-dataaccess:${org.egovframe.rte.version} scope=compile optional=false
+== all-5.0.x/Persistence_org.egovframe.rte.psl.data.mongodb_pom.xml
+   artifact=(parent):egovframe-rte-psl-data-mongodb:(parent) parent=org.egovframe.rte:egovframe-rte-root:5.0.2 packaging=jar
+   dep org.egovframe.rte:egovframe-rte-fdl-cmmn:${org.egovframe.rte.version} scope=compile optional=false
+== all-5.0.x/Persistence_org.egovframe.rte.psl.dataaccess_pom.xml
+   artifact=(parent):egovframe-rte-psl-dataaccess:(parent) parent=org.egovframe.rte:egovframe-rte-root:5.0.2 packaging=jar
+   dep org.egovframe.rte:egovframe-rte-fdl-logging:${org.egovframe.rte.version} scope=compile optional=false
+== all-5.0.x/Persistence_org.egovframe.rte.psl.reactive.cassandra_pom.xml
+   artifact=(parent):egovframe-rte-psl-reactive-cassandra:(parent) parent=org.egovframe.rte:egovframe-rte-root:5.0.2 packaging=jar
+   dep org.egovframe.rte:egovframe-rte-fdl-logging:${org.egovframe.rte.version} scope=compile optional=false
+== all-5.0.x/Persistence_org.egovframe.rte.psl.reactive.mongodb_pom.xml
+   artifact=(parent):egovframe-rte-psl-reactive-mongodb:(parent) parent=org.egovframe.rte:egovframe-rte-root:5.0.2 packaging=jar
+   dep org.egovframe.rte:egovframe-rte-fdl-cmmn:${org.egovframe.rte.version} scope=compile optional=false
+== all-5.0.x/Persistence_org.egovframe.rte.psl.reactive.r2dbc_pom.xml
+   artifact=(parent):egovframe-rte-psl-reactive-r2dbc:(parent) parent=org.egovframe.rte:egovframe-rte-root:5.0.2 packaging=jar
+   dep org.egovframe.rte:egovframe-rte-fdl-cmmn:${org.egovframe.rte.version} scope=compile optional=false
+== all-5.0.x/Persistence_org.egovframe.rte.psl.reactive.redis_pom.xml
+   artifact=(parent):egovframe-rte-psl-reactive-redis:(parent) parent=org.egovframe.rte:egovframe-rte-root:5.0.2 packaging=jar
+   dep org.egovframe.rte:egovframe-rte-fdl-cmmn:${org.egovframe.rte.version} scope=compile optional=false
+== all-5.0.x/Presentation_org.egovframe.rte.ptl.mvc_pom.xml
+   artifact=(parent):egovframe-rte-ptl-mvc:(parent) parent=org.egovframe.rte:egovframe-rte-root:5.0.2 packaging=jar
+   dep org.egovframe.rte:egovframe-rte-fdl-cmmn:${org.egovframe.rte.version} scope=compile optional=false
+   dep org.egovframe.rte:egovframe-rte-fdl-filehandling:${org.egovframe.rte.version} scope=compile optional=false
+== all-5.0.x/Presentation_org.egovframe.rte.ptl.reactive_pom.xml
+   artifact=(parent):egovframe-rte-ptl-reactive:(parent) parent=org.egovframe.rte:egovframe-rte-root:5.0.2 packaging=jar
+   dep org.egovframe.rte:egovframe-rte-fdl-logging:${org.egovframe.rte.version} scope=compile optional=false

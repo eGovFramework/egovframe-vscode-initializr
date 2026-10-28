@@ -10,7 +10,7 @@
  * 이 파일은 웹뷰(webview-ui)에서도 import 하므로 순수 타입만 두고 런타임 의존성(zod 등)을 두지 않는다.
  */
 
-import type { ArchCheckResults } from "./archCheck"
+import type { ArchCheckResults, RuntimeGeneration } from "./archCheck"
 import type { TemplateContext } from "./templateContext"
 
 // ---------------------------------------------------------------------------
@@ -164,10 +164,14 @@ export interface UpdateEgovSettingsMessage {
 	settings: EgovSettingsPayload
 }
 
-/** 아키텍처 점검 시작 — projectPath는 사용자가 다이얼로그로 선택한 프로젝트 루트 */
+/**
+ * 아키텍처 점검 시작 — projectPath는 사용자가 다이얼로그로 선택한 프로젝트 루트.
+ * runtimeGeneration을 주면 빌드 파일에서 판정한 세대 대신 그 세대로 점검한다(수동 지정).
+ */
 export interface StartArchCheckMessage {
 	type: "startArchCheck"
 	projectPath: string
+	runtimeGeneration?: RuntimeGeneration
 }
 
 /** 아키텍처 점검 결과를 프로젝트 폴더에 파일로 내보내기 */
