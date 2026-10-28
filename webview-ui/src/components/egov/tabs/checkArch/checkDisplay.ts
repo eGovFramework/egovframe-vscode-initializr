@@ -6,15 +6,37 @@
  */
 import type { ArchCheckResult } from "@shared/archCheck"
 
-/** 결과 키 → 화면 라벨 (DAO 키는 DAO와 Mapper 인터페이스를 함께 담는 통합 레이어) */
-export const LAYER_LABELS: Record<string, string> = { Controller: "Controller", Service: "Service", DAO: "DAO / Mapper" }
+/** 결과 키 → 화면 라벨 (DAO 키는 DAO와 Mapper 인터페이스를 함께 담는 통합 레이어, project는 빌드 파일 점검) */
+export const LAYER_LABELS: Record<string, string> = {
+	Controller: "Controller",
+	Service: "Service",
+	DAO: "DAO / Mapper",
+	project: "Project",
+}
 
-/** 파일 단위 결과를 담는 레이어 키 — 요약 카드·Select·합계는 이 키만 돈다 */
+/** 파일 단위 결과를 담는 레이어 키 — 레이어 요약 카드·합계는 이 키만 돈다 */
 export const FILE_LAYER_KEYS = ["Controller", "Service", "DAO"] as const
+
+/** 상세 결과 Select에 오르는 결과 키 — 파일 레이어 뒤에 Project */
+export const SELECT_KEYS = ["Controller", "Service", "DAO", "project"] as const
 
 const PASS_COLOR = "var(--vscode-terminal-ansiGreen)"
 const FAIL_COLOR = "var(--vscode-errorForeground)"
 const MUTED_COLOR = "var(--vscode-descriptionForeground)"
+
+const PASS_STATUSES = new Set(["OK", "PASS", "direct", "transitive"])
+const FAIL_STATUSES = new Set(["NotFound", "FAIL", "missing", "excluded"])
+
+/** Project 카드·행의 상태 문자열 색 — 통과는 초록, 실패는 빨강, 그 밖(Unknown·unknown·n/a·Skipped 등)은 흐린 색 */
+export function getStatusColor(status: string): string {
+	if (PASS_STATUSES.has(status)) {
+		return PASS_COLOR
+	}
+	if (FAIL_STATUSES.has(status)) {
+		return FAIL_COLOR
+	}
+	return MUTED_COLOR
+}
 
 /** 레이어별 사용하는 Check 정의 — Controller·Service·DAO 모두 check1~3을 쓴다(DAO의 check3는 Version) */
 export function getUsedChecks(_layerType: string): { check1: boolean; check2: boolean; check3: boolean } {

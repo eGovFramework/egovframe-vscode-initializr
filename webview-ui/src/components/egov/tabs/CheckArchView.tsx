@@ -2,8 +2,26 @@ import { useState, useEffect } from "react"
 import { Button, TextField, Select, ProgressRing, Link } from "../../ui"
 import { getMessageText, isMessageForScope } from "@shared/webviewMessageRouting"
 import { vscode } from "../../../utils/vscode"
-import type { ArchCheckResults, ArchCheckSummary } from "@shared/archCheck"
-import { FILE_LAYER_KEYS, LAYER_LABELS, getCellDisplay, getCheckDescriptions, getUsedChecks } from "./checkArch/checkDisplay"
+import type { ArchCheckResults, ArchCheckSummary, RuntimeGeneration } from "@shared/archCheck"
+import {
+	FILE_LAYER_KEYS,
+	LAYER_LABELS,
+	SELECT_KEYS,
+	getCellDisplay,
+	getCheckDescriptions,
+	getUsedChecks,
+} from "./checkArch/checkDisplay"
+import ProjectSummaryCard from "./checkArch/ProjectSummaryCard"
+import ProjectReportTable from "./checkArch/ProjectReportTable"
+
+type RuntimeChoice = "auto" | RuntimeGeneration
+
+const RUNTIME_OPTIONS: { value: RuntimeChoice; label: string }[] = [
+	{ value: "auto", label: "Auto" },
+	{ value: "3.x", label: "3.x" },
+	{ value: "4.x", label: "4.x" },
+	{ value: "5.x", label: "5.x" },
+]
 
 const CheckArchView = () => {
 	const [projectPath, setProjectPath] = useState<string>("")
@@ -13,14 +31,17 @@ const CheckArchView = () => {
 	const [error, setError] = useState<string>("")
 	const [checkProgress, setCheckProgress] = useState<string>("")
 	const [showSkipped, setShowSkipped] = useState<boolean>(false)
+	const [runtimeGeneration, setRuntimeGeneration] = useState<RuntimeChoice>("auto")
 
-	// 결과가 있는 파일 레이어 키 — 요약 카드·Select·합계·Export 판정은 이 키만 본다
+	// 결과가 있는 파일 레이어 키 — 레이어 요약 카드·합계는 이 키만 본다
 	const layerKeys = FILE_LAYER_KEYS.filter((k) => checkResults[k])
-	const hasResults = layerKeys.length > 0
-	// 선택한 레이어가 결과에 없으면 첫 번째 있는 레이어로 보정한다
-	const activeResultType: string = (layerKeys as readonly string[]).includes(selectedResultType)
+	// 상세 결과 Select에 오르는 키 — 파일 레이어 + Project
+	const selectKeys = SELECT_KEYS.filter((k) => checkResults[k])
+	const hasResults = selectKeys.length > 0
+	// 선택한 항목이 결과에 없으면 첫 번째 있는 항목으로 보정한다
+	const activeResultType: string = (selectKeys as readonly string[]).includes(selectedResultType)
 		? selectedResultType
-		: (layerKeys[0] ?? selectedResultType)
+		: (selectKeys[0] ?? selectedResultType)
 	const skippedFiles = checkResults.DAO?.skipped ?? []
 
 	// 컴포넌트 마운트 시 현재 워크스페이스 경로 요청
@@ -96,9 +117,11 @@ const CheckArchView = () => {
 		setCheckProgress("🔍 Starting architecture check...")
 		setCheckResults({})
 
+		// Auto면 runtimeGeneration을 싣지 않아 확장이 빌드 파일에서 세대를 판정한다
 		vscode.postMessage({
 			type: "startArchCheck",
 			projectPath: projectPath.trim(),
+			...(runtimeGeneration !== "auto" ? { runtimeGeneration } : {}),
 		})
 	}
 
@@ -235,6 +258,16 @@ const CheckArchView = () => {
 						<span className="codicon codicon-folder-opened" style={{ marginRight: "6px" }}></span>
 						Browse
 					</Button>
+					<div style={{ width: "110px" }}>
+						<Select
+							id="archCheckRuntime"
+							label="Runtime"
+							value={runtimeGeneration}
+							onChange={(e: any) => setRuntimeGeneration(e.target.value as RuntimeChoice)}
+							options={RUNTIME_OPTIONS}
+							title="eGovFrame runtime generation (Auto reads it from pom.xml / build.gradle)"
+						/>
+					</div>
 				</div>
 				<div style={{ fontSize: "10px", color: "var(--vscode-descriptionForeground)", marginTop: "2px" }}>
 					Selected path: {projectPath || "No path selected"}
@@ -291,6 +324,7 @@ const CheckArchView = () => {
 							borderRadius: "4px",
 							marginBottom: "15px",
 						}}>
+						{checkResults.project && <ProjectSummaryCard summary={checkResults.project} />}
 						<div style={{ display: "flex", justifyContent: "space-between", marginBottom: "10px" }}>
 							<div style={{ textAlign: "center" }}>
 								<div style={{ fontSize: "24px", fontWeight: "bold", color: "var(--vscode-foreground)" }}>
@@ -469,9 +503,14 @@ const CheckArchView = () => {
 						<Select
 							value={activeResultType}
 							onChange={(e: any) => setSelectedResultType(e.target.value)}
-							options={layerKeys.map((k) => ({ value: k, label: LAYER_LABELS[k] }))}
+							options={selectKeys.map((k) => ({ value: k, label: LAYER_LABELS[k] }))}
 						/>
 					</div>
+
+					{/* Project: Module / Item / Status / Evidence 긴 형식 테이블 */}
+					{activeResultType === "project" && checkResults.project && (
+						<ProjectReportTable summary={checkResults.project} />
+					)}
 
 					{/* Detailed Results Table */}
 					{currentResults && (
@@ -671,6 +710,20 @@ const CheckArchView = () => {
 								Abstract classes, @Configuration classes, RowMapper-like helpers, Spring Data repositories,
 								MapStruct mappers and plain base classes are listed under Skipped
 							</li>
+						</ul>
+					</div>
+					<div style={{ marginBottom: "12px" }}>
+						<strong>Project:</strong>
+						<ul style={{ fontSize: "11px", margin: "5px 0 0 0", paddingLeft: "20px" }}>
+							<li>
+								Runtime generation and version are read from pom.xml / build.gradle(.kts) (property &gt; BOM
+								parent or import &gt; dependency version &gt; artifact pattern)
+							</li>
+							<li>
+								Required libraries: ptl-mvc, fdl-cmmn, fdl-logging, psl-dataaccess — direct or transitive via the
+								eGovFrame runtime module graph, applied to every module
+							</li>
+							<li>Runtime library versions must be identical across all declarations and modules</li>
 						</ul>
 					</div>
 				</div>

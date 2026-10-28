@@ -1,6 +1,7 @@
-import { act, fireEvent, render, screen, waitFor } from "@testing-library/react"
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react"
 import { describe, expect, it, vi } from "vitest"
 import CheckArchView from "../CheckArchView"
+import { vscode } from "../../../../utils/vscode"
 
 vi.mock("../../../../utils/vscode", () => ({
 	vscode: {
@@ -12,6 +13,16 @@ const dispatch = (data: unknown) => {
 	act(() => {
 		window.dispatchEvent(new MessageEvent("message", { data }))
 	})
+}
+
+// 상세 결과의 레이어 Select — Runtime 드롭다운이 아닌 combobox
+const layerSelect = () => {
+	const runtime = screen.getByLabelText("Runtime")
+	const select = screen.getAllByRole("combobox").find((el) => el !== runtime)
+	if (!select) {
+		throw new Error("layer select not found")
+	}
+	return select
 }
 
 describe("CheckArchView 메시지 스코프", () => {
@@ -193,7 +204,7 @@ describe("CheckArchView DAO / Mapper", () => {
 		})
 
 		await waitFor(() => expect(screen.getByRole("option", { name: "DAO / Mapper" })).toBeInTheDocument())
-		fireEvent.change(screen.getByRole("combobox"), { target: { value: "DAO" } })
+		fireEvent.change(layerSelect(), { target: { value: "DAO" } })
 
 		expect(screen.getByText("CmmUseDAO.java")).toBeInTheDocument()
 		expect(screen.getByText("MyBatis DAO")).toBeInTheDocument()
@@ -214,5 +225,134 @@ describe("CheckArchView DAO / Mapper", () => {
 
 		// 제외 파일은 Total Files에 세지 않는다
 		expect(screen.getByText("Total Files").previousElementSibling).toHaveTextContent(/^2$/)
+	})
+})
+
+const projectSummary = {
+	generation: "5.x",
+	version: "5.0.0",
+	versionConsistency: { state: "pass", versions: ["5.0.0"], evidence: "managed by BOM egovframe-web-config-parent:5.0.0" },
+	modules: [
+		{
+			buildFile: "pom.xml",
+			buildTool: "maven",
+			aggregate: false,
+			runtime: {
+				generation: "5.x",
+				version: "5.0.0",
+				source: "bom",
+				evidence: "bom egovframe-web-config-parent:5.0.0 (assumed = rte version)",
+			},
+			requiredLibraries: [
+				{ name: "ptl-mvc", status: "direct", evidence: "declared org.egovframe.rte:egovframe-rte-ptl-mvc" },
+				{
+					name: "fdl-cmmn",
+					status: "transitive",
+					via: ["ptl-mvc", "fdl-cmmn"],
+					evidence: "via ptl-mvc > fdl-cmmn (static graph 5.0.x)",
+				},
+				{
+					name: "fdl-logging",
+					status: "transitive",
+					via: ["ptl-mvc", "fdl-cmmn", "fdl-logging"],
+					evidence: "via ptl-mvc > fdl-cmmn > fdl-logging (static graph 5.0.x)",
+				},
+				{ name: "psl-dataaccess", status: "direct", evidence: "declared org.egovframe.rte:egovframe-rte-psl-dataaccess" },
+			],
+			result: "OK",
+		},
+	],
+	result: "OK",
+}
+
+const dispatchProjectResult = () =>
+	dispatch({
+		type: "archCheckResult",
+		scope: "archCheck",
+		success: true,
+		results: {
+			Controller: {
+				totalFiles: 1,
+				passedFiles: 1,
+				failedFiles: 0,
+				results: [
+					controllerResult("FullController.java", {
+						check2: true,
+						mappedMethodCount: 1,
+						methodCount: 1,
+						hasClassLevelMapping: false,
+					}),
+				],
+			},
+			project: projectSummary,
+		},
+	})
+
+describe("CheckArchView Project", () => {
+	it("Project 카드를 보이고 Total Files는 파일 레이어만 센다", async () => {
+		render(<CheckArchView />)
+		dispatchProjectResult()
+
+		await waitFor(() => expect(screen.getByRole("option", { name: "Project" })).toBeInTheDocument())
+		const card = screen.getByRole("region", { name: "Project summary" })
+		expect(within(card).getByText("Build: maven")).toBeInTheDocument()
+		expect(within(card).getByText(/5\.x 5\.0\.0/)).toBeInTheDocument()
+		expect(within(card).getByText("OK")).toBeInTheDocument()
+		expect(within(card).getByText("ptl-mvc direct ✓")).toBeInTheDocument()
+		expect(within(card).getByText("fdl-cmmn transitive ✓ via ptl-mvc")).toBeInTheDocument()
+		expect(within(card).getByText(/^Version consistency: PASS — managed by BOM/)).toBeInTheDocument()
+		expect(within(card).getByText(/^Required-library rule is applied to every module/)).toBeInTheDocument()
+		// 모듈이 하나면 Modules 줄은 없다
+		expect(within(card).queryByText(/^Modules:/)).not.toBeInTheDocument()
+
+		// Total Files는 파일 레이어(Controller 1개)만 센다
+		expect(screen.getByText("Total Files").previousElementSibling).toHaveTextContent(/^1$/)
+	})
+
+	it("Select를 Project로 바꾸면 Module / Item / Status / Evidence 행을 보인다", async () => {
+		render(<CheckArchView />)
+		dispatchProjectResult()
+
+		await waitFor(() => expect(screen.getByRole("option", { name: "Project" })).toBeInTheDocument())
+		expect(screen.getByText("FullController.java")).toBeInTheDocument()
+		fireEvent.change(layerSelect(), { target: { value: "project" } })
+
+		expect(screen.queryByText("FullController.java")).not.toBeInTheDocument()
+		for (const header of ["Module", "Item", "Status", "Evidence"]) {
+			expect(screen.getByText(header)).toBeInTheDocument()
+		}
+		expect(screen.getByText("ptl-mvc")).toBeInTheDocument()
+		expect(screen.getAllByText("direct")).toHaveLength(2)
+		expect(screen.getByText("fdl-cmmn")).toBeInTheDocument()
+		const evidence = screen.getByText("via ptl-mvc > fdl-cmmn (static graph 5.0.x)")
+		expect(evidence).toHaveAttribute("title", "via ptl-mvc > fdl-cmmn (static graph 5.0.x)")
+		expect(screen.getByText("version-consistency")).toBeInTheDocument()
+	})
+
+	it("안내 박스에 Project 절이 있다", () => {
+		render(<CheckArchView />)
+
+		expect(screen.getByText("Project:")).toBeInTheDocument()
+		expect(screen.getByText(/^Required libraries: ptl-mvc, fdl-cmmn, fdl-logging, psl-dataaccess/)).toBeInTheDocument()
+	})
+
+	it("Runtime을 고르면 startArchCheck에 runtimeGeneration을 싣고 Auto면 싣지 않는다", async () => {
+		const postMessage = vi.mocked(vscode.postMessage)
+		render(<CheckArchView />)
+		dispatch({ type: "selectedProjectPath", scope: "archCheck", text: "/p" })
+		await waitFor(() => expect(screen.getByLabelText(/Project Path/)).toHaveValue("/p"))
+
+		const start = screen.getByRole("button", { name: /Start Architecture Check/ })
+		postMessage.mockClear()
+		fireEvent.click(start)
+		expect(postMessage).toHaveBeenCalledWith({ type: "startArchCheck", projectPath: "/p" })
+		expect(postMessage).toHaveBeenCalledWith(expect.not.objectContaining({ runtimeGeneration: expect.anything() }))
+
+		// 점검 중 상태를 풀어 다시 시작할 수 있게 한다
+		dispatch({ type: "archCheckResult", scope: "archCheck", success: false, error: "stop" })
+		fireEvent.change(screen.getByLabelText("Runtime"), { target: { value: "5.x" } })
+		postMessage.mockClear()
+		fireEvent.click(screen.getByRole("button", { name: /Start Architecture Check/ }))
+		expect(postMessage).toHaveBeenCalledWith({ type: "startArchCheck", projectPath: "/p", runtimeGeneration: "5.x" })
 	})
 })

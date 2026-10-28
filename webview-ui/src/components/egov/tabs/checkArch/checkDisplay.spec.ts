@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import type { ArchCheckResult } from "@shared/archCheck"
-import { getCellDisplay, getCheckDescriptions, getUsedChecks, LAYER_LABELS } from "./checkDisplay"
+import { getCellDisplay, getCheckDescriptions, getStatusColor, getUsedChecks, LAYER_LABELS, SELECT_KEYS } from "./checkDisplay"
 
 const dao = (f: Partial<ArchCheckResult>): ArchCheckResult => ({
 	filePath: "/p/A.java",
@@ -56,5 +56,22 @@ describe("checkDisplay", () => {
 		expect(LAYER_LABELS.DAO).toBe("DAO / Mapper")
 		expect(getUsedChecks("DAO")).toEqual({ check1: true, check2: true, check3: true })
 		expect(getCheckDescriptions("DAO").check3.short).toBe("Version")
+	})
+
+	it("Project 키는 Select 키 끝에 있고 라벨은 Project다", () => {
+		expect(SELECT_KEYS).toEqual(["Controller", "Service", "DAO", "project"])
+		expect(LAYER_LABELS.project).toBe("Project")
+	})
+
+	it("getStatusColor는 통과·실패·그 밖 세 갈래로 색을 고른다", () => {
+		for (const status of ["OK", "PASS", "direct", "transitive"]) {
+			expect(getStatusColor(status)).toBe("var(--vscode-terminal-ansiGreen)")
+		}
+		for (const status of ["NotFound", "FAIL", "missing", "excluded"]) {
+			expect(getStatusColor(status)).toBe("var(--vscode-errorForeground)")
+		}
+		for (const status of ["Unknown", "unknown", "n/a", "Skipped", "5.0.0 (5.x)"]) {
+			expect(getStatusColor(status)).toBe("var(--vscode-descriptionForeground)")
+		}
 	})
 })
