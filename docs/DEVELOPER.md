@@ -212,6 +212,58 @@ const csp = [
 
 > ⚠️ 브라우저/Electron 버전에 따라 Worker 스크립트를 `script-src`로도 검사하는 경우, 워커가 여전히 차단되면 `worker-src`에 `data:`를 추가하거나 `script-src`에 `blob:`을 추가합니다. 사양상 정석은 `worker-src blob:`입니다.
 
+## 아키텍처 점검 엔진
+
+CheckArch 탭의 점검은 확장 호스트의 순수 모듈들이 수행합니다. 모든 모듈은 `vscode`를 import하지 않고 파일 읽기를 주입받으므로 root Vitest(`npm run test`)로 직접 검증합니다.
+
+### 모듈 구성
+
+| 모듈 | 책임 |
+|------|------|
+| `src/utils/archChecker.ts` | 진입점 `checkEgovArchitecture`와 `exportArchResults`. 파일 수집(ripgrep/fs), 실행 순서(Project → DAO / Mapper → 데이터 접근 설정 → Controller → Service), 레이어별 집계, CSV 작성 |
+| `src/utils/javaSource.ts` | 주석 제거(`stripJavaComments`), `package`·`import` 수집, 타입 선언부 추출(`findTypeDeclaration`), 읽기 캐시(`createCachedReader`) |
+| `src/utils/javaIndex.ts` | 프로젝트 `.java`의 FQCN 색인(`buildJavaIndex`)과 단순 이름 참조 해석(`resolveTypeReference`: 단일 import → 같은 패키지 → 와일드카드 → 유일한 단순 이름) |
+| `src/utils/daoCheck.ts` | DAO / Mapper 통합 레이어. 제외 규칙 S1~S7, 상속 체인 추적(`traceInheritance`), 어노테이션·기반 클래스 출처 해석(`resolveOrigin`), Base/Bean/Version 3체크(`checkDaoLayer`) |
+| `src/utils/runtimeModuleGraph.ts` | 실행환경 브랜치별 모듈 의존 그래프 상수(`RUNTIME_MODULE_GRAPH`), 필수 라이브러리 4종(`REQUIRED_LIBRARIES`), 전이 도달 판정(`reachRequiredLibrary`) |
+| `src/utils/mavenPom.ts` | `pom.xml` 파서(`parseMavenPom`): parent·properties·dependencies·dependencyManagement·modules, 주석 제거, `${...}` 치환 |
+| `src/utils/gradleBuild.ts` | `build.gradle(.kts)`·`settings.gradle`·`gradle.properties`·`libs.versions.toml` 파서 |
+| `src/utils/buildFileCheck.ts` | 위 세 모듈을 묶어 Project 항목을 만든다(`checkProjectBuild`): 모듈별 세대·버전, 필수 4종 엄격 적용, 버전 일관성, 파일→모듈 세대 매핑(`generationForFile`) |
+| `src/utils/dataAccessConfigScan.ts` | Project의 데이터 접근 설정 정보(`scanDataAccessConfig`)와 미분류 데이터 접근 파일(`findUnclassifiedDataAccessFiles`). 정보 항목이라 판정에 영향을 주지 않는다 |
+| `src/shared/archCheck.ts` | 결과 타입(호스트·웹뷰 공유, 타입만) |
+| `src/shared/archCheckReport.ts` | Project 결과를 보고 행으로 펼치는 `projectReportRows`. 웹뷰 상세 테이블과 `Result_Project` CSV가 같은 행 규칙을 쓴다 |
+
+의존 방향은 `javaSource` → `javaIndex` → `daoCheck`, `mavenPom`·`gradleBuild`·`runtimeModuleGraph` → `buildFileCheck`입니다. `archChecker.ts`가 이들을 순서대로 호출하고, Project 결과의 세대를 DAO 레이어(check3)에 넘기며 DAO 판정 대상 타입 이름을 Controller의 "DAO X" 입력으로 씁니다.
+
+### 파일 수집 규칙
+
+모든 레이어가 같은 규칙을 씁니다(`collectProjectFiles`).
+
+- 숨김 디렉터리(`.`으로 시작)와 빌드 산출물 디렉터리(`EXCLUDED_DIRECTORY_NAMES`: `node_modules`, `target`, `build`, `out`, `dist`)는 건너뜁니다
+- `src/test`와 `src/it` 아래는 수집하지 않습니다(테스트 픽스처가 판정과 Controller "DAO X" 이름 집합에 섞이지 않도록)
+- ripgrep 호출에는 `--no-ignore`를 붙여 `.gitignore`·`.ignore`와 무관하게 fs 대체 경로와 같은 파일 집합을 얻습니다
+- rg는 프로젝트의 부모 디렉터리를 cwd로 두고 프로젝트 디렉터리 이름을 상대 경로로 넘겨 실행합니다. 절대 경로를 넘기면 심볼릭 링크(macOS `/var` → `/private/var`)를 거칠 때 제외 글롭이 경로 접두어를 떼지 못하고, cwd를 프로젝트로 두면 루트 이름이 `src`일 때 `src/test`가 제외되지 않습니다
+
+### 결과 계약 동기화 체크리스트
+
+결과 필드를 추가하거나 바꿀 때는 아래를 항상 함께 고칩니다. 하나라도 빠지면 웹뷰나 CSV에서 값이 사라집니다.
+
+1. `src/shared/archCheck.ts`: 타입 추가·변경
+2. `src/shared/webviewMessageSchema.ts`: 같은 모양의 zod 스키마(`archCheckResultSchema` 등). 스키마에 없는 필드는 호스트가 메시지를 검증할 때 **strip되므로**, 결과가 웹뷰에서 호스트로 되돌아오는 CSV 내보내기에서 조용히 사라집니다
+3. `src/utils/archChecker.ts`와 해당 모듈: 값을 채우는 코드, CSV 열(`exportArchResults`, `projectReportRows`)
+4. `webview-ui/src/components/egov/tabs/CheckArchView.tsx`: 표시. 공통 표시 로직은 `checkArch/checkDisplay.ts`, Project 카드·상세는 `ProjectSummaryCard.tsx`·`ProjectReportTable.tsx`. 이 spec(`__tests__/CheckArchView.spec.tsx`, `checkArch/checkDisplay.spec.ts`)도 함께 고칩니다
+5. 테스트: `src/utils/__tests__/*.spec.ts`, `src/shared/webviewMessageSchema.test.ts`, `src/shared/archCheckReport.spec.ts`
+6. `CHANGELOG.md`의 Unreleased 항목
+
+### 실행환경 모듈 그래프 상수
+
+`RUNTIME_MODULE_GRAPH`는 GitHub `eGovFramework/egovframe-runtime`의 브랜치(3.9.x, 3.10.x, 4.0.x, 4.1.x, 4.2.x, 4.3.x, 5.0.x)별 모듈 `pom.xml`에서 2026-10-28에 추출한 모듈 간 compile 의존입니다. 추출 원본은 `src/utils/__tests__/fixtures/runtime-graph/graph-<branch>.txt`에 있고, 변환 규칙은 `runtimeModuleGraph.ts` 머리 주석과 `runtimeModuleGraph.spec.ts`의 `parseFixture`에 적혀 있습니다.
+
+새 실행환경 버전이 나와 그래프가 바뀌면 다음 순서로 갱신합니다.
+
+1. 해당 브랜치의 모듈 pom에서 의존을 다시 추출해 `graph-<branch>.txt` 픽스처를 교체합니다(새 브랜치면 파일을 추가하고 `RuntimeGraphBranch`·`selectGraphBranch`도 확장)
+2. `npm run test`를 돌립니다. `runtimeModuleGraph.spec.ts`가 상수와 픽스처의 불일치를 잡아냅니다
+3. 실패한 모듈 항목을 `RUNTIME_MODULE_GRAPH`에 반영하고 테스트가 통과하는지 확인합니다
+
 ## 빌드 시스템
 
 ### Extension 빌드 (ESBuild)
