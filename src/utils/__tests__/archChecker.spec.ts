@@ -4,8 +4,10 @@ import * as path from "path"
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest"
 import {
 	checkEgovArchitecture,
+	collectProjectFiles,
 	exportArchResults,
 	EXCLUDED_DIRECTORY_NAMES,
+	shouldSkipDirectory,
 	type ArchCheckResult,
 	type ArchCheckResults,
 } from "../archChecker"
@@ -67,6 +69,13 @@ const collectionFixture = {
 	[`${SRC}/web/controller.java`]: `public class controller {}\n`,
 	[`${SRC}/dao/LowerDao.java`]: `@Repository\npublic class LowerDao extends EgovAbstractDAO {}\n`,
 	[`${SRC}/dao/UserDAO.java`]: `@Repository\npublic class UserDAO extends EgovAbstractDAO {}\n`,
+	[`${SRC}/mapper/UserMapper.java`]: `@EgovMapper\npublic interface UserMapper {}\n`,
+	// 테스트 소스(src/test·src/it)는 모든 레이어에서 제외한다
+	"src/test/java/egov/TestUserDAO.java": `@Repository\npublic class TestUserDAO extends EgovAbstractDAO {}\n`,
+	"src/it/java/egov/ItController.java": `@Controller\n@RequestMapping("/it")\npublic class ItController {}\n`,
+	// .ignore·.gitignore는 따르지 않는다 (ripgrep --no-ignore, fs 경로와 같은 결과)
+	".ignore": "ignored/\n",
+	"ignored/IgnoredController.java": `@Controller\n@RequestMapping("/i")\npublic class IgnoredController {}\n`,
 }
 
 describe.each([
@@ -78,11 +87,11 @@ describe.each([
 		const progress: string[] = []
 		const results = await checkEgovArchitecture(root, (m) => progress.push(m), options)
 
-		expect(fileNames(results, "Controller")).toEqual(["UserController.java"])
-		expect(fileNames(results, "DAO")).toEqual(["UserDAO.java"])
+		expect(fileNames(results, "Controller")).toEqual(["IgnoredController.java", "UserController.java"])
+		expect(fileNames(results, "DAO")).toEqual(["LowerDao.java", "UserDAO.java", "UserMapper.java"])
 		expect(results.Service?.totalFiles).toBe(0)
-		expect(results.Mapper?.totalFiles).toBe(0)
-		expect(progress).toHaveLength(5)
+		expect(results).not.toHaveProperty("Mapper")
+		expect(progress).toHaveLength(4)
 		expect(progress.every((m) => !m.includes("with ripgrep"))).toBe(true)
 	})
 })
@@ -93,10 +102,45 @@ describe.skipIf(!bundledRg)("파일 수집: ripgrep 경로", () => {
 		const progress: string[] = []
 		const results = await checkEgovArchitecture(root, (m) => progress.push(m), { rgPath: bundledRg })
 
-		expect(fileNames(results, "Controller")).toEqual(["UserController.java"])
-		expect(fileNames(results, "DAO")).toEqual(["UserDAO.java"])
-		expect(progress).toHaveLength(5)
+		expect(fileNames(results, "Controller")).toEqual(["IgnoredController.java", "UserController.java"])
+		expect(fileNames(results, "DAO")).toEqual(["LowerDao.java", "UserDAO.java", "UserMapper.java"])
+		expect(results).not.toHaveProperty("Mapper")
+		expect(progress).toHaveLength(4)
 		expect(progress.every((m) => m.includes("with ripgrep"))).toBe(true)
+	})
+
+	/** 임시 디렉터리 아래 relativeRoot 위치에 프로젝트를 만든다 (프로젝트 상위 경로의 이름을 정하기 위함) */
+	function makeNestedProject(relativeRoot: string, files: Record<string, string>): string {
+		const projectRoot = path.join(makeProject({}), relativeRoot)
+		for (const [relative, content] of Object.entries(files)) {
+			const full = path.join(projectRoot, relative)
+			fs.mkdirSync(path.dirname(full), { recursive: true })
+			fs.writeFileSync(full, content)
+		}
+		return projectRoot
+	}
+
+	it("프로젝트 상위 경로에 src/test·src/it가 있어도 프로젝트 파일을 fs 경로와 똑같이 모은다", async () => {
+		const controller = `@Controller\n@RequestMapping("/a")\npublic class AController {}\n`
+		for (const relativeRoot of [path.join("src", "test", "proj"), path.join("src", "it", "proj2")]) {
+			const root = makeNestedProject(relativeRoot, { [`${SRC}/web/AController.java`]: controller })
+			const expected = [path.join(root, SRC, "web", "AController.java")]
+			expect(await collectProjectFiles(root, ["*.java"], bundledRg)).toEqual(expected)
+			expect(await collectProjectFiles(root, ["*.java"])).toEqual(expected)
+			const results = await checkEgovArchitecture(root, undefined, { rgPath: bundledRg })
+			expect(fileNames(results, "Controller")).toEqual(["AController.java"])
+		}
+	})
+
+	it("프로젝트 루트 이름이 src이면 그 아래 test·it를 fs 경로와 똑같이 제외한다", async () => {
+		const root = makeNestedProject("src", {
+			"main/MController.java": `@Controller\npublic class MController {}\n`,
+			"test/TController.java": `@Controller\npublic class TController {}\n`,
+			"it/IController.java": `@Controller\npublic class IController {}\n`,
+		})
+		const expected = [path.join(root, "main", "MController.java")]
+		expect(await collectProjectFiles(root, ["*.java"], bundledRg)).toEqual(expected)
+		expect(await collectProjectFiles(root, ["*.java"])).toEqual(expected)
 	})
 
 	it("git 저장소가 아니어도 target/ 아래는 제외한다 (제외 글롭)", async () => {
@@ -106,6 +150,39 @@ describe.skipIf(!bundledRg)("파일 수집: ripgrep 경로", () => {
 		})
 		const results = await checkEgovArchitecture(root, undefined, { rgPath: bundledRg })
 		expect(fileNames(results, "Controller")).toEqual(["RealController.java"])
+	})
+})
+
+describe.each([{ name: "fs 경로", rgPath: undefined }, ...(bundledRg ? [{ name: "ripgrep 경로", rgPath: bundledRg }] : [])])(
+	"collectProjectFiles: $name",
+	({ rgPath }) => {
+		it("'*X'는 접미어로, 그 외 패턴은 정확한 파일 이름으로 모으고 같은 제외 규칙을 따른다", async () => {
+			const root = makeProject({
+				"pom.xml": "<project/>",
+				"sub/pom.xml": "<project/>",
+				"sub/my-pom.xml": "<project/>",
+				"build.gradle": "",
+				"src/test/resources/pom.xml": "<project/>",
+				"target/pom.xml": "<project/>",
+			})
+			const files = await collectProjectFiles(root, ["pom.xml", "*.gradle"], rgPath)
+			expect(files.map((f) => path.relative(root, f)).sort()).toEqual([
+				"build.gradle",
+				"pom.xml",
+				path.join("sub", "pom.xml"),
+			])
+		})
+	},
+)
+
+describe("shouldSkipDirectory", () => {
+	it("숨김·빌드 산출물·의존성 디렉터리와 src/test·src/it를 건너뛴다", () => {
+		expect(shouldSkipDirectory("src", "test")).toBe(true)
+		expect(shouldSkipDirectory("src", "it")).toBe(true)
+		expect(shouldSkipDirectory("x", ".git")).toBe(true)
+		expect(shouldSkipDirectory("x", "node_modules")).toBe(true)
+		expect(shouldSkipDirectory("x", "test")).toBe(false)
+		expect(shouldSkipDirectory("src", "main")).toBe(false)
 	})
 })
 
@@ -193,6 +270,8 @@ describe("판정 규칙 (fs 경로)", () => {
 	it("Controller: check3 'DAO X' — DAO/Dao 또는 프로젝트의 *Mapper 타입을 주입받으면(완전 한정 이름 포함) 실패한다", async () => {
 		const root = makeProject({
 			[`${SRC}/mapper/SampleMapper.java`]: `@Mapper\npublic interface SampleMapper {}\n`,
+			// 프로젝트 안에 같은 이름의 파일이 있어도 데이터 접근 클래스가 아니면(S3) DAO 판정 대상이 아니다
+			[`${SRC}/cmmn/ObjectMapper.java`]: `public class ObjectMapper {}\n`,
 			[`${SRC}/web/CleanController.java`]: `@Controller\npublic class CleanController {\n\t@Resource(name = "sampleService")\n\tprivate SampleService sampleService;\n\t@GetMapping("/a")\n\tpublic String a() { return "a"; }\n}\n`,
 			[`${SRC}/web/DaoFieldController.java`]: `@Controller\npublic class DaoFieldController {\n\t@Resource(name = "sampleDAO")\n\tprivate SampleDAO sampleDAO;\n\t@GetMapping("/a")\n\tpublic String a() { return "a"; }\n}\n`,
 			[`${SRC}/web/DaoLowerController.java`]: `@Controller\n@RequiredArgsConstructor\npublic class DaoLowerController {\n\tprivate final SampleDao sampleDao;\n\t@GetMapping("/a")\n\tpublic String a() { return "a"; }\n}\n`,
@@ -212,10 +291,10 @@ describe("판정 규칙 (fs 경로)", () => {
 			result: "NotFound",
 		})
 		expect(resultOf(results, "Controller", "DaoLowerController.java")).toMatchObject({ check3: false, result: "NotFound" })
-		// 프로젝트 안에 SampleMapper.java가 있으므로 DAO 역할의 Mapper 주입으로 본다
+		// SampleMapper는 DAO 레이어 판정 대상이므로 DAO 역할의 Mapper 주입으로 본다
 		expect(resultOf(results, "Controller", "MapperController.java")).toMatchObject({ check3: false, result: "NotFound" })
 		expect(resultOf(results, "Controller", "CtorController.java")).toMatchObject({ check3: false, result: "NotFound" })
-		// 프로젝트에 없는 라이브러리 타입(ObjectMapper)은 DAO로 보지 않는다
+		// DAO 판정 대상이 아닌 타입(ObjectMapper — 같은 이름 파일은 S3로 제외)은 DAO로 보지 않는다
 		expect(resultOf(results, "Controller", "JacksonController.java")).toMatchObject({ check3: true, result: "OK" })
 		// 주석 안의 선언은 무시한다
 		expect(resultOf(results, "Controller", "CommentedDaoController.java")).toMatchObject({ check3: true, result: "OK" })
@@ -323,39 +402,79 @@ describe("판정 규칙 (fs 경로)", () => {
 		})
 	})
 
-	it("DAO: @Repository ∧ (EgovAbstractDAO ∨ EgovAbstractMapper), 중간 클래스 경유 상속 포함", async () => {
-		const root = makeProject({
-			[`${SRC}/dao/BaseDAO.java`]: `public abstract class BaseDAO extends EgovAbstractDAO {}\n`,
-			[`${SRC}/dao/UserDAO.java`]: `@Repository("userDAO")\npublic class UserDAO extends BaseDAO {}\n`,
-			[`${SRC}/dao/BoardDAO.java`]: `@Repository\npublic class BoardDAO extends EgovAbstractMapper {}\n`,
-			[`${SRC}/dao/NoRepoDAO.java`]: `public class NoRepoDAO extends EgovAbstractDAO {}\n`,
-		})
-		const results = await checkEgovArchitecture(root)
+	const daoMapperFixture = {
+		[`${SRC}/dao/BaseDAO.java`]: `import org.egovframe.rte.psl.dataaccess.EgovAbstractDAO;\npublic abstract class BaseDAO extends EgovAbstractDAO {}\n`,
+		[`${SRC}/dao/UserDAO.java`]: `@Repository("userDAO")\npublic class UserDAO extends BaseDAO {}\n`,
+		[`${SRC}/dao/BoardDAO.java`]: `import org.egovframe.rte.psl.dataaccess.EgovAbstractMapper;\n@Repository\npublic class BoardDAO extends EgovAbstractMapper {}\n`,
+		[`${SRC}/dao/NoRepoDAO.java`]: `import org.egovframe.rte.psl.dataaccess.EgovAbstractDAO;\npublic class NoRepoDAO extends EgovAbstractDAO {}\n`,
+		[`${SRC}/mapper/UserMapper.java`]: `import org.egovframe.rte.psl.dataaccess.mapper.EgovMapper;\n@EgovMapper("userMapper")\npublic interface UserMapper {}\n`,
+		[`${SRC}/mapper/BoardMapper.java`]: `import org.apache.ibatis.annotations.Mapper;\n@Mapper\npublic interface BoardMapper {}\n`,
+		[`${SRC}/mapper/PlainMapper.java`]: `public interface PlainMapper {}\n`,
+	}
 
-		expect(fileNames(results, "DAO")).toEqual(["BoardDAO.java", "NoRepoDAO.java", "UserDAO.java"])
-		expect(resultOf(results, "DAO", "UserDAO.java")).toMatchObject({ check1: true, check2: false, result: "OK" })
-		expect(resultOf(results, "DAO", "BoardDAO.java")).toMatchObject({ check1: false, check2: true, result: "OK" })
-		expect(resultOf(results, "DAO", "NoRepoDAO.java")).toMatchObject({ check1: false, check2: false, result: "NotFound" })
+	it("DAO / Mapper 통합 레이어: 기반 ∧ @Repository/egov 출처 ∧ 버전(세대 unknown → n/a)", async () => {
+		const results = await checkEgovArchitecture(makeProject(daoMapperFixture))
+
+		expect(fileNames(results, "DAO")).toEqual([
+			"BoardDAO.java",
+			"BoardMapper.java",
+			"NoRepoDAO.java",
+			"PlainMapper.java",
+			"UserDAO.java",
+			"UserMapper.java",
+		])
+		expect(resultOf(results, "DAO", "UserDAO.java")).toMatchObject({
+			check1: true,
+			check2: true,
+			check3State: "skipped",
+			check3Detail: "n/a",
+			result: "OK",
+			inheritancePath: ["BaseDAO"],
+		})
+		expect(resultOf(results, "DAO", "BoardDAO.java")).toMatchObject({ result: "OK", daoStyle: "mybatisDao" })
+		expect(resultOf(results, "DAO", "NoRepoDAO.java")).toMatchObject({
+			check2: false,
+			check2Detail: "no @Repository",
+			result: "NotFound",
+		})
+		expect(resultOf(results, "DAO", "UserMapper.java")).toMatchObject({ result: "OK", check2Detail: "egov" })
+		expect(resultOf(results, "DAO", "BoardMapper.java")).toMatchObject({
+			check2Detail: "mybatis @Mapper",
+			result: "NotFound",
+		})
+		expect(resultOf(results, "DAO", "PlainMapper.java")).toMatchObject({ check1: false, result: "NotFound" })
+		expect(results.DAO?.skipped).toMatchObject([{ fileName: "BaseDAO.java", reason: "abstract" }])
+		expect(results.DAO).toMatchObject({ totalFiles: 6, passedFiles: 3, failedFiles: 3 })
 	})
 
-	it("Mapper: @Mapper 또는 @EgovMapper", async () => {
-		const root = makeProject({
-			[`${SRC}/mapper/UserMapper.java`]: `@EgovMapper("userMapper")\npublic interface UserMapper {}\n`,
-			[`${SRC}/mapper/BoardMapper.java`]: `@Mapper\npublic interface BoardMapper {}\n`,
-			[`${SRC}/mapper/PlainMapper.java`]: `public interface PlainMapper {}\n`,
-		})
-		const results = await checkEgovArchitecture(root)
+	it("DAO / Mapper 통합 레이어: runtimeGeneration 옵션으로 세대를 지정하면 check3를 판정한다", async () => {
+		const root = makeProject(daoMapperFixture)
 
-		expect(resultOf(results, "Mapper", "UserMapper.java")).toMatchObject({ check1: true, result: "OK" })
-		expect(resultOf(results, "Mapper", "BoardMapper.java")).toMatchObject({ check1: true, result: "OK" })
-		expect(resultOf(results, "Mapper", "PlainMapper.java")).toMatchObject({ check1: false, result: "NotFound" })
+		const v5 = await checkEgovArchitecture(root, undefined, { runtimeGeneration: "5.x" })
+		expect(resultOf(v5, "DAO", "BoardMapper.java")).toMatchObject({
+			check2Detail: "mybatis @Mapper",
+			check3State: "skipped",
+			check3Detail: "n/a",
+			result: "NotFound",
+		})
+		expect(resultOf(v5, "DAO", "UserMapper.java")).toMatchObject({ check3State: "pass", check3Detail: "5.x", result: "OK" })
+		expect(resultOf(v5, "DAO", "UserDAO.java")).toMatchObject({ check3State: "pass", check3Detail: "5.x", result: "OK" })
+
+		const v4 = await checkEgovArchitecture(root, undefined, { runtimeGeneration: "4.x" })
+		expect(resultOf(v4, "DAO", "UserMapper.java")).toMatchObject({
+			check3State: "fail",
+			check3Detail: "@EgovMapper in 4.x project",
+			result: "NotFound",
+		})
 	})
 
-	it("파일이 없어도 네 레이어가 모두 채워진다", async () => {
+	it("파일이 없어도 세 레이어가 모두 채워진다", async () => {
 		const results = await checkEgovArchitecture(makeProject({}))
-		for (const layer of ["Controller", "Service", "DAO", "Mapper"] as const) {
+		for (const layer of ["Controller", "Service"] as const) {
 			expect(results[layer]).toEqual({ totalFiles: 0, passedFiles: 0, failedFiles: 0, results: [] })
 		}
+		expect(results.DAO).toEqual({ totalFiles: 0, passedFiles: 0, failedFiles: 0, results: [], skipped: [] })
+		expect(Object.keys(results).sort()).toEqual(["Controller", "DAO", "Service"])
 	})
 })
 
@@ -469,5 +588,74 @@ describe("CSV 내보내기", () => {
 		])
 		// 다른 레이어는 종전대로 PASS/FAIL만 쓴다
 		expect(readCsv(outDir, "Service")[1]).toBe("/p/service,UserServiceImpl.java,PASS,PASS,PASS,OK")
+	})
+
+	it("DAO CSV는 Style/Base/Bean/Version 열에 상세 문자열을 쓰고 쉼표가 든 셀은 인용한다", async () => {
+		const outDir = makeProject({})
+		const dao = (fileName: string, parentPath: string, fields: Partial<ArchCheckResult>): ArchCheckResult => ({
+			filePath: `${parentPath}/${fileName}`,
+			fileName,
+			parentPath,
+			type: "DAO",
+			check1: true,
+			check2: true,
+			check3: true,
+			result: "OK",
+			...fields,
+		})
+		await exportArchResults(
+			{
+				DAO: {
+					totalFiles: 4,
+					passedFiles: 1,
+					failedFiles: 3,
+					results: [
+						dao("CmmUseDAO.java", "/p/dao", {
+							daoStyle: "mybatisDao",
+							check1Detail: "MyBatis DAO",
+							inheritancePath: ["EgovComAbstractDAO"],
+							check2Detail: "@Repository",
+							check3State: "pass",
+							check3Detail: "5.x",
+						}),
+						dao("BoardMapper.java", "/p/mapper", {
+							daoStyle: "mapperInterface",
+							check1Detail: "Mapper IF",
+							check2: false,
+							check2Detail: "mybatis @Mapper",
+							check3State: "skipped",
+							check3Detail: "n/a",
+							result: "NotFound",
+						}),
+						dao("JarDAO.java", "/p/dao", {
+							check1: false,
+							check1Detail: "parent CommonDAO not found",
+							check2Detail: "@Repository",
+							check3State: "skipped",
+							check3Detail: "n/a",
+							result: "NotFound",
+						}),
+						dao("OldMapper.java", "/p/odd,dir", {
+							daoStyle: "mapperInterface",
+							check1Detail: "Mapper IF",
+							check2Detail: "egov",
+							check3: false,
+							check3State: "fail",
+							check3Detail: "@Mapper → 5.x requires @EgovMapper",
+							result: "NotFound",
+						}),
+					],
+				},
+			},
+			outDir,
+		)
+		expect(readCsv(outDir, "DAO")).toEqual([
+			"Path,FileName,Style,Base,Bean,Version,Result",
+			"/p/dao,CmmUseDAO.java,MyBatis DAO,PASS via EgovComAbstractDAO,PASS (@Repository),PASS (5.x),OK",
+			"/p/mapper,BoardMapper.java,Mapper IF,PASS,FAIL (mybatis @Mapper),n/a,NotFound",
+			"/p/dao,JarDAO.java,-,FAIL (parent CommonDAO not found),PASS (@Repository),n/a,NotFound",
+			'"/p/odd,dir",OldMapper.java,Mapper IF,PASS,PASS (egov),FAIL (@Mapper → 5.x requires @EgovMapper),NotFound',
+		])
+		expect(fs.readdirSync(outDir).some((f) => f.startsWith("Result_Mapper_"))).toBe(false)
 	})
 })

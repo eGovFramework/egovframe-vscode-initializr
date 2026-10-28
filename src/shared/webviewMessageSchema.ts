@@ -96,6 +96,7 @@ const egovSettingsSchema = z.object({
 })
 
 // 아키텍처 점검 결과 — src/shared/archCheck.ts의 타입과 1:1 대응
+// (선언하지 않은 키는 z.object가 수신 시 제거하므로 타입에 필드를 추가하면 여기에도 반드시 추가한다)
 const archCheckResultSchema = z.object({
 	filePath: z.string(),
 	fileName: z.string(),
@@ -104,10 +105,26 @@ const archCheckResultSchema = z.object({
 	check2: z.boolean(),
 	check3: z.boolean(),
 	result: z.enum(["OK", "NotFound"]),
-	type: z.enum(["Controller", "Service", "DAO", "Mapper"]),
+	type: z.enum(["Controller", "Service", "DAO"]),
 	mappedMethodCount: z.number().int().nonnegative().optional(),
 	methodCount: z.number().int().nonnegative().optional(),
 	hasClassLevelMapping: z.boolean().optional(),
+	// DAO 전용 상세 필드
+	daoStyle: z.enum(["ibatisDao", "mybatisDao", "mapperInterface"]).optional(),
+	check1Detail: z.string().optional(),
+	check2Detail: z.string().optional(),
+	check3State: z.enum(["pass", "fail", "skipped"]).optional(),
+	check3Detail: z.string().optional(),
+	inheritancePath: z.array(z.string()).optional(),
+	annotationText: z.string().optional(),
+})
+
+// 점검 대상에서 제외된 파일
+const skippedFileSchema = z.object({
+	filePath: z.string(),
+	fileName: z.string(),
+	reason: z.enum(["abstract", "configuration", "not-data-access", "spring-data", "mapstruct", "base-class", "not-a-class"]),
+	detail: z.string().optional(),
 })
 
 const archCheckSummarySchema = z.object({
@@ -115,13 +132,13 @@ const archCheckSummarySchema = z.object({
 	passedFiles: z.number(),
 	failedFiles: z.number(),
 	results: z.array(archCheckResultSchema),
+	skipped: z.array(skippedFileSchema).optional(),
 })
 
 const archCheckResultsSchema = z.object({
 	Controller: archCheckSummarySchema.optional(),
 	Service: archCheckSummarySchema.optional(),
 	DAO: archCheckSummarySchema.optional(),
-	Mapper: archCheckSummarySchema.optional(),
 })
 
 const webviewScopeSchema = z.enum(["projects", "code", "config", "settings", "archCheck"])

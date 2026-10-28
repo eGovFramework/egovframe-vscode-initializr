@@ -1,7 +1,17 @@
 import * as fs from "fs"
 import * as path from "path"
 import { spawn } from "child_process"
-import type { ArchCheckResult, ArchCheckResults, ArchCheckSummary } from "../shared/archCheck"
+import type {
+	ArchCheckResult,
+	ArchCheckResults,
+	ArchCheckSummary,
+	ArchLayer,
+	DaoStyle,
+	RuntimeGeneration,
+} from "../shared/archCheck"
+import { checkDaoLayer, type DaoLayerOutcome } from "./daoCheck"
+import { buildJavaIndex } from "./javaIndex"
+import { createCachedReader } from "./javaSource"
 
 // 결과 타입은 웹뷰·메시지 계약과 공유하므로 src/shared/archCheck.ts에 정의한다
 export type { ArchCheckResult, ArchCheckResults, ArchCheckSummary } from "../shared/archCheck"
@@ -13,14 +23,36 @@ export interface ArchCheckOptions {
 	 * 넘긴다. 없거나 존재하지 않으면 fs 재귀 탐색으로 대체한다.
 	 */
 	rgPath?: string
+	/**
+	 * 실행환경 세대 수동 지정. 주면 DAO / Mapper 레이어의 check3(Version)를 그 세대 기준으로 판정하고,
+	 * 없으면 세대를 모르는 것으로 보고 check3를 n/a(skipped)로 둔다.
+	 */
+	runtimeGeneration?: RuntimeGeneration
 }
 
 /**
  * 파일 수집에서 제외하는 디렉터리 이름 (빌드 산출물·의존성).
  * ripgrep 경로와 fs 대체 경로 모두에 같은 규칙을 적용해 두 경로의 결과가 같도록 한다.
- * 숨김 디렉터리(.으로 시작, .git 포함)는 별도로 항상 제외한다.
+ * 숨김 디렉터리(.으로 시작, .git 포함)와 src 아래의 테스트 소스(src/test·src/it)는 별도로 항상 제외한다.
  */
 export const EXCLUDED_DIRECTORY_NAMES = ["node_modules", "target", "build", "out", "dist"] as const
+
+/** src 바로 아래에서 제외하는 테스트 소스 디렉터리 이름 (Maven/Gradle 관례: src/test, src/it) */
+const TEST_SOURCE_DIRECTORY_NAMES: readonly string[] = ["test", "it"]
+
+/** DAO / Mapper 통합 레이어로 모으는 파일 이름 접미어 */
+const DAO_LAYER_FILE_SUFFIXES = ["DAO.java", "Dao.java", "Mapper.java"]
+
+/**
+ * 수집에서 건너뛸 디렉터리인지 — 숨김(.으로 시작) ∨ EXCLUDED_DIRECTORY_NAMES ∨ src 바로 아래의 test·it
+ * (fs 경로의 판정이며, ripgrep 경로는 같은 규칙을 제외 글롭으로 준다)
+ */
+export function shouldSkipDirectory(parentDirName: string, dirName: string): boolean {
+	if (dirName.startsWith(".") || (EXCLUDED_DIRECTORY_NAMES as readonly string[]).includes(dirName)) {
+		return true
+	}
+	return parentDirName === "src" && TEST_SOURCE_DIRECTORY_NAMES.includes(dirName)
+}
 
 /**
  * 주어진 ripgrep 실행 파일 경로가 실제로 존재하는지 확인
@@ -33,27 +65,45 @@ function isRipgrepAvailable(rgPath: string | undefined): rgPath is string {
 	}
 }
 
-/**
- * 레이어 글롭(*Controller.java)에서 파일명 접미어(Controller.java)를 얻는다
- */
-function globToSuffix(filePattern: string): string {
-	return filePattern.replace(/^\*+/, "")
+/** 파일 이름 매처: suffix는 접미어 일치, exact는 정확한 이름 일치 (둘 다 대소문자 구분) */
+type FileNameMatcher = { suffix?: string; exact?: string }
+
+/** 패턴 "*X"는 접미어 X, 그 외는 정확한 파일 이름 */
+function toFileNameMatcher(pattern: string): FileNameMatcher {
+	return pattern.startsWith("*") ? { suffix: pattern.replace(/^\*+/, "") } : { exact: pattern }
+}
+
+function matchesFileName(fileName: string, matchers: FileNameMatcher[]): boolean {
+	return matchers.some((m) => (m.suffix !== undefined ? fileName.endsWith(m.suffix) : fileName === m.exact))
 }
 
 /**
  * ripgrep을 사용하여 패턴과 매칭되는 파일 목록을 가져옴
- * - 글롭은 파일 이름 기준이며 대소문자를 구분한다
- * - 숨김 디렉터리는 ripgrep 기본 동작으로, 빌드 산출물 디렉터리는 제외 글롭으로 건너뛴다
+ * - 글롭은 파일 이름 기준이며 대소문자를 구분한다 (여러 패턴은 OR)
+ * - .gitignore·.ignore는 따르지 않는다(--no-ignore): fs 경로와 같은 파일 집합을 얻기 위함
+ * - 숨김 디렉터리는 ripgrep 기본 동작으로, 빌드 산출물 디렉터리와 src/test·src/it는 제외 글롭으로 건너뛴다
  * - 종료 코드 0(매칭 있음)일 때만 목록을 쓰고, 1(매칭 없음)·2(오류)·spawn 실패는 빈 목록
  */
-function findFilesWithRipgrep(rgPath: string, projectPath: string, filePattern: string): Promise<string[]> {
+function findFilesWithRipgrep(rgPath: string, projectPath: string, patterns: string[]): Promise<string[]> {
 	return new Promise((resolve) => {
-		const args = ["--files", "--glob", filePattern]
+		const args = ["--files", "--no-ignore"]
+		for (const pattern of patterns) {
+			args.push("--glob", pattern)
+		}
 		for (const dir of EXCLUDED_DIRECTORY_NAMES) {
 			args.push("--glob", `!**/${dir}`)
 		}
-		args.push(projectPath)
-		const rg = spawn(rgPath, args, { stdio: ["ignore", "pipe", "ignore"] })
+		for (const dir of TEST_SOURCE_DIRECTORY_NAMES) {
+			args.push("--glob", `!**/src/${dir}/**`)
+		}
+		// rg는 제외 글롭을 "프로세스 cwd를 뗀 나머지 경로"에 맞춘다. cwd를 프로젝트의 부모로 두고 검색 경로를 그 cwd 기준
+		// 상대 경로(프로젝트 디렉터리 이름)로 넘겨, 글롭이 프로젝트 상위 경로의 src/test·src/it에는 걸리지 않게 한다
+		// (fs 경로의 shouldSkipDirectory와 같은 결과). 절대 경로를 넘기면 cwd가 심볼릭 링크를 거칠 때(macOS /var → /private/var)
+		// 접두어가 떼어지지 않아 절대 경로 전체가 매칭되고, cwd를 프로젝트 자신으로 두면 루트 이름이 src일 때 src/test가 제외되지 않는다.
+		const absoluteProjectPath = path.resolve(projectPath)
+		const cwd = path.dirname(absoluteProjectPath)
+		args.push(path.relative(cwd, absoluteProjectPath) || ".")
+		const rg = spawn(rgPath, args, { cwd, stdio: ["ignore", "pipe", "ignore"] })
 
 		let output = ""
 
@@ -67,9 +117,10 @@ function findFilesWithRipgrep(rgPath: string, projectPath: string, filePattern: 
 					.trim()
 					.split("\n")
 					.filter((f) => f.length > 0)
+					.map((f) => path.resolve(cwd, f))
 				resolve(files)
 			} else {
-				console.log(`No files found matching pattern: ${filePattern}`)
+				console.log(`No files found matching patterns: ${patterns.join(", ")}`)
 				resolve([])
 			}
 		})
@@ -83,12 +134,13 @@ function findFilesWithRipgrep(rgPath: string, projectPath: string, filePattern: 
 
 /**
  * fallback: fs를 사용한 파일 찾기 (ripgrep 바이너리가 없는 경우)
- * - 파일 이름이 접미어(Controller.java 등)로 끝나는 파일만 고른다 (대소문자 구분)
- * - 숨김 디렉터리(.git 등)와 EXCLUDED_DIRECTORY_NAMES는 들어가지 않는다
+ * - 파일 이름이 매처(접미어 또는 정확한 이름)에 맞는 파일만 고른다 (대소문자 구분)
+ * - shouldSkipDirectory에 걸리는 디렉터리는 들어가지 않고, 숨김 파일은 고르지 않는다 (ripgrep 기본 동작과 같음)
  * - 심볼릭 링크는 따라가지 않는다 (ripgrep 기본 동작과 같음)
  */
-function findFilesWithFs(dirPath: string, fileSuffix: string): string[] {
+function findFilesWithFs(dirPath: string, matchers: FileNameMatcher[]): string[] {
 	const results: string[] = []
+	const dirName = path.basename(dirPath)
 
 	try {
 		const entries = fs.readdirSync(dirPath, { withFileTypes: true })
@@ -100,15 +152,15 @@ function findFilesWithFs(dirPath: string, fileSuffix: string): string[] {
 			const fullPath = path.join(dirPath, entry.name)
 
 			if (entry.isFile()) {
-				if (entry.name.endsWith(fileSuffix)) {
+				if (!entry.name.startsWith(".") && matchesFileName(entry.name, matchers)) {
 					results.push(fullPath)
 				}
 			} else if (entry.isDirectory()) {
-				if (entry.name.startsWith(".") || (EXCLUDED_DIRECTORY_NAMES as readonly string[]).includes(entry.name)) {
+				if (shouldSkipDirectory(dirName, entry.name)) {
 					continue
 				}
 				// 재귀적으로 하위 디렉토리 탐색
-				results.push(...findFilesWithFs(fullPath, fileSuffix))
+				results.push(...findFilesWithFs(fullPath, matchers))
 			}
 		}
 	} catch (error) {
@@ -119,6 +171,21 @@ function findFilesWithFs(dirPath: string, fileSuffix: string): string[] {
 }
 
 /**
+ * 프로젝트에서 패턴에 맞는 파일을 모든 레이어 공통 수집 규칙으로 모은다 (정렬된 절대 경로 목록).
+ * rgPath가 존재하는 파일이면 ripgrep으로, 아니면 fs 재귀 탐색으로 모으며 두 경로는 같은 파일 집합을 돌려준다.
+ * - pattern "*X"는 파일 이름 접미어 X, 그 외는 정확한 파일 이름 (예: "*.java", "pom.xml")
+ * - 숨김 디렉터리·EXCLUDED_DIRECTORY_NAMES·src/test·src/it 아래는 제외, .gitignore·.ignore는 따르지 않는다
+ */
+export async function collectProjectFiles(projectPath: string, patterns: string[], rgPath?: string): Promise<string[]> {
+	const files = isRipgrepAvailable(rgPath)
+		? await findFilesWithRipgrep(rgPath, projectPath, patterns)
+		: findFilesWithFs(projectPath, patterns.map(toFileNameMatcher))
+	return files.sort()
+}
+
+/**
+ * 주석이 아닌 라인에서 패턴 찾기
+ *//**
  * 주석이 아닌 라인에서 패턴 찾기
  */
 function findPatternIgnoringComments(lines: string[], pattern: string): boolean {
@@ -608,66 +675,6 @@ function checkServiceFile(filePath: string): boolean[] {
 }
 
 /**
- * DAO 파일의 검증 (주석 제외)
- * 1. @Repository + extends EgovAbstractDAO 확인
- * 2. @Repository + extends EgovAbstractMapper 확인
- *    - 직접 상속이 아닌 중간 클래스를 통한 간접 상속도 추적하여 확인
- */
-function checkDAOFile(filePath: string): boolean[] {
-	try {
-		const content = fs.readFileSync(filePath, "utf8")
-		const lines = content.split("\n")
-
-		// @Repository 확인 (주석 제외)
-		const hasRepository = findPatternIgnoringComments(lines, "@Repository")
-
-		// extends EgovAbstractDAO 확인 (주석 제외)
-		let hasAbstractDAO = findRegexPatternIgnoringComments(lines, /extends.*EgovAbstractDAO/)
-
-		// extends EgovAbstractMapper 확인 (주석 제외)
-		let hasAbstractMapper = findRegexPatternIgnoringComments(lines, /extends.*EgovAbstractMapper/)
-
-		// 직접 상속이 아닌 경우, 부모 클래스를 추적하여 간접 상속 확인
-		if (!hasAbstractDAO && !hasAbstractMapper) {
-			const extendsMatch = content.match(/extends\s+(\w+)/)
-			if (extendsMatch) {
-				const parentClassName = extendsMatch[1]
-				if (parentClassName !== "EgovAbstractDAO" && parentClassName !== "EgovAbstractMapper") {
-					const projectPath = findSourceRoot(filePath)
-					// 부모 클래스가 EgovAbstractDAO를 상속하는지 확인
-					if (checkParentClassExtends(projectPath, parentClassName, "EgovAbstractDAO")) {
-						hasAbstractDAO = true
-						console.log(`✅ ${path.basename(filePath)} indirectly extends EgovAbstractDAO via ${parentClassName}`)
-					}
-					// 부모 클래스가 EgovAbstractMapper를 상속하는지 확인
-					if (!hasAbstractDAO && checkParentClassExtends(projectPath, parentClassName, "EgovAbstractMapper")) {
-						hasAbstractMapper = true
-						console.log(`✅ ${path.basename(filePath)} indirectly extends EgovAbstractMapper via ${parentClassName}`)
-					}
-				}
-			}
-		}
-
-		// Check1: @Repository + EgovAbstractDAO
-		const check1 = hasRepository && hasAbstractDAO
-
-		// Check2: @Repository + EgovAbstractMapper
-		const check2 = hasRepository && hasAbstractMapper
-
-		console.log(`✅ DAO checks for ${path.basename(filePath)}: @Repository+DAO=${check1}, @Repository+Mapper=${check2}`)
-
-		return [check1, check2, false]
-	} catch (error) {
-		console.error(`Error checking DAO file ${filePath}:`, error)
-		return [false, false, false]
-	}
-}
-
-/**
- * Mapper 파일의 검증 (주석 제외)
- * 1. @Mapper 또는 @EgovMapper annotation 확인
- */
-/**
  * 주입(필드·생성자/메서드 매개변수·지역 선언)된 타입 이름 패턴
  * - 단어 경계에서 시작하는 대문자 타입 이름만 본다 (mySampleDAO 같은 변수 이름의 일부는 제외)
  * - 패키지 경로를 다 적은 완전 한정 이름(egov.sample.SampleDAO sampleDAO)도 마지막 조각으로 매칭
@@ -678,10 +685,10 @@ const INJECTED_TYPE_PATTERN = /\b([A-Z]\w*(?:DAO|Dao|Mapper))\s+[A-Za-z_$][\w$]*
 /**
  * Controller가 DAO 역할의 타입을 주입받는지 확인 (주석 제외)
  * - *DAO / *Dao 타입은 항상 DAO로 본다
- * - *Mapper 타입은 프로젝트 안에 같은 이름의 *Mapper.java가 있을 때만 DAO(MyBatis 매퍼)로 본다
+ * - *Mapper 타입은 DAO 레이어 판정 대상(제외 목록 제외)에 같은 이름이 있을 때만 DAO(MyBatis 매퍼)로 본다
  *   (ObjectMapper 같은 라이브러리 타입을 오탐하지 않기 위함)
  */
-function checkDaoInjection(filePath: string, mapperClassNames: ReadonlySet<string>): boolean {
+function checkDaoInjection(filePath: string, daoTypeNames: ReadonlySet<string>): boolean {
 	try {
 		const content = fs.readFileSync(filePath, "utf8")
 		const lines = content.split("\n")
@@ -693,7 +700,7 @@ function checkDaoInjection(filePath: string, mapperClassNames: ReadonlySet<strin
 			}
 			for (const match of line.matchAll(INJECTED_TYPE_PATTERN)) {
 				const typeName = match[1]
-				const isDao = /(?:DAO|Dao)$/.test(typeName) || mapperClassNames.has(typeName)
+				const isDao = /(?:DAO|Dao)$/.test(typeName) || daoTypeNames.has(typeName)
 				if (isDao) {
 					console.log(`❌ ${path.basename(filePath)} injects DAO-role type '${typeName}'`)
 					return true
@@ -704,40 +711,6 @@ function checkDaoInjection(filePath: string, mapperClassNames: ReadonlySet<strin
 	} catch (error) {
 		console.error(`Error checking DAO injection in ${filePath}:`, error)
 		return false
-	}
-}
-
-/**
- * 프로젝트 안의 *Mapper.java 파일 이름(확장자 제외)을 모은다 — Controller의 DAO 주입 검사에 쓴다
- */
-async function collectMapperClassNames(projectPath: string, rgPath?: string): Promise<Set<string>> {
-	const filePattern = "*Mapper.java"
-	const files = isRipgrepAvailable(rgPath)
-		? await findFilesWithRipgrep(rgPath, projectPath, filePattern)
-		: findFilesWithFs(projectPath, globToSuffix(filePattern))
-	return new Set(files.map((file) => path.basename(file, ".java")))
-}
-
-function checkMapperFile(filePath: string): boolean[] {
-	try {
-		const content = fs.readFileSync(filePath, "utf8")
-		const lines = content.split("\n")
-
-		// @Mapper 또는 @EgovMapper annotation (주석 제외)
-		// @EgovMapper는 eGovFrame 전용 어노테이션으로 @Mapper와 동일한 역할 수행
-		const hasMapperAnnotation = findPatternIgnoringComments(lines, "@Mapper")
-		const hasEgovMapperAnnotation = findPatternIgnoringComments(lines, "@EgovMapper")
-
-		const isValid = hasMapperAnnotation || hasEgovMapperAnnotation
-
-		console.log(
-			`✅ Mapper check for ${path.basename(filePath)}: @Mapper=${hasMapperAnnotation}, @EgovMapper=${hasEgovMapperAnnotation}`,
-		)
-
-		return [isValid, false, false]
-	} catch (error) {
-		console.error(`Error checking mapper file ${filePath}:`, error)
-		return [false, false, false]
 	}
 }
 
@@ -756,30 +729,18 @@ function isAbstractClass(filePath: string): boolean {
 }
 
 /**
- * ripgrep 또는 fs를 사용하여 특정 레이어의 아키텍처 점검
- * rgPath가 존재하는 파일이면 ripgrep으로, 아니면 fs 재귀 탐색으로 파일을 모은다
+ * Controller 또는 Service 레이어의 파일 목록을 점검한다
+ * context.daoTypeNames: Controller "DAO X" 검사에 쓸 DAO 레이어 판정 대상 타입 이름
  */
-async function checkLayer(
-	projectPath: string,
-	filePattern: string,
-	layerType: "Controller" | "Service" | "DAO" | "Mapper",
-	rgPath?: string,
-	context: { mapperClassNames?: ReadonlySet<string> } = {},
-): Promise<ArchCheckResult[]> {
+function checkLayer(
+	fileList: string[],
+	layerType: "Controller" | "Service",
+	context: { daoTypeNames?: ReadonlySet<string> } = {},
+): ArchCheckResult[] {
 	const results: ArchCheckResult[] = []
-	const mapperClassNames = context.mapperClassNames ?? new Set<string>()
+	const daoTypeNames = context.daoTypeNames ?? new Set<string>()
 
 	try {
-		// 1. 파일 목록 가져오기
-		let fileList: string[]
-		if (isRipgrepAvailable(rgPath)) {
-			fileList = await findFilesWithRipgrep(rgPath, projectPath, filePattern)
-		} else {
-			// fallback to fs-based search
-			fileList = findFilesWithFs(projectPath, globToSuffix(filePattern))
-		}
-
-		// 2. 각 파일에 대해 패턴 검사
 		for (const filePath of fileList) {
 			const fileName = path.basename(filePath)
 			const parentPath = path.dirname(filePath)
@@ -790,61 +751,27 @@ async function checkLayer(
 				continue
 			}
 
-			// 3. 각 패턴별로 검사 (주석 제외 처리)
+			// 각 패턴별로 검사 (주석 제외 처리)
 			let checks: boolean[]
 			// Controller 전용 상세 집계 (매핑된 메서드 수 / 점검 대상 메서드 수 / 클래스 레벨 매핑 여부)
 			let methodCounts: Pick<ArchCheckResult, "mappedMethodCount" | "methodCount" | "hasClassLevelMapping"> = {}
 
-			// 모든 레이어는 주석을 무시하는 파일 기반 검사 사용
-			switch (layerType) {
-				case "Controller":
-					const controllerResult = checkControllerMethods(filePath)
-					// check3 'DAO X'는 소극 조건: DAO 역할 타입을 주입받지 않아야 통과
-					const injectsDao = checkDaoInjection(filePath, mapperClassNames)
-					checks = [controllerResult.hasControllerAnnotation, controllerResult.hasAllMappings, !injectsDao]
-					methodCounts = {
-						mappedMethodCount: controllerResult.mappedMethodCount,
-						methodCount: controllerResult.methodCount,
-						hasClassLevelMapping: controllerResult.hasClassLevelMapping,
-					}
-					break
-				case "Service":
-					checks = checkServiceFile(filePath)
-					break
-				case "DAO":
-					checks = checkDAOFile(filePath)
-					break
-				case "Mapper":
-					checks = checkMapperFile(filePath)
-					break
-				default:
-					checks = [false, false, false]
+			if (layerType === "Controller") {
+				const controllerResult = checkControllerMethods(filePath)
+				// check3 'DAO X'는 소극 조건: DAO 역할 타입을 주입받지 않아야 통과
+				const injectsDao = checkDaoInjection(filePath, daoTypeNames)
+				checks = [controllerResult.hasControllerAnnotation, controllerResult.hasAllMappings, !injectsDao]
+				methodCounts = {
+					mappedMethodCount: controllerResult.mappedMethodCount,
+					methodCount: controllerResult.methodCount,
+					hasClassLevelMapping: controllerResult.hasClassLevelMapping,
+				}
+			} else {
+				checks = checkServiceFile(filePath)
 			}
 
-			// 4. 결과 판정
-			let result: "OK" | "NotFound" = "NotFound"
-			switch (layerType) {
-				case "Controller":
-					if (checks[0] && checks[1] && checks[2]) {
-						result = "OK"
-					}
-					break
-				case "Service":
-					if (checks[0] && checks[1] && checks[2]) {
-						result = "OK"
-					}
-					break
-				case "DAO":
-					if (checks[0] || checks[1]) {
-						result = "OK"
-					}
-					break
-				case "Mapper":
-					if (checks[0]) {
-						result = "OK"
-					}
-					break
-			}
+			// 결과 판정: Controller·Service 모두 세 항목이 모두 통과해야 OK
+			const result: "OK" | "NotFound" = checks[0] && checks[1] && checks[2] ? "OK" : "NotFound"
 
 			results.push({
 				filePath,
@@ -865,9 +792,17 @@ async function checkLayer(
 	return results
 }
 
+/** 레이어 결과 목록을 요약(전체·통과·실패 수)으로 묶는다 */
+function summarize(results: ArchCheckResult[]): ArchCheckSummary {
+	const passedFiles = results.filter((r) => r.result === "OK").length
+	return { totalFiles: results.length, passedFiles, failedFiles: results.length - passedFiles, results }
+}
+
 /**
  * 전체 아키텍처 점검 실행
- * options.rgPath에 존재하는 ripgrep 실행 파일을 주면 ripgrep으로, 아니면 fs 재귀 탐색으로 파일을 모은다
+ * options.rgPath에 존재하는 ripgrep 실행 파일을 주면 ripgrep으로, 아니면 fs 재귀 탐색으로 파일을 모은다.
+ * .java 파일은 한 번만 모아 색인하고, 레이어별 파일은 그 목록에서 파일 이름 접미어로 거른다.
+ * 순서: DAO / Mapper(판정 대상 타입 이름이 Controller "DAO X"의 입력) → Controller → Service
  */
 export async function checkEgovArchitecture(
 	projectPath: string,
@@ -877,6 +812,7 @@ export async function checkEgovArchitecture(
 	const results: ArchCheckResults = {}
 	const rgPath = isRipgrepAvailable(options.rgPath) ? options.rgPath : undefined
 	const useRipgrep = rgPath !== undefined
+	const via = useRipgrep ? " with ripgrep" : ""
 
 	if (useRipgrep) {
 		console.log(`🚀 Using ripgrep (${rgPath}) for fast architecture checking`)
@@ -885,56 +821,35 @@ export async function checkEgovArchitecture(
 	}
 
 	try {
-		// 1. Controller 점검 (DAO 주입 검사를 위해 프로젝트의 *Mapper.java 이름을 먼저 모은다)
-		progressCallback?.(`🔍 Checking Controller layer${useRipgrep ? " with ripgrep" : ""}...`)
-		const mapperClassNames = await collectMapperClassNames(projectPath, rgPath)
-		const controllerResults = await checkLayer(projectPath, "*Controller.java", "Controller", rgPath, { mapperClassNames })
+		// 1. .java 수집·색인 (경로별로 한 번만 읽는다)
+		const readFile = createCachedReader()
+		const javaFiles = await collectProjectFiles(projectPath, ["*.java"], rgPath)
+		const index = buildJavaIndex(javaFiles, readFile)
+		const generation = options.runtimeGeneration ?? "unknown"
+		const filesEndingWith = (suffixes: string[]) =>
+			javaFiles.filter((filePath) => suffixes.some((suffix) => path.basename(filePath).endsWith(suffix)))
 
-		const controllerPassed = controllerResults.filter((r) => r.result === "OK").length
-		results.Controller = {
-			totalFiles: controllerResults.length,
-			passedFiles: controllerPassed,
-			failedFiles: controllerResults.length - controllerPassed,
-			results: controllerResults,
+		// 2. DAO / Mapper 통합 레이어 점검
+		progressCallback?.(`🔍 Checking DAO / Mapper layer${via}...`)
+		let daoOutcome: DaoLayerOutcome = { results: [], skipped: [], judgedTypeNames: new Set() }
+		try {
+			daoOutcome = checkDaoLayer(filesEndingWith(DAO_LAYER_FILE_SUFFIXES), index, readFile, () => generation)
+		} catch (error) {
+			console.error("Error checking DAO layer:", error)
 		}
+		results.DAO = { ...summarize(daoOutcome.results), skipped: daoOutcome.skipped }
 
-		// 2. Service 점검
-		progressCallback?.(`🔍 Checking Service layer${useRipgrep ? " with ripgrep" : ""}...`)
-		const serviceResults = await checkLayer(projectPath, "*ServiceImpl.java", "Service", rgPath)
+		// 3. Controller 점검 ("DAO X"는 DAO 레이어 판정 대상 타입 이름을 본다)
+		progressCallback?.(`🔍 Checking Controller layer${via}...`)
+		results.Controller = summarize(
+			checkLayer(filesEndingWith(["Controller.java"]), "Controller", { daoTypeNames: daoOutcome.judgedTypeNames }),
+		)
 
-		const servicePassed = serviceResults.filter((r) => r.result === "OK").length
-		results.Service = {
-			totalFiles: serviceResults.length,
-			passedFiles: servicePassed,
-			failedFiles: serviceResults.length - servicePassed,
-			results: serviceResults,
-		}
+		// 4. Service 점검
+		progressCallback?.(`🔍 Checking Service layer${via}...`)
+		results.Service = summarize(checkLayer(filesEndingWith(["ServiceImpl.java"]), "Service"))
 
-		// 3. DAO 점검
-		progressCallback?.(`🔍 Checking DAO layer${useRipgrep ? " with ripgrep" : ""}...`)
-		const daoResults = await checkLayer(projectPath, "*DAO.java", "DAO", rgPath)
-
-		const daoPassed = daoResults.filter((r) => r.result === "OK").length
-		results.DAO = {
-			totalFiles: daoResults.length,
-			passedFiles: daoPassed,
-			failedFiles: daoResults.length - daoPassed,
-			results: daoResults,
-		}
-
-		// 4. Mapper 점검
-		progressCallback?.(`🔍 Checking Mapper layer${useRipgrep ? " with ripgrep" : ""}...`)
-		const mapperResults = await checkLayer(projectPath, "*Mapper.java", "Mapper", rgPath)
-
-		const mapperPassed = mapperResults.filter((r) => r.result === "OK").length
-		results.Mapper = {
-			totalFiles: mapperResults.length,
-			passedFiles: mapperPassed,
-			failedFiles: mapperResults.length - mapperPassed,
-			results: mapperResults,
-		}
-
-		progressCallback?.(`✅ Architecture check completed${useRipgrep ? " with ripgrep" : ""}`)
+		progressCallback?.(`✅ Architecture check completed${via}`)
 		return results
 	} catch (error) {
 		console.error("Architecture check error:", error)
@@ -945,7 +860,7 @@ export async function checkEgovArchitecture(
 /**
  * 레이어별 CSV 컬럼명 및 사용 여부 반환
  */
-function getLayerCheckInfo(layerType: "Controller" | "Service" | "DAO" | "Mapper") {
+function getLayerCheckInfo(layerType: ArchLayer) {
 	switch (layerType) {
 		case "Controller":
 			return {
@@ -959,13 +874,8 @@ function getLayerCheckInfo(layerType: "Controller" | "Service" | "DAO" | "Mapper
 			}
 		case "DAO":
 			return {
-				columns: ["Path", "FileName", "@Repository + EgovAbstractDAO", "@Repository + EgovAbstractMapper", "-", "Result"],
-				used: [true, true, false],
-			}
-		case "Mapper":
-			return {
-				columns: ["Path", "FileName", "@Mapper/@EgovMapper", "-", "-", "Result"],
-				used: [true, false, false],
+				columns: ["Path", "FileName", "Style", "Base", "Bean", "Version", "Result"],
+				used: [true, true, true],
 			}
 	}
 }
@@ -998,13 +908,45 @@ function formatMappingCheckValue(item: ArchCheckResult): string {
 }
 
 /**
+ * CSV 셀 값 이스케이프 — 쉼표·큰따옴표·줄바꿈이 있으면 큰따옴표로 감싸고 안의 큰따옴표는 두 번 쓴다
+ */
+function csvCell(value: string): string {
+	if (/[,"\n\r]/.test(value)) {
+		return `"${value.replace(/"/g, '""')}"`
+	}
+	return value
+}
+
+const DAO_STYLE_LABELS: Record<DaoStyle, string> = {
+	ibatisDao: "iBatis DAO",
+	mybatisDao: "MyBatis DAO",
+	mapperInterface: "Mapper IF",
+}
+
+/**
+ * DAO / Mapper 레이어의 CSV 행 셀(Path, FileName, Style, Base, Bean, Version, Result)을 만든다
+ */
+function formatDaoRow(item: ArchCheckResult): string[] {
+	const style = item.daoStyle ? DAO_STYLE_LABELS[item.daoStyle] : "-"
+	const base = item.check1
+		? item.inheritancePath && item.inheritancePath.length > 0
+			? `PASS via ${item.inheritancePath.join(" > ")}`
+			: "PASS"
+		: `FAIL (${item.check1Detail ?? ""})`
+	const bean = `${item.check2 ? "PASS" : "FAIL"} (${item.check2Detail ?? ""})`
+	let version = "n/a"
+	if (item.check3State === "pass") {
+		version = `PASS (${item.check3Detail ?? ""})`
+	} else if (item.check3State === "fail") {
+		version = `FAIL (${item.check3Detail ?? ""})`
+	}
+	return [item.parentPath, item.fileName, style, base, bean, version, item.result]
+}
+
+/**
  * 아키텍처 점검 결과를 CSV 형식으로 저장
  */
-function saveReport(
-	resultType: "Controller" | "Service" | "DAO" | "Mapper",
-	outputPath: string,
-	resultList: ArchCheckResult[],
-): void {
+function saveReport(resultType: ArchLayer, outputPath: string, resultList: ArchCheckResult[]): void {
 	try {
 		const layerInfo = getLayerCheckInfo(resultType)
 
@@ -1013,6 +955,11 @@ function saveReport(
 
 		// 각 파일별 결과
 		for (const item of resultList) {
+			if (resultType === "DAO") {
+				csvContent += formatDaoRow(item).map(csvCell).join(",") + "\n"
+				continue
+			}
+
 			const check1Str = formatCheckValue(item.check1, layerInfo.used[0])
 			const check2Str =
 				resultType === "Controller" ? formatMappingCheckValue(item) : formatCheckValue(item.check2, layerInfo.used[1])
@@ -1041,7 +988,7 @@ export async function exportArchResults(results: ArchCheckResults, projectPath: 
 			if (summary && summary.results.length > 0) {
 				const fileName = `Result_${type}_${timestamp}.csv`
 				const outputPath = path.join(projectPath, fileName)
-				saveReport(type as "Controller" | "Service" | "DAO" | "Mapper", outputPath, summary.results)
+				saveReport(type as ArchLayer, outputPath, summary.results)
 			}
 		}
 

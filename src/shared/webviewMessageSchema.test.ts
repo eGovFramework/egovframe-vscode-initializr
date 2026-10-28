@@ -296,4 +296,58 @@ describe("parseWebviewMessage", () => {
 		parseFail({ type: "showError" })
 		parseFail({ type: "showWarning", value: { nested: "object" } })
 	})
+
+	it("exportArchResults의 DAO 상세 필드와 skipped 목록은 strip되지 않고 보존된다", () => {
+		const dao = {
+			filePath: "/p/src/main/java/a/UserDAO.java",
+			fileName: "UserDAO.java",
+			parentPath: "/p/src/main/java/a",
+			check1: true,
+			check2: true,
+			check3: true,
+			result: "OK",
+			type: "DAO",
+			daoStyle: "mybatisDao",
+			check1Detail: "MyBatis DAO",
+			check2Detail: "@Repository",
+			check3State: "skipped",
+			check3Detail: "n/a",
+			inheritancePath: ["EgovComAbstractDAO"],
+			annotationText: '@EgovMapper("m")',
+		}
+		const skipped = {
+			filePath: "/p/src/main/java/a/EgovComAbstractDAO.java",
+			fileName: "EgovComAbstractDAO.java",
+			reason: "abstract",
+		}
+		const parsed = parseOk({
+			type: "exportArchResults",
+			projectPath: "/p",
+			results: { DAO: { totalFiles: 1, passedFiles: 1, failedFiles: 0, results: [dao], skipped: [skipped] } },
+		})
+		expect(parsed).toMatchObject({ results: { DAO: { results: [dao], skipped: [skipped] } } })
+	})
+
+	it("exportArchResults는 type Mapper와 알 수 없는 check3State를 거부한다", () => {
+		const base = {
+			filePath: "/p/A.java",
+			fileName: "A.java",
+			parentPath: "/p",
+			check1: true,
+			check2: false,
+			check3: false,
+			result: "NotFound",
+		}
+		const summary = (r: object) => ({ totalFiles: 1, passedFiles: 0, failedFiles: 1, results: [r] })
+		expect(
+			parseFail({ type: "exportArchResults", projectPath: "/p", results: { DAO: summary({ ...base, type: "Mapper" }) } }),
+		).toContain("type")
+		expect(
+			parseFail({
+				type: "exportArchResults",
+				projectPath: "/p",
+				results: { DAO: summary({ ...base, type: "DAO", check3State: "maybe" }) },
+			}),
+		).toContain("check3State")
+	})
 })
