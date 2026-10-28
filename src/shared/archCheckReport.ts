@@ -12,7 +12,7 @@ import type { CheckState, ProjectCheckSummary } from "./archCheck"
 export interface ProjectReportRow {
 	/** 빌드 파일 상대 경로, 프로젝트 종합 행은 "*" */
 	module: string
-	/** "runtime" · 필수 라이브러리 이름 · "result" · "version-consistency" */
+	/** "runtime" · 필수 라이브러리 이름 · "result" · "data-access-config" · "unclassified" · "version-consistency" */
 	item: string
 	status: string
 	evidence: string
@@ -26,7 +26,7 @@ const CONSISTENCY_STATUS: Record<CheckState, string> = {
 
 /**
  * 모듈마다 runtime 행 → 필수 라이브러리 4종 행 → result 행(집계 모듈은 runtime·result 행만),
- * 끝에 프로젝트 전체의 version-consistency 행과 result 행을 둔다.
+ * 그 뒤 데이터 접근 설정 행(finding·warning)과 미분류 파일 행, 끝에 프로젝트 전체의 version-consistency 행과 result 행을 둔다.
  */
 export function projectReportRows(summary: ProjectCheckSummary): ProjectReportRow[] {
 	const rows: ProjectReportRow[] = []
@@ -44,6 +44,21 @@ export function projectReportRows(summary: ProjectCheckSummary): ProjectReportRo
 			}
 		}
 		rows.push({ module: buildFile, item: "result", status: module.result, evidence: (module.notes ?? []).join("; ") })
+	}
+	// 데이터 접근 설정 정보(판정에 영향 없음) — finding → 경고 → 미분류 파일
+	for (const finding of summary.dataAccessConfig?.findings ?? []) {
+		rows.push({
+			module: "*",
+			item: "data-access-config",
+			status: finding.kind,
+			evidence: `${finding.fileName}: ${finding.evidence}`,
+		})
+	}
+	for (const warning of summary.dataAccessConfig?.warnings ?? []) {
+		rows.push({ module: "*", item: "data-access-config", status: "warning", evidence: warning })
+	}
+	for (const file of summary.unclassifiedDataAccessFiles ?? []) {
+		rows.push({ module: "*", item: "unclassified", status: "info", evidence: `${file.relativePath}: ${file.evidence}` })
 	}
 	rows.push({
 		module: "*",

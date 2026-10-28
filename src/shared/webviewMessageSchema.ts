@@ -161,6 +161,28 @@ const buildModuleCheckSchema = z.object({
 	notes: z.array(z.string()).optional(),
 })
 
+// 데이터 접근 설정 정보 — archCheck.ts의 DataAccessConfigFinding / DataAccessConfigInfo / UnclassifiedDataAccessFile과 1:1 대응
+const dataAccessConfigFindingSchema = z.object({
+	kind: z.enum([
+		"sqlMapClientFactoryBean",
+		"sqlSessionFactoryBean",
+		"mapperConfigurer",
+		"mapperScan",
+		"mybatisStarter",
+		"mapperLocations",
+	]),
+	filePath: z.string(),
+	fileName: z.string(),
+	evidence: z.string(),
+})
+
+const unclassifiedDataAccessFileSchema = z.object({
+	filePath: z.string(),
+	fileName: z.string(),
+	relativePath: z.string(),
+	evidence: z.string(),
+})
+
 const projectCheckSummarySchema = z.object({
 	generation: generationOrUnknownSchema,
 	version: z.string().optional(),
@@ -171,6 +193,13 @@ const projectCheckSummarySchema = z.object({
 	}),
 	modules: z.array(buildModuleCheckSchema),
 	result: z.enum(["OK", "NotFound", "Unknown"]),
+	dataAccessConfig: z
+		.object({
+			findings: z.array(dataAccessConfigFindingSchema),
+			warnings: z.array(z.string()),
+		})
+		.optional(),
+	unclassifiedDataAccessFiles: z.array(unclassifiedDataAccessFileSchema).optional(),
 })
 
 const archCheckResultsSchema = z.object({

@@ -304,9 +304,53 @@ describe("CheckArchView Project", () => {
 		expect(within(card).getByText(/^Required-library rule is applied to every module/)).toBeInTheDocument()
 		// 모듈이 하나면 Modules 줄은 없다
 		expect(within(card).queryByText(/^Modules:/)).not.toBeInTheDocument()
+		// dataAccessConfig가 없으면 데이터 접근 설정 줄도 없다
+		expect(within(card).queryByText(/^Data access config:/)).not.toBeInTheDocument()
 
 		// Total Files는 파일 레이어(Controller 1개)만 센다
 		expect(screen.getByText("Total Files").previousElementSibling).toHaveTextContent(/^1$/)
+	})
+
+	it("dataAccessConfig가 있으면 카드에 finding·경고·미분류 건수 한 줄을 보인다", async () => {
+		render(<CheckArchView />)
+		dispatch({
+			type: "archCheckResult",
+			scope: "archCheck",
+			success: true,
+			results: {
+				project: {
+					...projectSummary,
+					dataAccessConfig: {
+						findings: [
+							{
+								kind: "mapperScan",
+								filePath: "/p/src/main/java/C.java",
+								fileName: "C.java",
+								evidence: "basePackages",
+							},
+							{
+								kind: "sqlSessionFactoryBean",
+								filePath: "/p/src/main/java/C.java",
+								fileName: "C.java",
+								evidence: "java",
+							},
+						],
+						warnings: ["@MapperScan without annotationClass registers every interface under basePackages"],
+					},
+					unclassifiedDataAccessFiles: [
+						{
+							filePath: "/p/src/main/java/R.java",
+							fileName: "R.java",
+							relativePath: "src/main/java/R.java",
+							evidence: "JdbcTemplate",
+						},
+					],
+				},
+			},
+		})
+
+		const card = await screen.findByRole("region", { name: "Project summary" })
+		expect(within(card).getByText("Data access config: 2 findings, 1 warnings, 1 unclassified files")).toBeInTheDocument()
 	})
 
 	it("Select를 Project로 바꾸면 Module / Item / Status / Evidence 행을 보인다", async () => {

@@ -128,4 +128,41 @@ export interface ProjectCheckSummary {
 	versionConsistency: { state: CheckState; versions: string[]; evidence: string }
 	modules: BuildModuleCheck[]
 	result: "OK" | "NotFound" | "Unknown"
+	/** 스프링 데이터 접근 설정 정보 (3단계, 정보 항목 — 판정에는 영향 없음) */
+	dataAccessConfig?: DataAccessConfigInfo
+	/** DAO / Mapper 수집 글롭 밖에서 데이터 접근 타입을 직접 쓰는 파일 (정보 항목) */
+	unclassifiedDataAccessFiles?: UnclassifiedDataAccessFile[]
+}
+
+/** 데이터 접근 설정 항목의 종류 */
+export type DataAccessConfigKind =
+	| "sqlMapClientFactoryBean"
+	| "sqlSessionFactoryBean"
+	| "mapperConfigurer"
+	| "mapperScan"
+	| "mybatisStarter"
+	| "mapperLocations"
+
+/** 설정 파일(XML·Java·yml·properties·빌드 파일)에서 찾은 데이터 접근 설정 1건 — 같은 파일·같은 kind는 한 번만 */
+export interface DataAccessConfigFinding {
+	kind: DataAccessConfigKind
+	filePath: string
+	fileName: string
+	evidence: string
+}
+
+/** 데이터 접근 설정 정보 — findings와 교차 경고 (판정에는 영향 없음) */
+export interface DataAccessConfigInfo {
+	findings: DataAccessConfigFinding[]
+	warnings: string[]
+}
+
+/** DAO / Mapper 레이어로 수집되지 않았지만 데이터 접근 타입을 직접 쓰는 파일 */
+export interface UnclassifiedDataAccessFile {
+	filePath: string
+	fileName: string
+	/** 프로젝트 루트 기준 상대 경로 (구분자 "/") — 보고 행에 쓴다 */
+	relativePath: string
+	/** 처음 맞은 데이터 접근 타입 토큰 (예: JdbcTemplate) */
+	evidence: string
 }

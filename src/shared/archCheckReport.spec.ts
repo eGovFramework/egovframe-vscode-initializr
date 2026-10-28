@@ -106,6 +106,72 @@ describe("projectReportRows", () => {
 		])
 	})
 
+	it("데이터 접근 설정 finding·경고·미분류 행을 모듈 행 뒤, version-consistency 행 앞에 둔다 (판정에는 영향 없음)", () => {
+		const rows = projectReportRows({
+			...summary,
+			modules: [webModule],
+			dataAccessConfig: {
+				findings: [
+					{
+						kind: "mapperConfigurer",
+						filePath: "/p/src/main/resources/context-mapper.xml",
+						fileName: "context-mapper.xml",
+						evidence: "basePackage=egovframework.example",
+					},
+					{
+						kind: "mybatisStarter",
+						filePath: "/p/pom.xml",
+						fileName: "pom.xml",
+						evidence: "mybatis-spring-boot-starter",
+					},
+				],
+				warnings: ["iBatis DAOs exist but no SqlMapClientFactoryBean was found"],
+			},
+			unclassifiedDataAccessFiles: [
+				{
+					filePath: "/p/src/main/java/egov/repo/SampleRepository.java",
+					fileName: "SampleRepository.java",
+					relativePath: "src/main/java/egov/repo/SampleRepository.java",
+					evidence: "JdbcTemplate",
+				},
+			],
+		})
+		expect(rows.slice(-6)).toEqual([
+			{
+				module: "*",
+				item: "data-access-config",
+				status: "mapperConfigurer",
+				evidence: "context-mapper.xml: basePackage=egovframework.example",
+			},
+			{
+				module: "*",
+				item: "data-access-config",
+				status: "mybatisStarter",
+				evidence: "pom.xml: mybatis-spring-boot-starter",
+			},
+			{
+				module: "*",
+				item: "data-access-config",
+				status: "warning",
+				evidence: "iBatis DAOs exist but no SqlMapClientFactoryBean was found",
+			},
+			{
+				module: "*",
+				item: "unclassified",
+				status: "info",
+				evidence: "src/main/java/egov/repo/SampleRepository.java: JdbcTemplate",
+			},
+			{
+				module: "*",
+				item: "version-consistency",
+				status: "PASS",
+				evidence: "managed by BOM egovframe-web-config-parent:5.0.0",
+			},
+			{ module: "*", item: "result", status: "NotFound", evidence: "5.x 5.0.0" },
+		])
+		expect(rows.at(-7)).toEqual({ module: "web/pom.xml", item: "result", status: "NotFound", evidence: "profiles ignored" })
+	})
+
 	it("여러 notes는 '; '로 잇는다", () => {
 		const rows = projectReportRows({
 			...summary,

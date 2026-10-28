@@ -402,6 +402,49 @@ describe("parseWebviewMessage", () => {
 		expect(parsed).toEqual({ type: "exportArchResults", projectPath: "/p", results: { project } })
 	})
 
+	it("exportArchResults의 project.dataAccessConfig·unclassifiedDataAccessFiles는 strip되지 않고 왕복 보존된다", () => {
+		const project = {
+			generation: "4.x",
+			versionConsistency: { state: "skipped", versions: [], evidence: "no resolvable version" },
+			modules: [],
+			result: "Unknown",
+			dataAccessConfig: {
+				findings: [
+					{
+						kind: "sqlMapClientFactoryBean",
+						filePath: "/p/src/main/resources/context-sqlMap.xml",
+						fileName: "context-sqlMap.xml",
+						evidence: "org.springframework.orm.ibatis",
+					},
+					{ kind: "mapperScan", filePath: "/p/C.java", fileName: "C.java", evidence: "basePackages" },
+				],
+				warnings: ["@MapperScan without annotationClass registers every interface under basePackages"],
+			},
+			unclassifiedDataAccessFiles: [
+				{
+					filePath: "/p/src/main/java/R.java",
+					fileName: "R.java",
+					relativePath: "src/main/java/R.java",
+					evidence: "EntityManager",
+				},
+			],
+		}
+		const parsed = parseOk({ type: "exportArchResults", projectPath: "/p", results: { project } })
+		expect(parsed).toEqual({ type: "exportArchResults", projectPath: "/p", results: { project } })
+
+		const withKind = (kind: string) => ({
+			type: "exportArchResults",
+			projectPath: "/p",
+			results: {
+				project: {
+					...project,
+					dataAccessConfig: { findings: [{ kind, filePath: "/p/a", fileName: "a", evidence: "" }], warnings: [] },
+				},
+			},
+		})
+		expect(parseFail(withKind("jdbcTemplate"))).toContain("kind")
+	})
+
 	it("exportArchResults의 project는 알 수 없는 enum 값을 거부한다", () => {
 		const module = {
 			buildFile: "pom.xml",

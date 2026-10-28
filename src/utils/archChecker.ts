@@ -12,6 +12,13 @@ import type {
 } from "../shared/archCheck"
 import { projectReportRows } from "../shared/archCheckReport"
 import { BUILD_FILE_PATTERNS, checkProjectBuild, generationForFile } from "./buildFileCheck"
+import {
+	DATA_ACCESS_BUILD_FILE_NAMES,
+	DATA_ACCESS_CONFIG_PATTERNS,
+	findUnclassifiedDataAccessFiles,
+	isDataAccessConfigPath,
+	scanDataAccessConfig,
+} from "./dataAccessConfigScan"
 import { checkDaoLayer, type DaoLayerOutcome } from "./daoCheck"
 import { buildJavaIndex } from "./javaIndex"
 import { createCachedReader } from "./javaSource"
@@ -806,7 +813,7 @@ function summarize(results: ArchCheckResult[]): ArchCheckSummary {
  * options.rgPath에 존재하는 ripgrep 실행 파일을 주면 ripgrep으로, 아니면 fs 재귀 탐색으로 파일을 모은다.
  * .java 파일은 한 번만 모아 색인하고, 레이어별 파일은 그 목록에서 파일 이름 접미어로 거른다.
  * 순서: 빌드 파일(project — DAO check3 세대의 입력) → DAO / Mapper(판정 대상 타입 이름이 Controller "DAO X"의 입력)
- * → Controller → Service
+ * → 데이터 접근 설정 정보(project에 덧붙이는 정보 항목) → Controller → Service
  */
 export async function checkEgovArchitecture(
 	projectPath: string,
@@ -831,8 +838,9 @@ export async function checkEgovArchitecture(
 		// 1. 빌드 파일 점검 — 모듈별 실행환경 세대·버전, 필수 라이브러리 4종, 버전 일관성
 		progressCallback?.(`🔍 Checking project build files${via}...`)
 		let project: ProjectCheckSummary
+		let buildFiles: string[] = []
 		try {
-			const buildFiles = await collectProjectFiles(projectPath, BUILD_FILE_PATTERNS, rgPath)
+			buildFiles = await collectProjectFiles(projectPath, BUILD_FILE_PATTERNS, rgPath)
 			project = checkProjectBuild({
 				projectPath,
 				files: buildFiles,
@@ -868,6 +876,39 @@ export async function checkEgovArchitecture(
 			console.error("Error checking DAO layer:", error)
 		}
 		results.DAO = { ...summarize(daoOutcome.results), skipped: daoOutcome.skipped }
+
+		// 3-1. 데이터 접근 설정 정보와 미분류 데이터 접근 파일 (정보 항목 — 판정에는 영향 없음)
+		progressCallback?.(`🔍 Scanning data access configuration${via}...`)
+		try {
+			const configFiles = (await collectProjectFiles(projectPath, DATA_ACCESS_CONFIG_PATTERNS, rgPath)).filter(
+				isDataAccessConfigPath,
+			)
+			const buildFileTexts: Array<{ filePath: string; text: string }> = []
+			for (const filePath of buildFiles.filter((f) => DATA_ACCESS_BUILD_FILE_NAMES.includes(path.basename(f)))) {
+				try {
+					buildFileTexts.push({ filePath, text: readFile(filePath) })
+				} catch (error) {
+					console.error(`Error reading build file ${filePath}:`, error)
+				}
+			}
+			const daoStyles = new Set(daoOutcome.results.map((r) => r.daoStyle))
+			project.dataAccessConfig = scanDataAccessConfig({
+				projectPath,
+				configFiles,
+				javaFiles,
+				buildFiles: buildFileTexts,
+				readFile,
+				generation: project.generation,
+				version: project.version,
+				hasMapperInterfaces: daoStyles.has("mapperInterface"),
+				hasIbatisDaos: daoStyles.has("ibatisDao"),
+			})
+			// DAO 레이어 수집 집합(판정 대상 + 제외 목록)
+			const daoFilePaths = new Set([...daoOutcome.results, ...daoOutcome.skipped].map((r) => r.filePath))
+			project.unclassifiedDataAccessFiles = findUnclassifiedDataAccessFiles(javaFiles, daoFilePaths, readFile, projectPath)
+		} catch (error) {
+			console.error("Error scanning data access configuration:", error)
+		}
 
 		// 4. Controller 점검 ("DAO X"는 DAO 레이어 판정 대상 타입 이름을 본다)
 		progressCallback?.(`🔍 Checking Controller layer${via}...`)

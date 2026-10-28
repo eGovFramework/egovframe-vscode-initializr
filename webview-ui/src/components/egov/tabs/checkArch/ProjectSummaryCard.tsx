@@ -2,7 +2,7 @@
  * ProjectSummaryCard.tsx
  *
  * 아키텍처 점검 요약 영역 맨 위의 Project 카드 — 빌드 도구, 실행환경 세대·버전, 필수 라이브러리 4종 칩,
- * 버전 일관성, 종합 결과를 한눈에 보인다. 모듈별 상세는 상세 결과의 Project 행(ProjectReportTable)에 있다.
+ * 버전 일관성, 종합 결과, 데이터 접근 설정 정보 건수를 한눈에 보인다. 모듈별 상세는 상세 결과의 Project 행(ProjectReportTable)에 있다.
  */
 import type { CheckState, ProjectCheckSummary, RequiredLibraryCheck, RequiredLibraryName } from "@shared/archCheck"
 import { getStatusColor } from "./checkDisplay"
@@ -102,6 +102,11 @@ export default function ProjectSummaryCard({ summary }: ProjectSummaryCardProps)
 			<div style={{ marginBottom: "6px" }}>
 				Result: <span style={{ fontWeight: "bold", color: getStatusColor(summary.result) }}>{summary.result}</span>
 			</div>
+			{summary.dataAccessConfig && (
+				<div style={{ marginBottom: "6px" }}>
+					{`Data access config: ${summary.dataAccessConfig.findings.length} findings, ${summary.dataAccessConfig.warnings.length} warnings, ${summary.unclassifiedDataAccessFiles?.length ?? 0} unclassified files`}
+				</div>
+			)}
 			<div style={{ color: "var(--vscode-descriptionForeground)" }}>{FIXED_NOTE}</div>
 			{summary.modules.length > 1 && (
 				<div style={{ marginTop: "4px" }}>{`Modules: ${summary.modules.length} (see the Project rows below)`}</div>

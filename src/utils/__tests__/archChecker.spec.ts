@@ -97,6 +97,7 @@ describe.each([
 		expect(progress).toEqual([
 			"🔍 Checking project build files...",
 			"🔍 Checking DAO / Mapper layer...",
+			"🔍 Scanning data access configuration...",
 			"🔍 Checking Controller layer...",
 			"🔍 Checking Service layer...",
 			"✅ Architecture check completed",
@@ -116,6 +117,7 @@ describe.skipIf(!bundledRg)("파일 수집: ripgrep 경로", () => {
 		expect(progress).toEqual([
 			"🔍 Checking project build files with ripgrep...",
 			"🔍 Checking DAO / Mapper layer with ripgrep...",
+			"🔍 Scanning data access configuration with ripgrep...",
 			"🔍 Checking Controller layer with ripgrep...",
 			"🔍 Checking Service layer with ripgrep...",
 			"✅ Architecture check completed with ripgrep",
@@ -535,6 +537,71 @@ describe("Project 빌드 점검 (2단계)", () => {
 			check3Detail: "@EgovMapper in 4.x project",
 			result: "NotFound",
 		})
+	})
+})
+
+describe("데이터 접근 설정 정보 (3단계)", () => {
+	const contextMapperXml = `<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans">
+	<bean id="sqlSession" class="org.mybatis.spring.SqlSessionFactoryBean">
+		<property name="dataSource" ref="dataSource"/>
+	</bean>
+	<bean class="org.egovframe.rte.psl.dataaccess.mapper.MapperConfigurer">
+		<property name="basePackage" value="egov.sample.**.mapper"/>
+	</bean>
+</beans>
+`
+	const fixture = {
+		"pom.xml": `<project><dependencies><dependency><groupId>org.egovframe.rte</groupId><artifactId>egovframe-rte-ptl-mvc</artifactId><version>4.3.0</version></dependency></dependencies></project>\n`,
+		"src/main/resources/egovframework/spring/context-mapper.xml": contextMapperXml,
+		// 수집 범위(src/main/resources·src/main/webapp/WEB-INF) 밖의 설정 파일은 보지 않는다
+		"src/test/resources/context-test.xml": `<beans><bean class="org.springframework.orm.ibatis.SqlMapClientFactoryBean"/></beans>`,
+		[`${SRC}/mapper/UserMapper.java`]: `import org.egovframe.rte.psl.dataaccess.mapper.Mapper;\n@Mapper("userMapper")\npublic interface UserMapper {}\n`,
+		[`${SRC}/repo/UserRepository.java`]: `import org.springframework.jdbc.core.JdbcTemplate;\npublic class UserRepository { private JdbcTemplate jdbc; }\n`,
+	}
+
+	it("설정 finding과 미분류 데이터 접근 파일을 project에 넣고 판정은 바꾸지 않는다", async () => {
+		const root = makeProject(fixture)
+		const results = await checkEgovArchitecture(root)
+		const contextPath = path.join(root, "src/main/resources/egovframework/spring/context-mapper.xml")
+		expect(results.project?.dataAccessConfig).toEqual({
+			findings: [
+				{
+					kind: "sqlSessionFactoryBean",
+					filePath: contextPath,
+					fileName: "context-mapper.xml",
+					evidence: "org.mybatis.spring.SqlSessionFactoryBean",
+				},
+				{
+					kind: "mapperConfigurer",
+					filePath: contextPath,
+					fileName: "context-mapper.xml",
+					evidence: "basePackage=egov.sample.**.mapper",
+				},
+			],
+			warnings: [],
+		})
+		expect(results.project?.unclassifiedDataAccessFiles).toEqual([
+			{
+				filePath: path.join(root, SRC, "repo/UserRepository.java"),
+				fileName: "UserRepository.java",
+				relativePath: `${SRC}/repo/UserRepository.java`,
+				evidence: "JdbcTemplate",
+			},
+		])
+
+		// 설정 정보 유무와 무관하게 판정(result)은 같다
+		const withoutConfig = await checkEgovArchitecture(
+			makeProject({
+				"pom.xml": fixture["pom.xml"],
+				[`${SRC}/mapper/UserMapper.java`]: fixture[`${SRC}/mapper/UserMapper.java`],
+			}),
+		)
+		expect(withoutConfig.project?.dataAccessConfig?.warnings).toEqual([
+			"Mapper interfaces exist but no MapperConfigurer, @MapperScan or mybatis-spring-boot-starter was found",
+		])
+		expect(withoutConfig.project?.result).toBe(results.project?.result)
+		expect(resultOf(withoutConfig, "DAO", "UserMapper.java").result).toBe(resultOf(results, "DAO", "UserMapper.java").result)
 	})
 })
 
