@@ -2,7 +2,8 @@ import { useState, useEffect } from "react"
 import { Button, TextField, Select, ProgressRing, Link } from "../../ui"
 import { getMessageText, isMessageForScope } from "@shared/webviewMessageRouting"
 import { vscode } from "../../../utils/vscode"
-import type { ArchCheckResult, ArchCheckResults, ArchCheckSummary } from "@shared/archCheck"
+import type { ArchCheckResults, ArchCheckSummary } from "@shared/archCheck"
+import { FILE_LAYER_KEYS, LAYER_LABELS, getCellDisplay, getCheckDescriptions, getUsedChecks } from "./checkArch/checkDisplay"
 
 const CheckArchView = () => {
 	const [projectPath, setProjectPath] = useState<string>("")
@@ -11,87 +12,16 @@ const CheckArchView = () => {
 	const [selectedResultType, setSelectedResultType] = useState<string>("Controller")
 	const [error, setError] = useState<string>("")
 	const [checkProgress, setCheckProgress] = useState<string>("")
+	const [showSkipped, setShowSkipped] = useState<boolean>(false)
 
-	// 레이어별 사용하는 Check 정의
-	const getUsedChecks = (layerType: string) => {
-		switch (layerType) {
-			case "Controller":
-				return { check1: true, check2: true, check3: true }
-			case "Service":
-				return { check1: true, check2: true, check3: true }
-			case "DAO":
-				return { check1: true, check2: true, check3: false }
-			case "Mapper":
-				return { check1: true, check2: false, check3: false }
-			default:
-				return { check1: true, check2: true, check3: true }
-		}
-	}
-
-	// Check 결과 표시 함수
-	const renderCheckResult = (checkValue: boolean, isUsed: boolean, detail?: string) => {
-		if (!isUsed) {
-			return {
-				symbol: "-",
-				color: "var(--vscode-descriptionForeground)",
-			}
-		}
-		return {
-			symbol: checkValue ? (detail ?? "✓") : "✗",
-			color: checkValue ? "var(--vscode-terminal-ansiGreen)" : "var(--vscode-errorForeground)",
-		}
-	}
-
-	// Controller의 Mapping(check2) 통과 시 상세 표시:
-	// 클래스 레벨 @RequestMapping으로 통과하면 'Class level', 일부 메서드만 매핑되면 '매핑된 수/점검 대상 수', 전부 매핑되면 ✓
-	const getMappingDetail = (result: ArchCheckResult): string | undefined => {
-		if (result.type !== "Controller") {
-			return undefined
-		}
-		if (result.hasClassLevelMapping) {
-			return "Class level"
-		}
-		if (result.mappedMethodCount === undefined || result.methodCount === undefined) {
-			return undefined
-		}
-		return result.mappedMethodCount < result.methodCount ? `${result.mappedMethodCount}/${result.methodCount}` : undefined
-	}
-
-	// 레이어별 Check 설명 정의
-	const getCheckDescriptions = (layerType: string) => {
-		switch (layerType) {
-			case "Controller":
-				return {
-					check1: { short: "@Controller", full: "Must have @Controller annotation" },
-					check2: { short: "Mapping", full: "Must have @RequestMapping or mapping annotation" },
-					check3: { short: "DAO X", full: "Must not inject DAO/Dao/Mapper types (DAO belongs in ServiceImpl)" },
-				}
-			case "Service":
-				return {
-					check1: { short: "Extends", full: "Must extend EgovAbstractServiceImpl" },
-					check2: { short: "@Service", full: "Must have @Service annotation" },
-					check3: { short: "Implements", full: "Must implement Service interface" },
-				}
-			case "DAO":
-				return {
-					check1: { short: "DAO", full: "Must have @Repository and extend EgovAbstractDAO" },
-					check2: { short: "Mapper", full: "Must have @Repository and extend EgovAbstractMapper" },
-					check3: { short: "-", full: "Not used for DAO layer" },
-				}
-			case "Mapper":
-				return {
-					check1: { short: "@Mapper", full: "Must have @Mapper annotation" },
-					check2: { short: "-", full: "Not used for Mapper layer" },
-					check3: { short: "-", full: "Not used for Mapper layer" },
-				}
-			default:
-				return {
-					check1: { short: "Check1", full: "Check1" },
-					check2: { short: "Check2", full: "Check2" },
-					check3: { short: "Check3", full: "Check3" },
-				}
-		}
-	}
+	// 결과가 있는 파일 레이어 키 — 요약 카드·Select·합계·Export 판정은 이 키만 본다
+	const layerKeys = FILE_LAYER_KEYS.filter((k) => checkResults[k])
+	const hasResults = layerKeys.length > 0
+	// 선택한 레이어가 결과에 없으면 첫 번째 있는 레이어로 보정한다
+	const activeResultType: string = (layerKeys as readonly string[]).includes(selectedResultType)
+		? selectedResultType
+		: (layerKeys[0] ?? selectedResultType)
+	const skippedFiles = checkResults.DAO?.skipped ?? []
 
 	// 컴포넌트 마운트 시 현재 워크스페이스 경로 요청
 	useEffect(() => {
@@ -173,7 +103,7 @@ const CheckArchView = () => {
 	}
 
 	const handleExportResults = () => {
-		if (Object.keys(checkResults).length === 0) {
+		if (!hasResults) {
 			setError("No results to export. Please run architecture check first.")
 			return
 		}
@@ -193,15 +123,21 @@ const CheckArchView = () => {
 	}
 
 	const getCurrentResults = (): ArchCheckSummary | null => {
-		return checkResults[selectedResultType as keyof typeof checkResults] || null
+		const key = FILE_LAYER_KEYS.find((k) => k === activeResultType)
+		return key ? (checkResults[key] ?? null) : null
 	}
+
+	const layerSummaries = layerKeys.flatMap((k) => {
+		const summary = checkResults[k]
+		return summary ? [[k, summary] as const] : []
+	})
 
 	const getTotalSummary = () => {
 		let totalFiles = 0
 		let totalPassed = 0
 		let totalFailed = 0
 
-		Object.values(checkResults).forEach((summary) => {
+		layerSummaries.forEach(([, summary]) => {
 			totalFiles += summary.totalFiles
 			totalPassed += summary.passedFiles
 			totalFailed += summary.failedFiles
@@ -228,7 +164,7 @@ const CheckArchView = () => {
 						marginTop: "5px",
 					}}>
 					Automatically check compliance with eGovFrame architecture guidelines. Verify annotations and inheritance
-					rules for Controller, Service, DAO, and Mapper layers. Learn more at{" "}
+					rules for Controller, Service, and DAO / Mapper layers. Learn more at{" "}
 					<Link href="https://github.com/eGovFramework/egovframe-vscode-initializr" style={{ display: "inline" }}>
 						GitHub
 					</Link>
@@ -338,18 +274,14 @@ const CheckArchView = () => {
 						</>
 					)}
 				</Button>
-				<Button
-					onClick={handleExportResults}
-					disabled={Object.keys(checkResults).length === 0}
-					variant="secondary"
-					size="md">
+				<Button onClick={handleExportResults} disabled={!hasResults} variant="secondary" size="md">
 					<span className="codicon codicon-export" style={{ marginRight: "6px" }}></span>
 					Export Results
 				</Button>
 			</div>
 
 			{/* Results Summary */}
-			{Object.keys(checkResults).length > 0 && (
+			{hasResults && (
 				<div style={{ marginBottom: "20px" }}>
 					<h4 style={{ color: "var(--vscode-foreground)", marginBottom: "10px" }}>Check Results Summary</h4>
 					<div
@@ -394,7 +326,7 @@ const CheckArchView = () => {
 						{/* Layer-wise Summary - 뱃지 스타일로 개선 */}
 						<div
 							style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "10px" }}>
-							{Object.entries(checkResults).map(([type, summary]) => (
+							{layerSummaries.map(([type, summary]) => (
 								<div
 									key={type}
 									style={{
@@ -403,7 +335,9 @@ const CheckArchView = () => {
 										borderRadius: "3px",
 										border: "1px solid var(--vscode-input-border)",
 									}}>
-									<div style={{ fontWeight: "bold", marginBottom: "8px", fontSize: "13px" }}>{type}</div>
+									<div style={{ fontWeight: "bold", marginBottom: "8px", fontSize: "13px" }}>
+										{LAYER_LABELS[type]}
+									</div>
 
 									{/* Stats Grid - 뱃지 스타일 */}
 									<div
@@ -465,21 +399,77 @@ const CheckArchView = () => {
 								</div>
 							))}
 						</div>
+
+						{/* Skipped Files - 점검 대상에서 제외된 파일 */}
+						{skippedFiles.length > 0 && (
+							<div style={{ marginTop: "10px" }}>
+								<Button
+									onClick={() => setShowSkipped(!showSkipped)}
+									variant="secondary"
+									size="md"
+									aria-expanded={showSkipped}>
+									{`Skipped ${skippedFiles.length}`}
+								</Button>
+								{showSkipped && (
+									<div
+										style={{
+											marginTop: "8px",
+											border: "1px solid var(--vscode-input-border)",
+											borderRadius: "3px",
+											backgroundColor: "var(--vscode-input-background)",
+										}}>
+										{skippedFiles.map((file, index) => (
+											<div
+												key={file.filePath}
+												style={{
+													display: "grid",
+													gridTemplateColumns: "1fr 140px 2fr",
+													gap: "10px",
+													padding: "6px 10px",
+													fontSize: "11px",
+													borderBottom:
+														index < skippedFiles.length - 1
+															? "1px solid var(--vscode-input-border)"
+															: "none",
+												}}>
+												<div
+													style={{
+														overflow: "hidden",
+														textOverflow: "ellipsis",
+														whiteSpace: "nowrap",
+														cursor: "pointer",
+														color: "var(--vscode-textLink-foreground)",
+														textDecoration: "underline",
+													}}
+													onClick={() => handleFileClick(file.filePath)}
+													title={file.filePath}>
+													{file.fileName}
+												</div>
+												<div>{file.reason}</div>
+												<div style={{ color: "var(--vscode-descriptionForeground)" }}>
+													{file.detail ?? ""}
+												</div>
+											</div>
+										))}
+									</div>
+								)}
+							</div>
+						)}
 					</div>
 				</div>
 			)}
 
 			{/* Detailed Results */}
-			{Object.keys(checkResults).length > 0 && (
+			{hasResults && (
 				<div style={{ marginBottom: "20px" }}>
 					<h4 style={{ color: "var(--vscode-foreground)", marginBottom: "10px" }}>Detailed Results</h4>
 
 					{/* Result Type Selector */}
 					<div style={{ marginBottom: "15px" }}>
 						<Select
-							value={selectedResultType}
+							value={activeResultType}
 							onChange={(e: any) => setSelectedResultType(e.target.value)}
-							options={Object.keys(checkResults).map((type) => ({ value: type, label: type }))}
+							options={layerKeys.map((k) => ({ value: k, label: LAYER_LABELS[k] }))}
 						/>
 					</div>
 
@@ -498,21 +488,21 @@ const CheckArchView = () => {
 									padding: "10px",
 									borderBottom: "1px solid var(--vscode-input-border)",
 									display: "grid",
-									gridTemplateColumns: "2fr 1fr 80px 80px 80px 80px",
+									gridTemplateColumns: "2fr 1fr 110px 110px 110px 80px",
 									gap: "10px",
 									fontSize: "12px",
 									fontWeight: "bold",
 								}}>
 								<div>File Path</div>
 								<div>File Name</div>
-								<div title={getCheckDescriptions(selectedResultType).check1.full}>
-									{getCheckDescriptions(selectedResultType).check1.short}
+								<div title={getCheckDescriptions(activeResultType).check1.full}>
+									{getCheckDescriptions(activeResultType).check1.short}
 								</div>
-								<div title={getCheckDescriptions(selectedResultType).check2.full}>
-									{getCheckDescriptions(selectedResultType).check2.short}
+								<div title={getCheckDescriptions(activeResultType).check2.full}>
+									{getCheckDescriptions(activeResultType).check2.short}
 								</div>
-								<div title={getCheckDescriptions(selectedResultType).check3.full}>
-									{getCheckDescriptions(selectedResultType).check3.short}
+								<div title={getCheckDescriptions(activeResultType).check3.full}>
+									{getCheckDescriptions(activeResultType).check3.short}
 								</div>
 								<div>Result</div>
 							</div>
@@ -521,13 +511,9 @@ const CheckArchView = () => {
 							<div style={{ maxHeight: "400px", overflowY: "auto" }}>
 								{currentResults.results.map((result, index) => {
 									const usedChecks = getUsedChecks(result.type)
-									const check1Display = renderCheckResult(result.check1, usedChecks.check1)
-									const check2Display = renderCheckResult(
-										result.check2,
-										usedChecks.check2,
-										getMappingDetail(result),
-									)
-									const check3Display = renderCheckResult(result.check3, usedChecks.check3)
+									const check1Display = getCellDisplay(result, 1)
+									const check2Display = getCellDisplay(result, 2)
+									const check3Display = getCellDisplay(result, 3)
 
 									return (
 										<div
@@ -539,7 +525,7 @@ const CheckArchView = () => {
 														? "1px solid var(--vscode-input-border)"
 														: "none",
 												display: "grid",
-												gridTemplateColumns: "2fr 1fr 80px 80px 80px 80px",
+												gridTemplateColumns: "2fr 1fr 110px 110px 110px 80px",
 												gap: "10px",
 												fontSize: "11px",
 												backgroundColor:
@@ -580,7 +566,10 @@ const CheckArchView = () => {
 													textAlign: "center",
 												}}
 												title={
-													usedChecks.check1 ? undefined : "이 체크는 해당 레이어에서 사용되지 않습니다"
+													check1Display.title ??
+													(usedChecks.check1
+														? undefined
+														: "이 체크는 해당 레이어에서 사용되지 않습니다")
 												}>
 												{check1Display.symbol}
 											</div>
@@ -590,7 +579,10 @@ const CheckArchView = () => {
 													textAlign: "center",
 												}}
 												title={
-													usedChecks.check2 ? undefined : "이 체크는 해당 레이어에서 사용되지 않습니다"
+													check2Display.title ??
+													(usedChecks.check2
+														? undefined
+														: "이 체크는 해당 레이어에서 사용되지 않습니다")
 												}>
 												{check2Display.symbol}
 											</div>
@@ -600,7 +592,10 @@ const CheckArchView = () => {
 													textAlign: "center",
 												}}
 												title={
-													usedChecks.check3 ? undefined : "이 체크는 해당 레이어에서 사용되지 않습니다"
+													check3Display.title ??
+													(usedChecks.check3
+														? undefined
+														: "이 체크는 해당 레이어에서 사용되지 않습니다")
 												}>
 												{check3Display.symbol}
 											</div>
@@ -656,18 +651,26 @@ const CheckArchView = () => {
 						</ul>
 					</div>
 					<div style={{ marginBottom: "12px" }}>
-						<strong>DAO Layer:</strong>
+						<strong>DAO / Mapper Layer:</strong>
 						<ul style={{ fontSize: "11px", margin: "5px 0 0 0", paddingLeft: "20px" }}>
-							<li>File name must follow *DAO.java pattern</li>
-							<li>Must have @Repository annotation and extend EgovAbstractDAO, OR</li>
-							<li>Must have @Repository annotation and extend EgovAbstractMapper</li>
-						</ul>
-					</div>
-					<div style={{ marginBottom: "12px" }}>
-						<strong>Mapper Layer:</strong>
-						<ul style={{ fontSize: "11px", margin: "5px 0 0 0", paddingLeft: "20px" }}>
-							<li>File name must follow *Mapper.java pattern</li>
-							<li>Must have @Mapper annotation</li>
+							<li>
+								File name must follow *DAO.java, *Dao.java or *Mapper.java pattern (the style is detected from the
+								file content)
+							</li>
+							<li>iBatis DAO: @Repository and extends EgovAbstractDAO</li>
+							<li>MyBatis DAO: @Repository and extends EgovAbstractMapper</li>
+							<li>
+								Mapper interface: @Mapper (4.3 and below) or @EgovMapper (5.0 and above) imported from the
+								eGovFrame package
+							</li>
+							<li>
+								Version: the base class package or the annotation must match the project's runtime generation (n/a
+								when unknown)
+							</li>
+							<li>
+								Abstract classes, @Configuration classes, RowMapper-like helpers, Spring Data repositories,
+								MapStruct mappers and plain base classes are listed under Skipped
+							</li>
 						</ul>
 					</div>
 				</div>

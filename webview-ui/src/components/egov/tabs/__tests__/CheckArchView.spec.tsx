@@ -1,4 +1,4 @@
-import { act, render, screen, waitFor } from "@testing-library/react"
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react"
 import { describe, expect, it, vi } from "vitest"
 import CheckArchView from "../CheckArchView"
 
@@ -138,5 +138,81 @@ describe("CheckArchView Detailed Results", () => {
 		// ✗: NoMapping의 Mapping 칸 + Dao의 DAO X 칸
 		expect(screen.getAllByText("✗")).toHaveLength(2)
 		expect(screen.getAllByText("NotFound")).toHaveLength(2)
+	})
+})
+
+const daoResult = (fileName: string, fields: Record<string, unknown>) => ({
+	filePath: `/p/src/main/java/egov/dao/${fileName}`,
+	fileName,
+	parentPath: "/p/src/main/java/egov/dao",
+	type: "DAO",
+	check1: true,
+	check2: true,
+	check3: true,
+	result: "OK",
+	...fields,
+})
+
+describe("CheckArchView DAO / Mapper", () => {
+	it("통합 레이어의 상세 문자열·n/a·Skipped 목록을 표시하고 제외 파일은 Total Files에 세지 않는다", async () => {
+		render(<CheckArchView />)
+
+		dispatch({
+			type: "archCheckResult",
+			scope: "archCheck",
+			success: true,
+			results: {
+				DAO: {
+					totalFiles: 2,
+					passedFiles: 1,
+					failedFiles: 1,
+					results: [
+						daoResult("CmmUseDAO.java", {
+							daoStyle: "mybatisDao",
+							check1Detail: "MyBatis DAO",
+							inheritancePath: ["EgovComAbstractDAO"],
+							check2Detail: "@Repository",
+							check3State: "skipped",
+							check3Detail: "n/a",
+						}),
+						daoResult("BoardMapper.java", {
+							daoStyle: "mapperInterface",
+							result: "NotFound",
+							check1Detail: "Mapper IF",
+							check2: false,
+							check2Detail: "mybatis @Mapper",
+							check3State: "skipped",
+							check3Detail: "n/a",
+						}),
+					],
+					skipped: [
+						{ fileName: "EgovComAbstractDAO.java", reason: "abstract", filePath: "/p/EgovComAbstractDAO.java" },
+					],
+				},
+			},
+		})
+
+		await waitFor(() => expect(screen.getByRole("option", { name: "DAO / Mapper" })).toBeInTheDocument())
+		fireEvent.change(screen.getByRole("combobox"), { target: { value: "DAO" } })
+
+		expect(screen.getByText("CmmUseDAO.java")).toBeInTheDocument()
+		expect(screen.getByText("MyBatis DAO")).toBeInTheDocument()
+		expect(screen.getByText("@Repository")).toBeInTheDocument()
+		expect(screen.getByText("Mapper IF")).toBeInTheDocument()
+		expect(screen.getAllByText("✗")).toHaveLength(1)
+		expect(screen.getAllByText("n/a")).toHaveLength(2)
+		// 머리글
+		expect(screen.getByText("Base")).toBeInTheDocument()
+		expect(screen.getByText("Bean")).toBeInTheDocument()
+		expect(screen.getByText("Version")).toBeInTheDocument()
+
+		// Skipped 목록은 접혀 있다가 토글로 펼친다
+		expect(screen.queryByText("EgovComAbstractDAO.java")).not.toBeInTheDocument()
+		fireEvent.click(screen.getByRole("button", { name: "Skipped 1" }))
+		expect(screen.getByText("EgovComAbstractDAO.java")).toBeInTheDocument()
+		expect(screen.getByText("abstract")).toBeInTheDocument()
+
+		// 제외 파일은 Total Files에 세지 않는다
+		expect(screen.getByText("Total Files").previousElementSibling).toHaveTextContent(/^2$/)
 	})
 })
