@@ -192,6 +192,7 @@ function egovBaseNameOf(typeName: string): EgovBaseName | null {
  * extends 체인을 `EgovAbstractDAO`/`EgovAbstractMapper`(종점)까지 따라간다.
  * 종점은 프로젝트 밖(jar)이므로 단순 이름으로만 알아보고, 그 밖의 부모는 프로젝트 색인에서 찾아 그 파일의 extends를 다시 읽는다.
  * 같은 파일을 두 번 만나면(순환) 종점 없이 끝내고, 중간 클래스가 `maxDepth`개를 넘으면 마지막 부모를 `unresolvedParent`에 둔다.
+ * 부모 파일을 읽지 못하면(`analyze`가 던지면) 그 부모의 단순 이름을 `unresolvedParent`에 두고 끝낸다.
  */
 export function traceInheritance(
 	analysis: DaoFileAnalysis,
@@ -237,8 +238,14 @@ export function traceInheritance(
 		if (depth === 0) {
 			chain.firstParentFile = resolved.entry.filePath
 		}
+		let parent: DaoFileAnalysis
+		try {
+			parent = analyze(resolved.entry.filePath)
+		} catch {
+			return { ...chain, unresolvedParent: resolved.entry.simpleName }
+		}
 		chain.path.push(resolved.entry.simpleName)
-		current = analyze(resolved.entry.filePath)
+		current = parent
 	}
 }
 
@@ -459,6 +466,7 @@ export interface DaoLayerOutcome {
  * DAO / Mapper 레이어를 점검한다. 파일 분석은 경로별로 한 번만 한다(체인 추적이 같은 부모를 거듭 읽지 않도록).
  * 분류 뒤 S6 2패스: 수집 파일 전체의 직접 부모(`extends` 첫 이름을 색인에서 푼 파일)를 세어,
  * @Repository 없는 판정 대상 클래스가 다른 수집 파일의 직접 부모면 `base-class`로 제외한다. 결과 순서는 입력 순서다.
+ * 읽지 못한 수집 파일은 `unreadable`(detail: 오류 메시지)로 제외해 판정·`judgedTypeNames`에 넣지 않는다.
  */
 export function checkDaoLayer(
 	filePaths: string[],
@@ -466,23 +474,43 @@ export function checkDaoLayer(
 	readFile: ReadFile,
 	generationOf: (filePath: string) => Generation,
 ): DaoLayerOutcome {
-	const analyses = new Map<string, DaoFileAnalysis>()
+	// 읽기 실패도 캐시해 같은 파일을 다시 읽지 않는다
+	const analyses = new Map<string, DaoFileAnalysis | { error: unknown }>()
 	const analyze = (filePath: string): DaoFileAnalysis => {
 		let analysis = analyses.get(filePath)
 		if (!analysis) {
-			analysis = analyzeJavaFile(filePath, readFile)
+			try {
+				analysis = analyzeJavaFile(filePath, readFile)
+			} catch (error) {
+				analysis = { error }
+			}
 			analyses.set(filePath, analysis)
+		}
+		if ("error" in analysis) {
+			throw analysis.error
 		}
 		return analysis
 	}
 
-	const entries = filePaths.map((filePath) => {
-		const analysis = analyze(filePath)
-		return { analysis, classification: classifyDaoFile(analysis, index, analyze, generationOf(filePath)) }
+	type Entry =
+		| { kind: "unreadable"; filePath: string; detail: string }
+		| { kind: "analyzed"; analysis: DaoFileAnalysis; classification: DaoClassification }
+	const entries = filePaths.map((filePath): Entry => {
+		let analysis: DaoFileAnalysis
+		try {
+			analysis = analyze(filePath)
+		} catch (error) {
+			return { kind: "unreadable", filePath, detail: error instanceof Error ? error.message : String(error) }
+		}
+		return { kind: "analyzed", analysis, classification: classifyDaoFile(analysis, index, analyze, generationOf(filePath)) }
 	})
 
 	const childCounts = new Map<string, number>()
-	for (const { analysis } of entries) {
+	for (const entry of entries) {
+		if (entry.kind === "unreadable") {
+			continue
+		}
+		const { analysis } = entry
 		const parentName = analysis.declaration?.extendsNames[0]
 		if (!parentName || egovBaseNameOf(parentName)) {
 			continue
@@ -494,7 +522,13 @@ export function checkDaoLayer(
 	}
 
 	const outcome: DaoLayerOutcome = { results: [], skipped: [], judgedTypeNames: new Set() }
-	for (const { analysis, classification } of entries) {
+	for (const entry of entries) {
+		if (entry.kind === "unreadable") {
+			const { filePath, detail } = entry
+			outcome.skipped.push({ filePath, fileName: path.basename(filePath), reason: "unreadable", detail })
+			continue
+		}
+		const { analysis, classification } = entry
 		const { filePath, fileName } = analysis
 		if (classification.kind === "skipped") {
 			const { reason, detail } = classification

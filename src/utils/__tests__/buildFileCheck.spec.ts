@@ -658,6 +658,71 @@ dependencies {
 		expect(summary.result).toBe("Unknown")
 	})
 
+	it("buildSrc 빌드 파일은 빌드 로직이라 Skipped로 두고 프로젝트 판정에 넣지 않는다", () => {
+		const summary = run({
+			"/p/settings.gradle.kts": 'include(":app")\n',
+			"/p/buildSrc/build.gradle.kts": `
+plugins {
+	\`kotlin-dsl\`
+}
+dependencies {
+	implementation("org.egovframe.rte:org.egovframe.rte.ptl.mvc:4.3.0")
+}
+`,
+			"/p/app/build.gradle.kts": `
+dependencies {
+	implementation("org.egovframe.rte:egovframe-rte-ptl-mvc:5.0.0")
+	implementation("org.egovframe.rte:egovframe-rte-psl-dataaccess:5.0.0")
+	implementation("org.egovframe.rte:egovframe-rte-fdl-idgnr:5.0.0")
+	implementation("org.egovframe.rte:egovframe-rte-fdl-property:5.0.0")
+}
+`,
+		})
+		const buildSrc = moduleOf(summary, "buildSrc/build.gradle.kts")
+		expect(buildSrc).toMatchObject({
+			aggregate: true,
+			result: "Skipped",
+			requiredLibraries: [],
+			notes: ["build logic (buildSrc)"],
+		})
+		expect(moduleOf(summary, "app/build.gradle.kts").result).toBe("OK")
+		expect(summary.versionConsistency.state).toBe("pass")
+		expect(summary.result).toBe("OK")
+		expect(moduleForFile("/p/buildSrc/src/main/kotlin/X.kt", summary, projectPath)).toBeUndefined()
+	})
+
+	it("packaging pom은 modules가 없어도(parent/BOM 전용) Skipped이고 자식의 상속 원천으로는 남는다", () => {
+		const summary = run({
+			"/p/pom.xml": pom(`
+<groupId>com.ex</groupId><artifactId>root</artifactId><version>1.0</version><packaging>pom</packaging>
+<modules><module>parent</module><module>app</module></modules>
+`),
+			"/p/parent/pom.xml": pom(`
+<groupId>com.ex</groupId><artifactId>ex-parent</artifactId><version>1.0</version><packaging>pom</packaging>
+${props({ "egovframe.rte.version": "5.0.0" })}
+<dependencyManagement>
+${deps(rte5("ptl-mvc", "${egovframe.rte.version}"), rte5("psl-dataaccess", "${egovframe.rte.version}"), rte5("fdl-idgnr", "${egovframe.rte.version}"), rte5("fdl-property", "${egovframe.rte.version}"))}
+</dependencyManagement>
+`),
+			"/p/app/pom.xml": pom(`
+${parent("com.ex", "ex-parent", "1.0", "<relativePath>../parent/pom.xml</relativePath>")}
+<artifactId>app</artifactId>
+${deps(rte5("ptl-mvc"), rte5("psl-dataaccess"), rte5("fdl-idgnr"), rte5("fdl-property"))}
+`),
+		})
+		expect(moduleOf(summary, "pom.xml")).toMatchObject({ aggregate: true, result: "Skipped", notes: ["aggregate pom"] })
+		expect(moduleOf(summary, "parent/pom.xml")).toMatchObject({
+			aggregate: true,
+			result: "Skipped",
+			requiredLibraries: [],
+			notes: ["packaging pom"],
+		})
+		const app = moduleOf(summary, "app/pom.xml")
+		expect(app.result).toBe("OK")
+		expect(app.runtime).toMatchObject({ generation: "5.x", version: "5.0.0" })
+		expect(summary.result).toBe("OK")
+	})
+
 	it("manualGeneration은 세대만 덮어쓰고 버전 추출·일관성은 그대로", () => {
 		const summary = run({ "/p/pom.xml": web51Pom }, "4.x")
 		const module = moduleOf(summary, "pom.xml")

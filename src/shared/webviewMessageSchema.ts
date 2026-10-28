@@ -123,7 +123,16 @@ const archCheckResultSchema = z.object({
 const skippedFileSchema = z.object({
 	filePath: z.string(),
 	fileName: z.string(),
-	reason: z.enum(["abstract", "configuration", "not-data-access", "spring-data", "mapstruct", "base-class", "not-a-class"]),
+	reason: z.enum([
+		"abstract",
+		"configuration",
+		"not-data-access",
+		"spring-data",
+		"mapstruct",
+		"base-class",
+		"not-a-class",
+		"unreadable",
+	]),
 	detail: z.string().optional(),
 })
 

@@ -237,6 +237,11 @@ function moduleFiles(input: BuildFileCheckInput, root: string): string[] {
 		})
 }
 
+/** 빌드 파일 경로(projectPath 기준, `/` 구분)에 `buildSrc` 세그먼트가 있으면 애플리케이션 모듈이 아닌 빌드 로직이다 */
+function isBuildSrcFile(buildFile: string): boolean {
+	return buildFile.split("/").includes("buildSrc")
+}
+
 // ───────────────────────── Maven 모듈 모델 ─────────────────────────
 
 function loadPom(ctx: Context, file: string): MavenPomModel | undefined {
@@ -372,9 +377,13 @@ function buildMavenModule(
 		dependencies.push(collected)
 	}
 
-	const aggregate = own.packaging === "pom" && own.modules.length > 0
-	if (aggregate) {
-		notes.unshift("aggregate pom")
+	// packaging pom은 modules 유무와 무관하게 판정하지 않는다 (parent/BOM 전용 pom도 자식의 상속 원천으로만 쓴다)
+	const buildSrc = isBuildSrcFile(base.buildFile)
+	const aggregate = buildSrc || own.packaging === "pom"
+	if (buildSrc) {
+		notes.unshift("build logic (buildSrc)")
+	} else if (aggregate) {
+		notes.unshift(own.modules.length > 0 ? "aggregate pom" : "packaging pom")
 	}
 	if (own.profilesIgnored) {
 		addNote(notes, "profiles ignored")
@@ -556,8 +565,12 @@ function buildGradleModule(
 		dependencies.push(collected)
 	}
 
-	const aggregate = hasSettingsInclude(ctx, dir)
-	if (aggregate) {
+	// buildSrc는 빌드 로직이라 판정하지 않는다 (aggregate 행이라 byRef에도 들어가지 않아 다른 모듈에 의존성을 보태지 않는다)
+	const buildSrc = isBuildSrcFile(base.buildFile)
+	const aggregate = buildSrc || hasSettingsInclude(ctx, dir)
+	if (buildSrc) {
+		notes.unshift("build logic (buildSrc)")
+	} else if (aggregate) {
 		notes.unshift("aggregate build (settings include)")
 	}
 	return {

@@ -195,8 +195,6 @@ export async function collectProjectFiles(projectPath: string, patterns: string[
 
 /**
  * 주석이 아닌 라인에서 패턴 찾기
- *//**
- * 주석이 아닌 라인에서 패턴 찾기
  */
 function findPatternIgnoringComments(lines: string[], pattern: string): boolean {
 	for (const line of lines) {

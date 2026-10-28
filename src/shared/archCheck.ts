@@ -65,6 +65,7 @@ export type SkippedReason =
 	| "mapstruct"
 	| "base-class"
 	| "not-a-class"
+	| "unreadable"
 
 /** 점검 대상에서 제외된 파일 */
 export interface SkippedFile {

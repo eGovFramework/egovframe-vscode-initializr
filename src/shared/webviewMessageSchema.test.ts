@@ -328,6 +328,21 @@ describe("parseWebviewMessage", () => {
 		expect(parsed).toMatchObject({ results: { DAO: { results: [dao], skipped: [skipped] } } })
 	})
 
+	it("exportArchResults의 skipped reason unreadable은 보존된다", () => {
+		const skipped = {
+			filePath: "/p/src/main/java/a/BrokenDAO.java",
+			fileName: "BrokenDAO.java",
+			reason: "unreadable",
+			detail: "EACCES: permission denied",
+		}
+		const parsed = parseOk({
+			type: "exportArchResults",
+			projectPath: "/p",
+			results: { DAO: { totalFiles: 0, passedFiles: 0, failedFiles: 0, results: [], skipped: [skipped] } },
+		})
+		expect(parsed).toMatchObject({ results: { DAO: { skipped: [skipped] } } })
+	})
+
 	it("exportArchResults는 type Mapper와 알 수 없는 check3State를 거부한다", () => {
 		const base = {
 			filePath: "/p/A.java",

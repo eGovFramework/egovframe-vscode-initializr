@@ -425,6 +425,66 @@ describe("checkDaoLayer", () => {
 		})
 	})
 
+	it("읽을 수 없는 수집 파일은 unreadable로 제외하고 나머지는 그대로 판정한다", () => {
+		const files = indirectFixture()
+		files["/p/a/dao/BrokenDAO.java"] = "(unreadable)"
+		const readFile: ReadFile = (p) => {
+			if (p === "/p/a/dao/BrokenDAO.java") {
+				throw new Error("EACCES: permission denied")
+			}
+			return files[p]
+		}
+		const index = buildJavaIndex(
+			Object.keys(files).filter((p) => p !== "/p/a/dao/BrokenDAO.java"),
+			readFile,
+		)
+		const daoPaths = ["/p/a/dao/CmmUseDAO.java", "/p/a/dao/BrokenDAO.java", "/p/a/dao/DeepDAO.java"]
+		const outcome = checkDaoLayer(daoPaths, index, readFile, () => "5.x")
+		expect(outcome.results.map((result) => [result.fileName, result.result])).toEqual([
+			["CmmUseDAO.java", "OK"],
+			["DeepDAO.java", "OK"],
+		])
+		expect(outcome.skipped).toEqual([
+			{
+				filePath: "/p/a/dao/BrokenDAO.java",
+				fileName: "BrokenDAO.java",
+				reason: "unreadable",
+				detail: "EACCES: permission denied",
+			},
+		])
+		expect([...outcome.judgedTypeNames].sort()).toEqual(["CmmUseDAO", "DeepDAO"])
+	})
+
+	it("체인 추적 중 부모 파일을 읽을 수 없으면 그 부모에서 체인이 끊겨 check1이 실패한다", () => {
+		const files: Record<string, string> = {
+			"/p/b/cmmn/Base.java": java(
+				"b.cmmn",
+				[`${EGOV4}.EgovAbstractMapper`],
+				"public abstract class Base extends EgovAbstractMapper {\n}",
+			),
+			"/p/b/dao/ChildDAO.java": java(
+				"b.dao",
+				["b.cmmn.Base", "org.springframework.stereotype.Repository"],
+				"@Repository\npublic class ChildDAO extends Base {\n}",
+			),
+		}
+		const index = buildJavaIndex(Object.keys(files), (p) => files[p])
+		const readFile: ReadFile = (p) => {
+			if (p === "/p/b/cmmn/Base.java") {
+				throw new Error("EIO: i/o error")
+			}
+			return files[p]
+		}
+		const outcome = checkDaoLayer(["/p/b/dao/ChildDAO.java"], index, readFile, () => "5.x")
+		expect(outcome.skipped).toEqual([])
+		expect(outcome.results[0]).toMatchObject({
+			fileName: "ChildDAO.java",
+			check1: false,
+			check1Detail: "parent Base not found",
+			result: "NotFound",
+		})
+	})
+
 	it("파일마다 한 번만 읽는다 (색인 + 분류 + 체인 추적)", () => {
 		const files = indirectFixture()
 		const calls = new Map<string, number>()
