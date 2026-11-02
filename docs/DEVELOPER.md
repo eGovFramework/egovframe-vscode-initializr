@@ -241,7 +241,10 @@ CheckArch 탭의 점검은 확장 호스트의 순수 모듈들이 수행합니�
 - 숨김 디렉터리(`.`으로 시작)와 빌드 산출물 디렉터리(`EXCLUDED_DIRECTORY_NAMES`: `node_modules`, `target`, `build`, `out`, `dist`)는 건너뜁니다
 - `src/test`와 `src/it` 아래는 수집하지 않습니다(테스트 픽스처가 판정과 Controller "DAO X" 이름 집합에 섞이지 않도록)
 - ripgrep 호출에는 `--no-ignore`를 붙여 `.gitignore`·`.ignore`와 무관하게 fs 대체 경로와 같은 파일 집합을 얻습니다
-- rg는 프로젝트의 부모 디렉터리를 cwd로 두고 프로젝트 디렉터리 이름을 상대 경로로 넘겨 실행합니다. 절대 경로를 넘기면 심볼릭 링크(macOS `/var` → `/private/var`)를 거칠 때 제외 글롭이 경로 접두어를 떼지 못하고, cwd를 프로젝트로 두면 루트 이름이 `src`일 때 `src/test`가 제외되지 않습니다
+- rg는 프로젝트의 부모 디렉터리를 cwd로 두고 프로젝트 디렉터리 이름을 상대 경로로 넘겨 실행합니다. 절대 경로를 넘기면 심볼릭 링크(macOS `/var` → `/private/var`)를 거칠 때 제외 글롭이 경로 접두어를 떼지 못하고, cwd를 프로젝트로 두면 루트 이름이 `src`일 때 `src/test`가 제외되지 않습니다. 검색 경로 앞에는 옵션 끝 구분자 `--`를 두어, 디렉터리 이름이 `-x`·`-L`처럼 `-`로 시작해도 rg 옵션으로 읽히지 않게 합니다
+- Service 상속 체인(check1)의 부모 클래스 파일은 디렉터리를 다시 훑지 않고 `checkEgovArchitecture`가 만든 `.java` 색인(`buildJavaIndex`)에서 찾습니다. 자식의 package·import로 해석하고(`resolveTypeReference`), 해석되지 않으면 이름이 같은 첫 후보를 씁니다. 그래서 부모 탐색 범위도 수집 규칙과 같이 `projectPath` 아래·심볼릭 링크 제외·`src/test` 제외입니다
+- CSV의 모든 셀은 `csvCell`을 거칩니다: 쉼표·큰따옴표·줄바꿈은 인용하고, `=`·`+`·`@`·탭·CR로 시작하거나 `-` 뒤에 숫자가 아닌 글자가 오는 값에는 `'`를 붙여 스프레드시트 수식 주입을 막습니다
+- 엔진의 오류 로그는 `describeError`(시스템 오류는 code, 그 밖은 message)와 `path.basename`만 쓰고 Error 객체·절대 경로·스택을 남기지 않습니다
 
 ### 결과 계약 동기화 체크리스트
 
