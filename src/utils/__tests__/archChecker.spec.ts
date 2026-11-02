@@ -555,6 +555,41 @@ describe("판정 규칙 (fs 경로)", () => {
 		})
 	})
 
+	it.skipIf(process.getuid?.() === 0)(
+		"오류 로그에는 파일 이름과 오류 요약만 남기고 절대 경로·스택은 남기지 않는다",
+		async () => {
+			const root = makeProject({
+				[`${SRC}/service/impl/LockedServiceImpl.java`]: `@Service\npublic class LockedServiceImpl extends EgovAbstractServiceImpl implements LockedService {}\n`,
+				[`${SRC}/service/impl/OpenServiceImpl.java`]: `@Service\npublic class OpenServiceImpl extends EgovAbstractServiceImpl implements OpenService {}\n`,
+			})
+			const locked = path.join(root, SRC, "service", "impl", "LockedServiceImpl.java")
+			fs.chmodSync(locked, 0o000)
+			const errors = vi.spyOn(console, "error").mockImplementation(() => {})
+			errors.mockClear()
+			try {
+				const results = await checkEgovArchitecture(root)
+				expect(resultOf(results, "Service", "LockedServiceImpl.java")).toMatchObject({
+					check1: false,
+					result: "NotFound",
+				})
+				expect(resultOf(results, "Service", "OpenServiceImpl.java")).toMatchObject({ result: "OK" })
+				expect(errors.mock.calls.length).toBeGreaterThan(0)
+				const logged = errors.mock.calls.map((args) => args.map(String).join(" "))
+				expect(logged.some((line) => line.includes("LockedServiceImpl.java"))).toBe(true)
+				for (const args of errors.mock.calls) {
+					// Error 객체를 그대로 넘기면 Node 원문 메시지(절대 경로)와 스택이 함께 찍힌다
+					expect(args.every((arg) => typeof arg === "string")).toBe(true)
+				}
+				for (const line of logged) {
+					expect(line).not.toContain(root)
+					expect(line).not.toMatch(/\n\s+at /)
+				}
+			} finally {
+				fs.chmodSync(locked, 0o644)
+			}
+		},
+	)
+
 	it("파일이 없어도 세 레이어가 모두 채워진다", async () => {
 		const results = await checkEgovArchitecture(makeProject({}))
 		for (const layer of ["Controller", "Service"] as const) {

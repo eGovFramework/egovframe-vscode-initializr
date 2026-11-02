@@ -75,6 +75,18 @@ function isRipgrepAvailable(rgPath: string | undefined): rgPath is string {
 	}
 }
 
+/**
+ * 로그용 오류 요약. Error 객체를 그대로 넘기면 Node 원문 메시지(절대 경로 포함)와 스택이 함께 찍히므로,
+ * 파일 시스템 오류(code가 있는 시스템 오류)는 이름과 code만, 그 밖의 Error는 message만, 나머지는 String()으로 줄인다.
+ */
+function describeError(error: unknown): string {
+	if (error instanceof Error) {
+		const code = (error as NodeJS.ErrnoException).code
+		return code ? `${error.name} ${code}` : error.message
+	}
+	return String(error)
+}
+
 /** 파일 이름 매처: suffix는 접미어 일치, exact는 정확한 이름 일치 (둘 다 대소문자 구분) */
 type FileNameMatcher = { suffix?: string; exact?: string }
 
@@ -138,7 +150,7 @@ function findFilesWithRipgrep(rgPath: string, projectPath: string, patterns: str
 		})
 
 		rg.on("error", (error) => {
-			console.error(`Error running ripgrep: ${error.message}`)
+			console.error(`Error running ripgrep: ${describeError(error)}`)
 			resolve([])
 		})
 	})
@@ -176,7 +188,7 @@ function findFilesWithFs(dirPath: string, matchers: FileNameMatcher[]): string[]
 			}
 		}
 	} catch (error) {
-		console.error(`Error reading directory ${dirPath}:`, error)
+		console.error(`Error reading directory ${path.basename(dirPath)}: ${describeError(error)}`)
 	}
 
 	return results
@@ -392,7 +404,7 @@ function checkControllerMethods(filePath: string, readFile: ReadFile): Controlle
 		)
 		return result
 	} catch (error) {
-		console.error(`Error checking controller methods in ${filePath}:`, error)
+		console.error(`Error checking controller methods in ${path.basename(filePath)}: ${describeError(error)}`)
 		return result
 	}
 }
@@ -532,7 +544,7 @@ function checkParentClassExtends(
 		console.log(`✅ Parent class '${parentClassName}' extends '${targetClassName}': false`)
 		return false
 	} catch (error) {
-		console.error(`Error checking parent class ${parentClassName}:`, error)
+		console.error(`Error checking parent class ${parentClassName}: ${describeError(error)}`)
 		return false
 	}
 }
@@ -665,7 +677,7 @@ function checkServiceFile(filePath: string, ctx: JavaProjectContext): boolean[] 
 
 		return [extendsCheck, hasServiceAnnotation, hasImplements]
 	} catch (error) {
-		console.error(`Error checking service file ${filePath}:`, error)
+		console.error(`Error checking service file ${path.basename(filePath)}: ${describeError(error)}`)
 		return [false, false, false]
 	}
 }
@@ -705,7 +717,7 @@ function checkDaoInjection(filePath: string, daoTypeNames: ReadonlySet<string>, 
 		}
 		return false
 	} catch (error) {
-		console.error(`Error checking DAO injection in ${filePath}:`, error)
+		console.error(`Error checking DAO injection in ${path.basename(filePath)}: ${describeError(error)}`)
 		return false
 	}
 }
@@ -784,7 +796,7 @@ function checkLayer(
 			})
 		}
 	} catch (error) {
-		console.error(`Error checking ${layerType} layer:`, error)
+		console.error(`Error checking ${layerType} layer: ${describeError(error)}`)
 	}
 
 	return results
@@ -836,7 +848,7 @@ export async function checkEgovArchitecture(
 				manualGeneration: options.runtimeGeneration,
 			})
 		} catch (error) {
-			console.error("Error checking project build files:", error)
+			console.error(`Error checking project build files: ${describeError(error)}`)
 			const message = error instanceof Error ? error.message : String(error)
 			project = {
 				generation: "unknown",
@@ -861,7 +873,7 @@ export async function checkEgovArchitecture(
 		try {
 			daoOutcome = checkDaoLayer(filesEndingWith(DAO_LAYER_FILE_SUFFIXES), index, readFile, generationOf)
 		} catch (error) {
-			console.error("Error checking DAO layer:", error)
+			console.error(`Error checking DAO layer: ${describeError(error)}`)
 		}
 		results.DAO = { ...summarize(daoOutcome.results), skipped: daoOutcome.skipped }
 
@@ -876,7 +888,7 @@ export async function checkEgovArchitecture(
 				try {
 					buildFileTexts.push({ filePath, text: readFile(filePath) })
 				} catch (error) {
-					console.error(`Error reading build file ${filePath}:`, error)
+					console.error(`Error reading build file ${path.basename(filePath)}: ${describeError(error)}`)
 				}
 			}
 			const daoStyles = new Set(daoOutcome.results.map((r) => r.daoStyle))
@@ -895,7 +907,7 @@ export async function checkEgovArchitecture(
 			const daoFilePaths = new Set([...daoOutcome.results, ...daoOutcome.skipped].map((r) => r.filePath))
 			project.unclassifiedDataAccessFiles = findUnclassifiedDataAccessFiles(javaFiles, daoFilePaths, readFile, projectPath)
 		} catch (error) {
-			console.error("Error scanning data access configuration:", error)
+			console.error(`Error scanning data access configuration: ${describeError(error)}`)
 		}
 
 		// 4. Controller 점검 ("DAO X"는 DAO 레이어 판정 대상 타입 이름을 본다)
@@ -915,7 +927,7 @@ export async function checkEgovArchitecture(
 		progressCallback?.(`✅ Architecture check completed${via}`)
 		return results
 	} catch (error) {
-		console.error("Architecture check error:", error)
+		console.error(`Architecture check error: ${describeError(error)}`)
 		throw error
 	}
 }
@@ -1042,7 +1054,7 @@ function saveReport(resultType: ArchLayer, outputPath: string, resultList: ArchC
 		fs.writeFileSync(outputPath, csvContent, "utf8")
 		console.log(`Report saved to: ${outputPath}`)
 	} catch (error) {
-		console.error(`Error saving report to ${outputPath}:`, error)
+		console.error(`Error saving report to ${path.basename(outputPath)}: ${describeError(error)}`)
 		throw error
 	}
 }
@@ -1059,7 +1071,7 @@ function saveProjectReport(outputPath: string, summary: ProjectCheckSummary): vo
 		fs.writeFileSync(outputPath, csvContent, "utf8")
 		console.log(`Report saved to: ${outputPath}`)
 	} catch (error) {
-		console.error(`Error saving report to ${outputPath}:`, error)
+		console.error(`Error saving report to ${path.basename(outputPath)}: ${describeError(error)}`)
 		throw error
 	}
 }
@@ -1085,7 +1097,7 @@ export async function exportArchResults(results: ArchCheckResults, projectPath: 
 
 		console.log("All reports exported successfully")
 	} catch (error) {
-		console.error("Error exporting results:", error)
+		console.error(`Error exporting results: ${describeError(error)}`)
 		throw error
 	}
 }
