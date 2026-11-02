@@ -789,6 +789,74 @@ describe("CSV 내보내기", () => {
 		expect(readCsv(outDir, "Service")[1]).toBe("/p/service,UserServiceImpl.java,PASS,PASS,PASS,OK")
 	})
 
+	it("Controller·Service CSV도 모든 셀을 이스케이프하고 수식으로 읽힐 수 있는 셀 앞에는 '를 붙인다", async () => {
+		const outDir = makeProject({})
+		const service = (parentPath: string, fileName: string): ArchCheckResult => ({
+			filePath: `${parentPath}/${fileName}`,
+			fileName,
+			parentPath,
+			check1: true,
+			check2: true,
+			check3: true,
+			result: "OK",
+			type: "Service",
+		})
+		await exportArchResults(
+			{
+				Controller: {
+					totalFiles: 2,
+					passedFiles: 2,
+					failedFiles: 0,
+					results: [
+						{
+							...controller('Odd"Controller.java', {
+								check2: true,
+								mappedMethodCount: 1,
+								methodCount: 1,
+								hasClassLevelMapping: false,
+							}),
+							parentPath: "/p/odd,dir",
+						},
+						{
+							...controller("EqController.java", {
+								check2: true,
+								mappedMethodCount: 1,
+								methodCount: 1,
+								hasClassLevelMapping: false,
+							}),
+							parentPath: "=HYPERLINK(1)",
+						},
+					],
+				},
+				Service: {
+					totalFiles: 4,
+					passedFiles: 4,
+					failedFiles: 0,
+					results: [
+						service("-x/svc", "DashServiceImpl.java"),
+						service("+p/svc", "PlusServiceImpl.java"),
+						service("@h/svc", "AtServiceImpl.java"),
+						// 음수 표기(`-5`)는 수식이 아니므로 그대로 둔다 (`-` 하나는 DAO CSV 테스트의 Style 열이 확인한다)
+						service("-5", "MinusServiceImpl.java"),
+					],
+				},
+			},
+			outDir,
+		)
+		expect(readCsv(outDir, "Controller")).toEqual([
+			"Path,FileName,@Controller,Mapping Annotation,DAO X,Result",
+			'"/p/odd,dir","Odd""Controller.java",PASS,PASS,PASS,OK',
+			"'=HYPERLINK(1),EqController.java,PASS,PASS,PASS,OK",
+		])
+		expect(readCsv(outDir, "Service")).toEqual([
+			"Path,FileName,Extends EgovAbstractServiceImpl,@Service,Implements Service,Result",
+			"'-x/svc,DashServiceImpl.java,PASS,PASS,PASS,OK",
+			"'+p/svc,PlusServiceImpl.java,PASS,PASS,PASS,OK",
+			"'@h/svc,AtServiceImpl.java,PASS,PASS,PASS,OK",
+			"-5,MinusServiceImpl.java,PASS,PASS,PASS,OK",
+		])
+	})
+
 	it("DAO CSV는 Style/Base/Bean/Version 열에 상세 문자열을 쓰고 쉼표가 든 셀은 인용한다", async () => {
 		const outDir = makeProject({})
 		const dao = (fileName: string, parentPath: string, fields: Partial<ArchCheckResult>): ArchCheckResult => ({

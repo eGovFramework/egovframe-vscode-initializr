@@ -970,14 +970,21 @@ function formatMappingCheckValue(item: ArchCheckResult): string {
 	return "PASS"
 }
 
+/** 스프레드시트가 수식으로 해석할 수 있는 셀 머리: `=`·`+`·`@`·탭·CR, 또는 숫자·`.`·끝이 아닌 글자가 뒤따르는 `-` */
+const FORMULA_LEADING_PATTERN = /^(?:[=+@\t\r]|-(?![\d.]|$))/
+
 /**
- * CSV 셀 값 이스케이프 — 쉼표·큰따옴표·줄바꿈이 있으면 큰따옴표로 감싸고 안의 큰따옴표는 두 번 쓴다
+ * CSV 셀 값 이스케이프 — 모든 열(경로·파일 이름 포함)이 이 함수를 거친다
+ * - 수식으로 읽힐 수 있는 머리(FORMULA_LEADING_PATTERN)에는 `'`를 붙여 Excel 등에서 수식 주입(CSV injection)을 막는다.
+ *   `-` 하나(미사용 열 표시)와 `-5` 같은 음수 표기는 그대로 둔다
+ * - 쉼표·큰따옴표·줄바꿈이 있으면 큰따옴표로 감싸고 안의 큰따옴표는 두 번 쓴다
  */
 function csvCell(value: string): string {
-	if (/[,"\n\r]/.test(value)) {
-		return `"${value.replace(/"/g, '""')}"`
+	const guarded = FORMULA_LEADING_PATTERN.test(value) ? `'${value}` : value
+	if (/[,"\n\r]/.test(guarded)) {
+		return `"${guarded.replace(/"/g, '""')}"`
 	}
-	return value
+	return guarded
 }
 
 const DAO_STYLE_LABELS: Record<DaoStyle, string> = {
@@ -1028,8 +1035,8 @@ function saveReport(resultType: ArchLayer, outputPath: string, resultList: ArchC
 				resultType === "Controller" ? formatMappingCheckValue(item) : formatCheckValue(item.check2, layerInfo.used[1])
 			const check3Str = formatCheckValue(item.check3, layerInfo.used[2])
 
-			const report = `${item.parentPath},${item.fileName},${check1Str},${check2Str},${check3Str},${item.result}\n`
-			csvContent += report
+			csvContent +=
+				[item.parentPath, item.fileName, check1Str, check2Str, check3Str, item.result].map(csvCell).join(",") + "\n"
 		}
 
 		fs.writeFileSync(outputPath, csvContent, "utf8")
