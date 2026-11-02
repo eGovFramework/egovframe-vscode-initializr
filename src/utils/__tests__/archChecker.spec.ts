@@ -166,6 +166,20 @@ describe.skipIf(!bundledRg)("파일 수집: ripgrep 경로", () => {
 		const results = await checkEgovArchitecture(root, undefined, { rgPath: bundledRg })
 		expect(fileNames(results, "Controller")).toEqual(["RealController.java"])
 	})
+
+	it("프로젝트 디렉터리 이름이 -로 시작해도 rg 옵션으로 읽히지 않고 프로젝트 안의 파일만 모은다", async () => {
+		const controller = `@Controller\n@RequestMapping("/a")\npublic class AController {}\n`
+		// -x(--line-regexp)·-L(--follow)처럼 rg 옵션과 같은 이름: 옵션으로 읽히면 cwd(부모) 전체를 훑거나 심볼릭 링크를 따라간다
+		for (const dirName of ["-x", "-L"]) {
+			const root = makeNestedProject(dirName, { [`${SRC}/web/AController.java`]: controller })
+			const outside = path.join(path.dirname(root), "outside", "OutsideController.java")
+			fs.mkdirSync(path.dirname(outside), { recursive: true })
+			fs.writeFileSync(outside, controller)
+			const expected = [path.join(root, SRC, "web", "AController.java")]
+			expect(await collectProjectFiles(root, ["*.java"], bundledRg)).toEqual(expected)
+			expect(await collectProjectFiles(root, ["*.java"])).toEqual(expected)
+		}
+	})
 })
 
 describe.each([{ name: "fs 경로", rgPath: undefined }, ...(bundledRg ? [{ name: "ripgrep 경로", rgPath: bundledRg }] : [])])(

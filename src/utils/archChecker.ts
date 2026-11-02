@@ -110,9 +110,11 @@ function findFilesWithRipgrep(rgPath: string, projectPath: string, patterns: str
 		// 상대 경로(프로젝트 디렉터리 이름)로 넘겨, 글롭이 프로젝트 상위 경로의 src/test·src/it에는 걸리지 않게 한다
 		// (fs 경로의 shouldSkipDirectory와 같은 결과). 절대 경로를 넘기면 cwd가 심볼릭 링크를 거칠 때(macOS /var → /private/var)
 		// 접두어가 떼어지지 않아 절대 경로 전체가 매칭되고, cwd를 프로젝트 자신으로 두면 루트 이름이 src일 때 src/test가 제외되지 않는다.
+		// 검색 경로 앞에 `--`로 옵션 끝을 명시한다: 디렉터리 이름이 `-x`·`-L`처럼 `-`로 시작하면 rg가 옵션으로 읽어
+		// 프로젝트 밖(cwd 전체)을 훑거나 심볼릭 링크를 따라가게 된다
 		const absoluteProjectPath = path.resolve(projectPath)
 		const cwd = path.dirname(absoluteProjectPath)
-		args.push(path.relative(cwd, absoluteProjectPath) || ".")
+		args.push("--", path.relative(cwd, absoluteProjectPath) || ".")
 		const rg = spawn(rgPath, args, { cwd, stdio: ["ignore", "pipe", "ignore"] })
 
 		let output = ""
