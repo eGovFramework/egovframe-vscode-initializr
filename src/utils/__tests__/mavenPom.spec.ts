@@ -247,6 +247,14 @@ describe("mavenPom", () => {
 		expect(model.version).toBe("1.0")
 	})
 
+	it("아주 깊게 중첩된 XML도 스택 오버플로 없이 읽는다", () => {
+		const depth = 20000
+		const xml = `<project><artifactId>deep</artifactId>${"<x>".repeat(depth)}leaf${"</x>".repeat(depth)}<version>1.0</version></project>`
+		const model = parseMavenPom(xml)
+		expect(model.artifactId).toBe("deep")
+		expect(model.version).toBe("1.0")
+	})
+
 	it("resolvePlaceholders: 연쇄 치환, 자기 참조·순환은 끝난다, 모르는 키는 남긴다", () => {
 		expect(resolvePlaceholders("${a}", { a: "${b}", b: "x" })).toBe("x")
 		expect(resolvePlaceholders("v-${a}-${b}", { a: "1", b: "2" })).toBe("v-1-2")

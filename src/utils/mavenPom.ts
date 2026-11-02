@@ -175,7 +175,8 @@ function parseXmlTree(xml: string): XmlElement[] {
 		i = end + 1
 		if (inner.startsWith("/")) {
 			const name = localName(inner.slice(1).trim())
-			const index = stack.map((el) => el.name).lastIndexOf(name)
+			// 잘 맞물린 닫는 태그는 꼭대기와 바로 일치한다. 어긋났을 때만 스택을 거슬러 가장 가까운 같은 이름까지 닫는다
+			const index = top().name === name ? stack.length - 1 : stack.map((el) => el.name).lastIndexOf(name)
 			if (index > 0) {
 				stack.length = index
 			}
@@ -192,11 +193,38 @@ function parseXmlTree(xml: string): XmlElement[] {
 			stack.push(element)
 		}
 	}
-	return document.children.map(freeze)
+	return freeze(document).children
 }
 
-function freeze(element: MutableElement): XmlElement {
-	return { name: element.name, children: element.children.map(freeze), text: element.textParts.join("").trim() }
+/**
+ * 가변 트리를 읽기 전용 XmlElement 트리로 바꾼다. 재귀 대신 명시적 스택을 써서 아주 깊게 중첩된 XML에서도
+ * 호출 스택이 넘치지 않는다. 자식을 모두 변환한 뒤 부모를 만든다(후위 순회).
+ */
+function freeze(root: MutableElement): XmlElement {
+	const frozenChildren = new Map<MutableElement, XmlElement[]>()
+	const stack: Array<{ element: MutableElement; nextChild: number }> = [{ element: root, nextChild: 0 }]
+	frozenChildren.set(root, [])
+	for (;;) {
+		const frame = stack[stack.length - 1]
+		const { element } = frame
+		if (frame.nextChild < element.children.length) {
+			const child = element.children[frame.nextChild++]
+			frozenChildren.set(child, [])
+			stack.push({ element: child, nextChild: 0 })
+			continue
+		}
+		const frozen: XmlElement = {
+			name: element.name,
+			children: frozenChildren.get(element) ?? [],
+			text: element.textParts.join("").trim(),
+		}
+		frozenChildren.delete(element)
+		stack.pop()
+		if (stack.length === 0) {
+			return frozen
+		}
+		frozenChildren.get(stack[stack.length - 1].element)?.push(frozen)
+	}
 }
 
 function child(element: XmlElement | undefined, name: string): XmlElement | undefined {
