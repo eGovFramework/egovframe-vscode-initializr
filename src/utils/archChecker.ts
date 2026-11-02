@@ -19,9 +19,9 @@ import {
 	isDataAccessConfigPath,
 	scanDataAccessConfig,
 } from "./dataAccessConfigScan"
-import { checkDaoLayer, type DaoLayerOutcome } from "./daoCheck"
-import { buildJavaIndex } from "./javaIndex"
-import { createCachedReader } from "./javaSource"
+import { checkDaoLayer, type DaoLayerOutcome, type SourceContext } from "./daoCheck"
+import { buildJavaIndex, resolveTypeReference, type JavaIndex, type ReadFile } from "./javaIndex"
+import { collectImports, createCachedReader, readPackage, stripJavaComments } from "./javaSource"
 
 // 결과 타입은 웹뷰·메시지 계약과 공유하므로 src/shared/archCheck.ts에 정의한다
 export type { ArchCheckResult, ArchCheckResults, ArchCheckSummary } from "../shared/archCheck"
@@ -248,7 +248,7 @@ interface ControllerCheckResult {
  *    - 클래스 레벨에 @RequestMapping이 있으면 메서드 레벨 mapping은 선택 사항
  *    - 메서드 레벨에만 mapping이 있어도 OK
  */
-function checkControllerMethods(filePath: string): ControllerCheckResult {
+function checkControllerMethods(filePath: string, readFile: ReadFile): ControllerCheckResult {
 	const result: ControllerCheckResult = {
 		hasControllerAnnotation: false,
 		hasAllMappings: false,
@@ -258,7 +258,7 @@ function checkControllerMethods(filePath: string): ControllerCheckResult {
 	}
 
 	try {
-		const content = fs.readFileSync(filePath, "utf8")
+		const content = readFile(filePath)
 		const lines = content.split("\n")
 
 		// 1. 클래스 레벨의 @Controller annotation 확인 (주석 제외)
@@ -436,49 +436,31 @@ function checkClassLevelRequestMapping(lines: string[]): boolean {
 	return false
 }
 
-/**
- * 파일 경로에서 Java 소스 루트(src/main/java) 디렉토리를 찾아 반환
- * 패키지 깊이에 관계없이 정확한 소스 루트를 반환
- */
-function findSourceRoot(filePath: string): string {
-	const srcMainJava = `${path.sep}src${path.sep}main${path.sep}java${path.sep}`
-	const idx = filePath.indexOf(srcMainJava)
-	if (idx !== -1) {
-		return filePath.substring(0, idx + srcMainJava.length)
-	}
-	// src/main/java를 찾지 못한 경우 fallback: 프로젝트 루트 추정
-	const srcMain = `${path.sep}src${path.sep}main${path.sep}`
-	const srcIdx = filePath.indexOf(srcMain)
-	if (srcIdx !== -1) {
-		return filePath.substring(0, srcIdx)
-	}
-	// 최후의 fallback
-	return path.dirname(path.dirname(path.dirname(filePath)))
+/** Controller·Service 점검이 공유하는 프로젝트 문맥: 수집된 .java의 FQCN 색인과 경로별 읽기 캐시 */
+interface JavaProjectContext {
+	index: JavaIndex
+	readFile: ReadFile
+}
+
+/** 파일 내용에서 이름 해석에 쓸 package 선언과 import 목록을 읽는다 */
+function sourceContextOf(content: string): SourceContext {
+	const stripped = stripJavaComments(content)
+	return { package: readPackage(stripped), imports: collectImports(stripped) }
 }
 
 /**
- * 프로젝트 내에서 특정 이름의 Java 파일을 재귀적으로 찾기
+ * 부모 클래스의 단순 이름으로 프로젝트 색인에서 부모 파일을 찾는다.
+ * 자식 파일의 package·import로 해석하고(단일 import → 같은 패키지 → 와일드카드 → 유일한 단순 이름), 해석되지 않으면
+ * 종전의 파일 이름 탐색과 같이 이름이 같은 첫 후보(정렬된 경로 순)를 쓴다. 색인은 collectProjectFiles가 projectPath
+ * 아래에서 모은 파일만 담으므로 프로젝트 밖·심볼릭 링크 너머·src/test 아래의 파일은 찾지 않고, 디렉터리를 다시 훑지 않는다.
  */
-function findJavaFile(searchPath: string, fileName: string): string | null {
-	try {
-		const files = fs.readdirSync(searchPath)
-		for (const file of files) {
-			const fullPath = path.join(searchPath, file)
-			const stat = fs.statSync(fullPath)
-
-			if (stat.isDirectory()) {
-				const found = findJavaFile(fullPath, fileName)
-				if (found) {
-					return found
-				}
-			} else if (file === fileName) {
-				return fullPath
-			}
-		}
-	} catch {
-		// 권한 없는 디렉토리는 스킵
+function findParentClassFile(index: JavaIndex, from: SourceContext, parentClassName: string): string | null {
+	const resolved = resolveTypeReference(index, from, parentClassName)
+	if (resolved.kind === "resolved") {
+		return resolved.entry.filePath
 	}
-	return null
+	const candidates = index.bySimpleName.get(parentClassName)
+	return candidates && candidates.length > 0 ? candidates[0].filePath : null
 }
 
 /**
@@ -505,7 +487,8 @@ function findExtendsParentIgnoringComments(lines: string[]): string | null {
  * maxDepth를 통해 무한 루프를 방지하며, 다단계 상속도 추적 가능
  */
 function checkParentClassExtends(
-	projectPath: string,
+	ctx: JavaProjectContext,
+	from: SourceContext,
 	parentClassName: string,
 	targetClassName: string,
 	maxDepth: number = 5,
@@ -515,17 +498,16 @@ function checkParentClassExtends(
 	}
 
 	try {
-		// 프로젝트에서 부모 클래스 파일 찾기
-		const parentClassFile = `${parentClassName}.java`
-		const parentFilePath = findJavaFile(projectPath, parentClassFile)
+		// 프로젝트 색인에서 부모 클래스 파일 찾기
+		const parentFilePath = findParentClassFile(ctx.index, from, parentClassName)
 
 		if (!parentFilePath) {
-			console.log(`⚠️ Parent class file '${parentClassFile}' not found in project`)
+			console.log(`⚠️ Parent class file '${parentClassName}.java' not found in project`)
 			return false
 		}
 
-		// 부모 클래스 파일 읽기
-		const content = fs.readFileSync(parentFilePath, "utf8")
+		// 부모 클래스 파일 읽기 (읽기 캐시 공유)
+		const content = ctx.readFile(parentFilePath)
 		const lines = content.split("\n")
 
 		// 대상 클래스를 직접 상속하는지 확인
@@ -543,7 +525,7 @@ function checkParentClassExtends(
 			// 프레임워크 기본 클래스가 아니라면 계속 추적
 			if (grandParentClassName !== targetClassName && grandParentClassName !== "Object") {
 				console.log(`🔍 Tracing inheritance: ${parentClassName} → ${grandParentClassName} → ... → ${targetClassName}?`)
-				return checkParentClassExtends(projectPath, grandParentClassName, targetClassName, maxDepth - 1)
+				return checkParentClassExtends(ctx, sourceContextOf(content), grandParentClassName, targetClassName, maxDepth - 1)
 			}
 		}
 
@@ -635,13 +617,13 @@ function implementsServiceInterface(lines: string[], className: string): boolean
  * Service 파일의 검증 (주석 제외)
  * 1. extends EgovAbstractServiceImpl 확인
  *    - 직접 상속이 아니면 부모 클래스(프로젝트마다 이름이 다른 공통 ServiceImpl 등)의 .java를
- *      소스 루트에서 찾아 EgovAbstractServiceImpl까지 상속 체인을 추적
+ *      프로젝트 .java 색인에서 찾아 EgovAbstractServiceImpl까지 상속 체인을 추적
  * 2. @Service annotation 확인
  * 3. 클래스 선언부의 implements 목록에 Service로 끝나는 인터페이스가 있는지 확인
  */
-function checkServiceFile(filePath: string): boolean[] {
+function checkServiceFile(filePath: string, ctx: JavaProjectContext): boolean[] {
 	try {
-		const content = fs.readFileSync(filePath, "utf8")
+		const content = ctx.readFile(filePath)
 		const lines = content.split("\n")
 
 		// 1. extends 체크
@@ -656,8 +638,12 @@ function checkServiceFile(filePath: string): boolean[] {
 			// 다른 클래스를 상속한 경우, 그 부모 클래스가 EgovAbstractServiceImpl을 상속하는지 체인을 추적
 			const parentClassName = findExtendsParentIgnoringComments(lines)
 			if (parentClassName && parentClassName !== "Object") {
-				const projectPath = findSourceRoot(filePath)
-				const parentExtendsAbstract = checkParentClassExtends(projectPath, parentClassName, "EgovAbstractServiceImpl")
+				const parentExtendsAbstract = checkParentClassExtends(
+					ctx,
+					sourceContextOf(content),
+					parentClassName,
+					"EgovAbstractServiceImpl",
+				)
 				extendsCheck = parentExtendsAbstract
 				console.log(
 					`${parentExtendsAbstract ? "✅" : "❌"} ${path.basename(filePath)} extends ${parentClassName}, which extends EgovAbstractServiceImpl: ${parentExtendsAbstract}`,
@@ -698,9 +684,9 @@ const INJECTED_TYPE_PATTERN = /\b([A-Z]\w*(?:DAO|Dao|Mapper))\s+[A-Za-z_$][\w$]*
  * - *Mapper 타입은 DAO 레이어 판정 대상(제외 목록 제외)에 같은 이름이 있을 때만 DAO(MyBatis 매퍼)로 본다
  *   (ObjectMapper 같은 라이브러리 타입을 오탐하지 않기 위함)
  */
-function checkDaoInjection(filePath: string, daoTypeNames: ReadonlySet<string>): boolean {
+function checkDaoInjection(filePath: string, daoTypeNames: ReadonlySet<string>, readFile: ReadFile): boolean {
 	try {
-		const content = fs.readFileSync(filePath, "utf8")
+		const content = readFile(filePath)
 		const lines = content.split("\n")
 
 		for (const rawLine of lines) {
@@ -728,9 +714,9 @@ function checkDaoInjection(filePath: string, daoTypeNames: ReadonlySet<string>):
  * 파일이 abstract class인지 확인 (주석 제외)
  * abstract class는 직접 인스턴스화되지 않는 기반 클래스이므로 아키텍처 점검 대상에서 제외
  */
-function isAbstractClass(filePath: string): boolean {
+function isAbstractClass(filePath: string, readFile: ReadFile): boolean {
 	try {
-		const content = fs.readFileSync(filePath, "utf8")
+		const content = readFile(filePath)
 		const lines = content.split("\n")
 		return findRegexPatternIgnoringComments(lines, /\babstract\s+class\b/)
 	} catch {
@@ -740,14 +726,16 @@ function isAbstractClass(filePath: string): boolean {
 
 /**
  * Controller 또는 Service 레이어의 파일 목록을 점검한다
+ * context.index·readFile: 프로젝트 .java 색인과 읽기 캐시 (Service 상속 체인의 부모 파일 조회와 모든 파일 읽기에 쓴다)
  * context.daoTypeNames: Controller "DAO X" 검사에 쓸 DAO 레이어 판정 대상 타입 이름
  */
 function checkLayer(
 	fileList: string[],
 	layerType: "Controller" | "Service",
-	context: { daoTypeNames?: ReadonlySet<string> } = {},
+	context: JavaProjectContext & { daoTypeNames?: ReadonlySet<string> },
 ): ArchCheckResult[] {
 	const results: ArchCheckResult[] = []
+	const { readFile } = context
 	const daoTypeNames = context.daoTypeNames ?? new Set<string>()
 
 	try {
@@ -756,7 +744,7 @@ function checkLayer(
 			const parentPath = path.dirname(filePath)
 
 			// abstract class는 점검 대상에서 제외 (기반 클래스이므로 어노테이션/매핑이 없는 것이 정상)
-			if (isAbstractClass(filePath)) {
+			if (isAbstractClass(filePath, readFile)) {
 				console.log(`⏭️ Skipping abstract class: ${fileName}`)
 				continue
 			}
@@ -767,9 +755,9 @@ function checkLayer(
 			let methodCounts: Pick<ArchCheckResult, "mappedMethodCount" | "methodCount" | "hasClassLevelMapping"> = {}
 
 			if (layerType === "Controller") {
-				const controllerResult = checkControllerMethods(filePath)
+				const controllerResult = checkControllerMethods(filePath, readFile)
 				// check3 'DAO X'는 소극 조건: DAO 역할 타입을 주입받지 않아야 통과
-				const injectsDao = checkDaoInjection(filePath, daoTypeNames)
+				const injectsDao = checkDaoInjection(filePath, daoTypeNames, readFile)
 				checks = [controllerResult.hasControllerAnnotation, controllerResult.hasAllMappings, !injectsDao]
 				methodCounts = {
 					mappedMethodCount: controllerResult.mappedMethodCount,
@@ -777,7 +765,7 @@ function checkLayer(
 					hasClassLevelMapping: controllerResult.hasClassLevelMapping,
 				}
 			} else {
-				checks = checkServiceFile(filePath)
+				checks = checkServiceFile(filePath, context)
 			}
 
 			// 결과 판정: Controller·Service 모두 세 항목이 모두 통과해야 OK
@@ -913,12 +901,16 @@ export async function checkEgovArchitecture(
 		// 4. Controller 점검 ("DAO X"는 DAO 레이어 판정 대상 타입 이름을 본다)
 		progressCallback?.(`🔍 Checking Controller layer${via}...`)
 		results.Controller = summarize(
-			checkLayer(filesEndingWith(["Controller.java"]), "Controller", { daoTypeNames: daoOutcome.judgedTypeNames }),
+			checkLayer(filesEndingWith(["Controller.java"]), "Controller", {
+				index,
+				readFile,
+				daoTypeNames: daoOutcome.judgedTypeNames,
+			}),
 		)
 
 		// 5. Service 점검
 		progressCallback?.(`🔍 Checking Service layer${via}...`)
-		results.Service = summarize(checkLayer(filesEndingWith(["ServiceImpl.java"]), "Service"))
+		results.Service = summarize(checkLayer(filesEndingWith(["ServiceImpl.java"]), "Service", { index, readFile }))
 
 		progressCallback?.(`✅ Architecture check completed${via}`)
 		return results

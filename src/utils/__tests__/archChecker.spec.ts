@@ -14,6 +14,12 @@ import {
 import type { ProjectCheckSummary } from "../../shared/archCheck"
 import { resolveRipgrepPath } from "../ripgrepPath"
 
+// Service 상속 추적이 디렉터리를 다시 훑지 않는지 세기 위해 readdirSync만 호출 기록이 남는 래퍼로 바꾼다 (동작은 원본 그대로)
+vi.mock("fs", async (importOriginal) => {
+	const actual = await importOriginal<typeof import("fs")>()
+	return { ...actual, default: actual, readdirSync: vi.fn(actual.readdirSync) }
+})
+
 /** 저장소 node_modules에 npm이 설치한 @vscode/ripgrep 플랫폼 패키지의 rg가 있으면 ripgrep 경로도 검증한다 */
 const bundledRg = resolveRipgrepPath({ extensionPath: path.resolve(__dirname, "../../..") })
 
@@ -389,6 +395,58 @@ describe("판정 규칙 (fs 경로)", () => {
 			check3: true,
 			result: "NotFound",
 		})
+	})
+
+	it("Service check1: 부모 클래스는 색인으로 찾으므로 부모가 없는 ServiceImpl이 많아도 디렉터리를 다시 훑지 않는다", async () => {
+		const serviceCount = 300
+		const files: Record<string, string> = {}
+		for (let i = 0; i < serviceCount; i++) {
+			files[`${SRC}/service/impl/Svc${i}ServiceImpl.java`] =
+				`@Service\npublic class Svc${i}ServiceImpl extends MissingBase implements Svc${i}Service {}\n`
+		}
+		const root = makeProject(files)
+		const readdir = vi.mocked(fs.readdirSync)
+		readdir.mockClear()
+		const results = await checkEgovArchitecture(root)
+		expect(results.Service?.totalFiles).toBe(serviceCount)
+		expect(results.Service?.passedFiles).toBe(0)
+		// 종전에는 ServiceImpl마다 소스 루트를 재귀 스캔해 호출 수가 파일 수 × 디렉터리 수로 늘었다
+		expect(readdir.mock.calls.length).toBeLessThan(serviceCount)
+	})
+
+	it("Service check1: 부모 클래스 탐색은 projectPath 아래로 한정하고 심볼릭 링크는 따라가지 않는다", async () => {
+		const base = `public abstract class OutsideBase extends EgovAbstractServiceImpl {}\n`
+		// src/main이 없는 프로젝트: 종전 findSourceRoot의 최후 fallback은 파일의 세 단계 위(프로젝트 밖)를 소스 루트로 삼았다
+		const root = makeProject({
+			"svc/impl/AServiceImpl.java": `@Service\npublic class AServiceImpl extends OutsideBase implements AService {}\n`,
+			[`${SRC}/service/impl/BServiceImpl.java`]: `@Service\npublic class BServiceImpl extends LinkedBase implements BService {}\n`,
+		})
+		const outside = path.join(path.dirname(root), `outside-${path.basename(root)}`)
+		tempDirs.push(outside)
+		fs.mkdirSync(path.join(outside, "linked"), { recursive: true })
+		fs.writeFileSync(path.join(outside, "OutsideBase.java"), base)
+		fs.writeFileSync(
+			path.join(outside, "linked", "LinkedBase.java"),
+			`public abstract class LinkedBase extends EgovAbstractServiceImpl {}\n`,
+		)
+		fs.symlinkSync(path.join(outside, "linked"), path.join(root, SRC, "cmmn"), "dir")
+
+		const results = await checkEgovArchitecture(root)
+		expect(resultOf(results, "Service", "AServiceImpl.java")).toMatchObject({ check1: false, result: "NotFound" })
+		expect(resultOf(results, "Service", "BServiceImpl.java")).toMatchObject({ check1: false, result: "NotFound" })
+	})
+
+	it("Service check1: 부모 클래스가 다른 모듈에 있어도 프로젝트 색인에서 찾아 상속 체인을 추적한다", async () => {
+		const root = makeProject({
+			"common/src/main/java/egov/cmmn/CommonBase.java": `package egov.cmmn;\npublic abstract class CommonBase extends EgovAbstractServiceImpl {}\n`,
+			"web/src/main/java/egov/web/CServiceImpl.java": `package egov.web;\nimport egov.cmmn.CommonBase;\n@Service\npublic class CServiceImpl extends CommonBase implements CService {}\n`,
+			// 동명 부모가 둘이면 자식의 package·import로 고른다: 이 import는 EgovAbstractServiceImpl 계열이 아닌 쪽을 가리킨다
+			"other/src/main/java/egov/other/CommonBase.java": `package egov.other;\npublic abstract class CommonBase {}\n`,
+			"web/src/main/java/egov/web/DServiceImpl.java": `package egov.web;\nimport egov.other.CommonBase;\n@Service\npublic class DServiceImpl extends CommonBase implements DService {}\n`,
+		})
+		const results = await checkEgovArchitecture(root)
+		expect(resultOf(results, "Service", "CServiceImpl.java")).toMatchObject({ check1: true, result: "OK" })
+		expect(resultOf(results, "Service", "DServiceImpl.java")).toMatchObject({ check1: false, result: "NotFound" })
 	})
 
 	it("Service check3: 클래스 선언부의 implements 목록에 Service로 끝나는 인터페이스가 있어야 한다", async () => {
