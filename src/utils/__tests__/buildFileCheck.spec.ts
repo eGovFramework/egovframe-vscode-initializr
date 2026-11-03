@@ -262,6 +262,32 @@ dependencies {
 		expect(summary.result).toBe("Unknown")
 	})
 
+	it("egovframe-boot-starter-* 선언은 실행환경 모듈을 끌어오지 않으므로 누락을 unknown으로 낮추지 않는다", () => {
+		// 5.0.0 starter(access·crypto·security)의 pom에는 org.egovframe.rte 의존성이 없다 (소스 jar의 META-INF/maven pom으로 확인)
+		const summary = run({
+			"/p/pom.xml": pom(`
+${parent("org.egovframe.boot", "egovframe-boot-starter-parent", "5.0.0")}
+<groupId>egovframework</groupId><artifactId>boot</artifactId><version>1.0.0</version>
+${deps(
+	rte5("ptl-mvc"),
+	dep("org.egovframe.boot", "egovframe-boot-starter-security", "${egovframe.boot.starter.version}"),
+	dep("org.egovframe.boot", "egovframe-boot-starter-crypto", "${egovframe.boot.starter.version}"),
+)}
+`),
+		})
+		const module = moduleOf(summary, "pom.xml")
+		expect(module.runtime).toMatchObject({ generation: "5.x", version: "5.0.0", source: "bom" })
+		expect(statuses(module)).toEqual([
+			"ptl-mvc:direct",
+			"fdl-cmmn:transitive",
+			"fdl-logging:transitive",
+			"psl-dataaccess:missing",
+		])
+		expect(lib(module, "psl-dataaccess")).toEqual({ name: "psl-dataaccess", status: "missing", evidence: "not declared" })
+		expect(module.result).toBe("NotFound")
+		expect(summary.result).toBe("NotFound")
+	})
+
 	it("멀티 모듈 Maven: 집계 pom Skipped, 자식은 parent 의존성을 물려받고 moduleForFile은 세그먼트로 비교", () => {
 		const summary = run({
 			"/p/pom.xml": multiRootPom(),

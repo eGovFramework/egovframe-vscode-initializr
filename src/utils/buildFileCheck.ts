@@ -147,13 +147,14 @@ function isEgovBom(coordinate: MavenCoordinate | undefined): coordinate is Maven
 	return coordinate !== undefined && EGOV_BOM_ARTIFACTS.has(coordinate.artifactId)
 }
 
-/** 그래프 밖 표준프레임워크 아티팩트 (선언하면 missing·excluded를 unknown으로 낮춘다) */
-function isOutsideArtifact(groupId: string, artifactId: string): boolean {
-	return (
-		groupId === "org.egovframe.cloud" ||
-		groupId === "egovframework.com.ems" ||
-		(groupId === "org.egovframe.boot" && artifactId.startsWith("egovframe-boot-starter-"))
-	)
+/**
+ * 그래프 밖 표준프레임워크 아티팩트 (선언하면 missing·excluded를 unknown으로 낮춘다).
+ * 실행환경 모듈을 끌어올 수 있다고 확인된 좌표만 넣는다 — org.egovframe.cloud(module-common이 fdl-cmmn을 선언),
+ * egovframework.com.ems. org.egovframe.boot:egovframe-boot-starter-{access,crypto,security} 5.0.0은 pom에
+ * org.egovframe.rte 의존성이 없고 소스도 실행환경 클래스를 import하지 않으므로(2026-11-03 소스 jar 확인) 여기에 넣지 않는다.
+ */
+function isOutsideArtifact(groupId: string, _artifactId: string): boolean {
+	return groupId === "org.egovframe.cloud" || groupId === "egovframework.com.ems"
 }
 
 /** exclusion 좌표 → 모듈 키 또는 "*" (실행환경과 무관하면 null) */
