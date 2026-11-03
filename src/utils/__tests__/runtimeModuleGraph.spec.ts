@@ -12,7 +12,7 @@ import {
 	toModuleKey,
 } from "../runtimeModuleGraph"
 
-const BRANCHES: RuntimeGraphBranch[] = ["3.9.x", "3.10.x", "4.0.x", "4.1.x", "4.2.x", "4.3.x", "5.0.x"]
+const BRANCHES: RuntimeGraphBranch[] = ["3.9.x", "3.10.x", "4.0.x", "4.1.x", "4.2.x", "4.3.x", "5.0.x", "5.1.x"]
 const G = RUNTIME_MODULE_GRAPH
 const dep = (key: string, exclusions: string[] = []): DirectDependency => ({ key, exclusions, evidence: key })
 const sorted = (g: ModuleGraph) =>
@@ -71,6 +71,23 @@ describe("runtimeModuleGraph", () => {
 		expect(selectGraphBranch("4.x", "4.1.0")).toBe("4.1.x")
 		expect(selectGraphBranch("4.x")).toBe("4.3.x")
 		expect(selectGraphBranch("5.x", "5.0.2")).toBe("5.0.x")
+		// 5.1.x 그래프는 베타 소스 기준이므로 버전이 5.1.으로 시작할 때만 쓰고, 버전을 모르면 정식 5.0.x를 쓴다
+		expect(selectGraphBranch("5.x", "5.1.0")).toBe("5.1.x")
+		expect(selectGraphBranch("5.x")).toBe("5.0.x")
+	})
+
+	it("5.1.x: AI 모듈 3개가 추가되고 필수 라이브러리 4종의 도달 경로는 5.0.x와 같다", () => {
+		expect(Object.keys(G["5.1.x"]).filter((k) => !(k in G["5.0.x"]))).toEqual(["ai-core", "ai-langchain4j", "ai-springai"])
+		expect(G["5.1.x"]["ai-langchain4j"]).toEqual(["ai-core"])
+		expect(G["5.1.x"]["ai-springai"]).toEqual(["ai-core"])
+		expect(toModuleKey("egovframe-rte-ai-core")).toBe("ai-core")
+		const d = [dep("ptl-mvc"), dep("psl-dataaccess")]
+		for (const target of ["ptl-mvc", "fdl-cmmn", "fdl-logging", "psl-dataaccess"]) {
+			expect(reachRequiredLibrary(target, d, G["5.1.x"])).toEqual(reachRequiredLibrary(target, d, G["5.0.x"]))
+		}
+		for (const key of Object.keys(G["5.0.x"])) {
+			expect(G["5.1.x"][key]).toEqual(G["5.0.x"][key])
+		}
 	})
 
 	it("5.0.x: ptl-mvc·psl-dataaccess 직접 선언이면 cmmn·logging은 전이", () => {

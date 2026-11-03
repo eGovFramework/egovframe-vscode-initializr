@@ -5,6 +5,9 @@
  *
  * RUNTIME_MODULE_GRAPH 출처: GitHub eGovFramework/egovframe-runtime 각 브랜치(3.9.x, 3.10.x, 4.0.x, 4.1.x, 4.2.x, 4.3.x, 5.0.x)의
  * 모듈 pom.xml에서 추출한 모듈 간 compile 의존 (추출일 2026-10-28).
+ * 5.1.x는 실행환경 v5.1.0 **베타** sources jar(egovframe-rte-*-5.1.0-sources.jar)의 META-INF/maven pom.xml에서 추출했다
+ * (추출일 2026-11-03). 정식 5.1.0에서 모듈 구성·의존이 바뀔 수 있으므로 정식 릴리스 뒤 다시 추출해 확인해야 한다.
+ * 5.0.x와의 차이는 AI 모듈 3개(ai-core, ai-langchain4j, ai-springai)가 추가된 것뿐이고 필수 라이브러리 4종의 도달 경로는 같다.
  * 재생성 방법: 브랜치별 추출 파일(graph-<branch>.txt)을 한 줄씩 읽어
  *  - `artifact=` 줄의 두 번째 `:` 조각(artifactId)을 toModuleKey로 바꿔 모듈 키로 삼는다 (artifactId가 비었거나 키가 null이면 건너뜀)
  *  - `dep ` 줄 중 scope=compile, optional=false이고 의존 artifactId의 toModuleKey가 null이 아닌 것만 간선으로 선언 순서대로 넣는다
@@ -13,7 +16,7 @@
  */
 import type { RequiredLibraryName, RuntimeGeneration } from "../shared/archCheck"
 
-export type RuntimeGraphBranch = "3.9.x" | "3.10.x" | "4.0.x" | "4.1.x" | "4.2.x" | "4.3.x" | "5.0.x"
+export type RuntimeGraphBranch = "3.9.x" | "3.10.x" | "4.0.x" | "4.1.x" | "4.2.x" | "4.3.x" | "5.0.x" | "5.1.x"
 /** 모듈 키 → compile 의존 모듈 키(실행환경 모듈만, 선언 순서) */
 export type ModuleGraph = Record<string, string[]>
 
@@ -179,6 +182,35 @@ export const RUNTIME_MODULE_GRAPH: Record<RuntimeGraphBranch, ModuleGraph> = {
 		"ptl-mvc": ["fdl-cmmn", "fdl-filehandling"],
 		"ptl-reactive": ["fdl-logging"],
 	},
+	"5.1.x": {
+		"ai-core": [],
+		"ai-langchain4j": ["ai-core"],
+		"ai-springai": ["ai-core"],
+		"bat-core": ["fdl-cmmn", "psl-dataaccess"],
+		"fdl-access": ["fdl-cmmn"],
+		"fdl-cmmn": ["fdl-logging"],
+		"fdl-crypto": ["fdl-property"],
+		"fdl-excel": ["fdl-cmmn", "fdl-filehandling", "psl-dataaccess"],
+		"fdl-filehandling": ["fdl-string"],
+		"fdl-idgnr": ["fdl-cmmn"],
+		"fdl-logging": [],
+		"fdl-property": ["fdl-cmmn"],
+		"fdl-reactive": ["fdl-logging"],
+		"fdl-security": ["fdl-string"],
+		"fdl-string": ["fdl-logging"],
+		"fdl-xml": ["fdl-logging"],
+		"itl-integration": ["fdl-logging"],
+		"itl-webservice": ["itl-integration"],
+		"psl-data-jpa": ["psl-dataaccess"],
+		"psl-data-mongodb": ["fdl-cmmn"],
+		"psl-dataaccess": ["fdl-logging"],
+		"psl-reactive-cassandra": ["fdl-logging"],
+		"psl-reactive-mongodb": ["fdl-cmmn"],
+		"psl-reactive-r2dbc": ["fdl-cmmn"],
+		"psl-reactive-redis": ["fdl-cmmn"],
+		"ptl-mvc": ["fdl-cmmn", "fdl-filehandling"],
+		"ptl-reactive": ["fdl-logging"],
+	},
 }
 
 const ARTIFACT_PREFIXES: ReadonlyArray<{ prefix: string; generation: RuntimeGeneration }> = [
@@ -207,7 +239,11 @@ export function generationOfArtifactId(artifactId: string): RuntimeGeneration | 
 	return null
 }
 
-/** 세대와 (알면) 버전으로 쓸 그래프 브랜치를 고른다 */
+/**
+ * 세대와 (알면) 버전으로 쓸 그래프 브랜치를 고른다.
+ * 5.x는 버전이 5.1.으로 시작할 때만 5.1.x(베타 기준 그래프)를 쓰고, 버전을 모르거나 5.0.이면 정식 릴리스인 5.0.x를 쓴다
+ * (4.x처럼 최신 브랜치를 기본값으로 두지 않는 이유: 5.1.x 그래프가 베타 소스에서 추출된 것이기 때문).
+ */
 export function selectGraphBranch(generation: RuntimeGeneration, version?: string): RuntimeGraphBranch {
 	if (generation === "3.x") {
 		return version?.startsWith("3.9.") ? "3.9.x" : "3.10.x"
@@ -224,7 +260,7 @@ export function selectGraphBranch(generation: RuntimeGeneration, version?: strin
 		}
 		return "4.3.x"
 	}
-	return "5.0.x"
+	return version?.startsWith("5.1.") ? "5.1.x" : "5.0.x"
 }
 
 export interface DirectDependency {

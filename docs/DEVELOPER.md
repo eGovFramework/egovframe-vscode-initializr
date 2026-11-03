@@ -259,7 +259,7 @@ CheckArch 탭의 점검은 확장 호스트의 순수 모듈들이 수행합니�
 
 ### 실행환경 모듈 그래프 상수
 
-`RUNTIME_MODULE_GRAPH`는 GitHub `eGovFramework/egovframe-runtime`의 브랜치(3.9.x, 3.10.x, 4.0.x, 4.1.x, 4.2.x, 4.3.x, 5.0.x)별 모듈 `pom.xml`에서 2026-10-28에 추출한 모듈 간 compile 의존입니다. 추출 원본은 `src/utils/__tests__/fixtures/runtime-graph/graph-<branch>.txt`에 있고, 변환 규칙은 `runtimeModuleGraph.ts` 머리 주석과 `runtimeModuleGraph.spec.ts`의 `parseFixture`에 적혀 있습니다.
+`RUNTIME_MODULE_GRAPH`는 GitHub `eGovFramework/egovframe-runtime`의 브랜치(3.9.x, 3.10.x, 4.0.x, 4.1.x, 4.2.x, 4.3.x, 5.0.x)별 모듈 `pom.xml`에서 2026-10-28에 추출한 모듈 간 compile 의존입니다. 5.1.x는 실행환경 v5.1.0 **베타** sources jar의 `META-INF/maven` pom에서 2026-11-03에 추출한 것으로(AI 모듈 `ai-core`·`ai-langchain4j`·`ai-springai` 추가, 필수 라이브러리 4종 도달 경로는 5.0.x와 동일), 정식 5.1.0 릴리스 뒤 다시 추출해 확인해야 합니다. `selectGraphBranch`는 버전이 `5.1.`로 시작할 때만 5.1.x를 쓰고 버전을 모르면 정식 5.0.x를 씁니다. 추출 원본은 `src/utils/__tests__/fixtures/runtime-graph/graph-<branch>.txt`에 있고, 변환 규칙은 `runtimeModuleGraph.ts` 머리 주석과 `runtimeModuleGraph.spec.ts`의 `parseFixture`에 적혀 있습니다.
 
 새 실행환경 버전이 나와 그래프가 바뀌면 다음 순서로 갱신합니다.
 

@@ -59,9 +59,9 @@ const EGOV_BOM_ARTIFACTS = new Set([
 const RUNTIME_GROUPS = new Set(["org.egovframe.rte", "egovframework.rte"])
 const MAVEN_SCOPES = new Set(["compile", "runtime", "provided"])
 const MAX_DEPTH = 5
-const UNION_BRANCHES: RuntimeGraphBranch[] = ["3.10.x", "4.3.x", "5.0.x"]
+const UNION_BRANCHES: RuntimeGraphBranch[] = ["3.10.x", "4.3.x", "5.0.x", "5.1.x"]
 
-/** 세대를 모를 때 쓰는 3.10.x·4.3.x·5.0.x 그래프의 합집합 */
+/** 세대를 모를 때 쓰는 3.10.x·4.3.x·5.0.x·5.1.x 그래프의 합집합 */
 const UNION_GRAPH: ModuleGraph = (() => {
 	const graph: ModuleGraph = {}
 	for (const branch of UNION_BRANCHES) {

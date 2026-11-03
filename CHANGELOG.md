@@ -2,6 +2,7 @@
 
 ## Unreleased
 - Architecture Check
+  - 실행환경 모듈 의존 그래프에 5.1.x 추가. v5.1.0 베타 sources jar의 pom에서 추출했으며(AI 모듈 `ai-core`·`ai-langchain4j`·`ai-springai` 추가, 필수 라이브러리 4종의 도달 경로는 5.0.x와 동일) 버전이 `5.1.`로 시작하는 모듈에만 쓴다. 베타 기준이므로 정식 5.1.0 릴리스 뒤 재추출이 필요하다
   - 번들 빌드에서 `@vscode/ripgrep`의 `rgPath`가 존재하지 않는 경로를 가리켜 ripgrep이 한 번도 동작하지 않고 항상 fs 재귀 탐색으로 떨어지던 문제 수정. 확장이 rg를 배포하는 대신 VS Code가 설치한 rg를 쓴다. 탐색 순서는 Cline 확장과 같은 고정 후보 6개(`vscode.env.appRoot` 아래 `@vscode/ripgrep-universal/bin/<platform>-<arch>/rg`, `@vscode/ripgrep/bin/rg`, `vscode-ripgrep/bin/rg`의 `node_modules`·`node_modules.asar.unpacked` 배치) → `@vscode/ripgrep*` 패키지 디렉터리 나열 → 시스템 rg(`/usr/bin`, `/opt/homebrew/bin`, `/usr/local/bin`, PATH) → 개발 환경의 저장소 node_modules `@vscode/ripgrep` 1.18.0 플랫폼 패키지 → fs 탐색. 엔진은 `vscode` 의존 없이 rg 경로를 주입받고, 이 프로젝트는 esbuild CJS 번들 방식이라서 esm 전용인 `@vscode/ripgrep`은 런타임 import 없이 devDependency 1.18.0으로 올림.
   - fs 대체 경로가 글롭을 잘못 변환해 경로에 `Controller.java`가 포함되기만 하면(e.g., `*Controller.java.bak` 등) 매칭되고, 숨김 디렉터리·`target/`·`build/`·`node_modules/`·`out/`·`dist/`까지 모두 훑던 문제 수정. ripgrep 경로에도 같은 제외 글롭을 적용해 git 저장소 여부와 무관하게 두 경로의 결과가 같도록 함. `archChecker`·`ripgrepPath` 단위 테스트 추가
   - Controller 매핑 판정 결과에 매핑된 public 메서드 수와 점검 대상 메서드 수, 클래스 레벨 `@RequestMapping` 여부를 실어, 상세 결과의 Mapping 칸과 CSV의 Mapping Annotation 열에 FAIL / Class level / a/b / PASS로 표시. 판정 규칙은 그대로이며 일부 메서드만 매핑된 경우를 알아볼 수 있게 함
