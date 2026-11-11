@@ -12,8 +12,8 @@ describe("templates/templates-projects.json", () => {
 	it("다운로드 경로·파일명·해시 형식 규칙을 모두 지킨다", async () => {
 		const manifest = await loadProjectTemplatesManifest(extensionPath)
 
-		// TODO: 4.3 릴리스 자산이 모두 업로드되고 해시가 기록되면 requireSha256: true로 올린다
-		expect(collectManifestIssues(manifest)).toEqual([])
+		// 다운로드 대상 버전은 모두 sha256(POM이 있으면 pomSha256)을 기록해야 한다 — 누락은 호스트가 다운로드를 거부한다
+		expect(collectManifestIssues(manifest, { requireSha256: true })).toEqual([])
 	})
 
 	it("모든 (templateId, version) 조합이 호스트에서 확정된다", async () => {
@@ -26,12 +26,13 @@ describe("templates/templates-projects.json", () => {
 		}
 	})
 
-	it("Boot > Web Project 4.3.1은 다운로드 대상이며 ZIP·POM 해시가 기록되어 있다", async () => {
+	it("Boot > Web Project 4.3.2는 다운로드 대상이며 v4.3.2 릴리스 자산의 ZIP·POM 해시가 기록되어 있다", async () => {
 		const manifest = await loadProjectTemplatesManifest(extensionPath)
-		const resolved = resolveProjectTemplate(manifest, "boot-web-project", "4.3.1")
+		const resolved = resolveProjectTemplate(manifest, "boot-web-project", "4.3.2")
 
 		expect(resolved.included).toBe(false)
-		expect(resolved.sha256).toBe("46b1d649bee0d3b71d7a430f6f090ff49fa5446bcef5154c30543744566302b0")
-		expect(resolved.pomSha256).toBe("8197e367ab307d5d03bd75ecd52edfb875ea01f18e4fc86d71b0cea45dab0a73")
+		expect(resolved.downloadUrl).toBe("v4.3.2/egovframe-boot-web.zip")
+		expect(resolved.sha256).toBe("198fea08152906cd3ba58f4f42f90908e1d75c453fb1ffb1ca5ea52b1663a547")
+		expect(resolved.pomSha256).toBe("e49d2ed79ed758db90100a1b3a6fb04f2bd9ddd182a47a033e027d29d85ffb53")
 	})
 })
