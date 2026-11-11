@@ -5,8 +5,8 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>###GROUP_ID###</groupId>
 	<artifactId>###ARTIFACT_ID###</artifactId>
-	<packaging>war</packaging>
 	<version>###VERSION###</version>
+	<packaging>war</packaging>
 	<name>###NAME###</name>
 	<url>###URL###</url>
 
@@ -17,11 +17,10 @@
 		</license>
 	</licenses>
 
-	<!-- eGovFramework Web Parent 설정 -->
 	<parent>
 		<groupId>org.egovframe.web</groupId>
 		<artifactId>egovframe-web-config-parent</artifactId>
-		<version>5.0.0</version>
+		<version>5.1.0</version>
 	</parent>
 
 	<repositories>
@@ -32,7 +31,7 @@
 				<enabled>true</enabled>
 			</releases>
 			<snapshots>
-				<enabled>true</enabled>
+				<enabled>false</enabled>
 			</snapshots>
 		</repository>
 		<repository>
@@ -51,12 +50,25 @@
 		<java.version>17</java.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-		<log4j2.version>2.25.3</log4j2.version>
-		<slf4j.version>2.0.17</slf4j.version>
-		<commons-beanutils.version>1.11.0</commons-beanutils.version>
-		<protobuf.java.version>3.25.5</protobuf.java.version>
-		<parsson.version>1.1.7</parsson.version>
+		<hikaricp.version>6.3.3</hikaricp.version>
+		<lombok.version>1.18.48</lombok.version>
+		<!-- 부모 POM 관리 버전의 보안·버그 패치 반영 -->
+		<postgresql.version>42.7.14</postgresql.version>
+		<commons-codec.version>1.23.0</commons-codec.version>
+		<!-- 테스트 전용: Spring 6 MockMvc 가 Servlet 6.0 API 를 참조 -->
+		<test.jakarta.servlet-api.version>6.0.0</test.jakarta.servlet-api.version>
 	</properties>
+
+	<!-- 전이 의존성 버전 고정 : commons-codec (egovframe-rte-fdl-crypto 경유) -->
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>commons-codec</groupId>
+				<artifactId>commons-codec</artifactId>
+				<version>${commons-codec.version}</version>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
 
 	<dependencies>
 		<!-- 표준프레임워크 실행환경 -->
@@ -78,18 +90,39 @@
 		</dependency>
 		<dependency>
 			<groupId>org.egovframe.rte</groupId>
-			<artifactId>egovframe-rte-fdl-string</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.egovframe.rte</groupId>
 			<artifactId>egovframe-rte-fdl-crypto</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.egovframe.rte</groupId>
+			<artifactId>egovframe-rte-fdl-security</artifactId>
+		</dependency>
+		<!-- 입력값 검증 애노테이션(@EgovNullCheck) 제공. 검증기는 Bean Validation 만 사용하므로 WebFlux/Reactor 제외 -->
+		<dependency>
+			<groupId>org.egovframe.rte</groupId>
 			<artifactId>egovframe-rte-ptl-reactive</artifactId>
+			<exclusions>
+				<exclusion>
+					<groupId>org.springframework</groupId>
+					<artifactId>spring-webflux</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 
-		<!-- Jakarta Bean Validation -->
+		<!-- Spring Security : 인증/인가, BCrypt, CSRF, JSP 태그 -->
+		<dependency>
+			<groupId>org.springframework.security</groupId>
+			<artifactId>spring-security-web</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.security</groupId>
+			<artifactId>spring-security-config</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.security</groupId>
+			<artifactId>spring-security-taglibs</artifactId>
+		</dependency>
+
+		<!-- Bean Validation -->
 		<dependency>
 			<groupId>jakarta.validation</groupId>
 			<artifactId>jakarta.validation-api</artifactId>
@@ -99,139 +132,83 @@
 			<artifactId>hibernate-validator</artifactId>
 		</dependency>
 
-		<!-- Jakarta -->
+		<!-- Servlet / JSP / JSTL (Servlet·JSP API 는 WAS 제공) -->
 		<dependency>
 			<groupId>jakarta.servlet</groupId>
 			<artifactId>jakarta.servlet-api</artifactId>
 			<scope>provided</scope>
 		</dependency>
-		<!-- JSP 구문을 지원하기 위한 표준 사양 -->
 		<dependency>
 			<groupId>jakarta.servlet.jsp</groupId>
 			<artifactId>jakarta.servlet.jsp-api</artifactId>
 			<scope>provided</scope>
 		</dependency>
-		<!-- JSTL 태그의 표준 사양 -->
 		<dependency>
 			<groupId>jakarta.servlet.jsp.jstl</groupId>
 			<artifactId>jakarta.servlet.jsp.jstl-api</artifactId>
 		</dependency>
-		<!-- JSTL 구현체 -->
 		<dependency>
 			<groupId>org.glassfish.web</groupId>
 			<artifactId>jakarta.servlet.jsp.jstl</artifactId>
 		</dependency>
 
-		<!-- SLF4J API 및 Log4j2 바인딩 -->
-		<!-- CVE-2025-68161: 취약점 보완용 업데이트 -->
+		<!-- 로깅 : SLF4J -> Log4j2 -->
 		<dependency>
 			<groupId>org.apache.logging.log4j</groupId>
 			<artifactId>log4j-core</artifactId>
-			<version>${log4j2.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.logging.log4j</groupId>
 			<artifactId>log4j-slf4j2-impl</artifactId>
-			<version>${log4j2.version}</version>
 		</dependency>
-		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-api</artifactId>
-			<version>${slf4j.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>jcl-over-slf4j</artifactId>
-			<version>${slf4j.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>log4j-over-slf4j</artifactId>
-			<version>${slf4j.version}</version>
-		</dependency>
-
+		<!-- SQL 로깅 (Globals.DriverClassName=net.sf.log4jdbc.DriverSpy) -->
 		<dependency>
 			<groupId>com.googlecode.log4jdbc</groupId>
 			<artifactId>log4jdbc</artifactId>
 			<exclusions>
 				<exclusion>
-					<artifactId>slf4j-api</artifactId>
 					<groupId>org.slf4j</groupId>
+					<artifactId>slf4j-api</artifactId>
 				</exclusion>
 			</exclusions>
 		</dependency>
 
-		<!-- CVE-2025-48734: 취약점 보완용 업데이트 -->
+		<!-- DB : 커넥션 풀 및 JDBC 드라이버 (그 외 DB 는 드라이버를 추가) -->
 		<dependency>
-			<groupId>commons-beanutils</groupId>
-			<artifactId>commons-beanutils</artifactId>
-			<version>${commons-beanutils.version}</version>
-		</dependency>
-
-		<dependency>
-			<groupId>org.apache.commons</groupId>
-			<artifactId>commons-dbcp2</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>commons-codec</groupId>
-			<artifactId>commons-codec</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>cglib</groupId>
-			<artifactId>cglib</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.antlr</groupId>
-			<artifactId>antlr4</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.commons</groupId>
-			<artifactId>commons-compress</artifactId>
+			<groupId>com.zaxxer</groupId>
+			<artifactId>HikariCP</artifactId>
+			<version>${hikaricp.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.hsqldb</groupId>
 			<artifactId>hsqldb</artifactId>
 		</dependency>
-
-		<!-- mysql driver -->
 		<dependency>
 			<groupId>com.mysql</groupId>
 			<artifactId>mysql-connector-j</artifactId>
+			<!-- X DevAPI 전용(JDBC 미사용) -->
+			<exclusions>
+				<exclusion>
+					<groupId>com.google.protobuf</groupId>
+					<artifactId>protobuf-java</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>org.postgresql</groupId>
+			<artifactId>postgresql</artifactId>
 		</dependency>
 
-		<!-- CVE-2024-7254: mysql-connector-j에서 주입되는 protobuf-java 3.25.1 취약점
-		보완용 직접 주입 -->
-		<dependency>
-			<groupId>com.google.protobuf</groupId>
-			<artifactId>protobuf-java</artifactId>
-			<version>${protobuf.java.version}</version>
-		</dependency>
-
-		<dependency>
-			<groupId>com.ibm.icu</groupId>
-			<artifactId>icu4j</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.eclipse</groupId>
-			<artifactId>yasson</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.glassfish</groupId>
-			<artifactId>jakarta.json</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.junit.jupiter</groupId>
-			<artifactId>junit-jupiter-api</artifactId>
-			<scope>test</scope>
-		</dependency>
 		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
 			<scope>provided</scope>
 		</dependency>
+
+		<!-- 테스트 -->
 		<dependency>
-			<groupId>org.seleniumhq.selenium</groupId>
-			<artifactId>selenium-java</artifactId>
+			<groupId>org.junit.jupiter</groupId>
+			<artifactId>junit-jupiter-api</artifactId>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
@@ -239,12 +216,16 @@
 			<artifactId>spring-test</artifactId>
 			<scope>test</scope>
 		</dependency>
-
-		<!-- CVE-2023-7272/CVE-2023-4043: 취약점 보완용 업데이트 -->
 		<dependency>
-			<groupId>org.eclipse.parsson</groupId>
-			<artifactId>parsson</artifactId>
-			<version>${parsson.version}</version>
+			<groupId>org.springframework.security</groupId>
+			<artifactId>spring-security-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<!-- EL 구현체 : 테스트 시 Bean Validation 메시지 보간용 (운영은 WAS 제공) -->
+		<dependency>
+			<groupId>org.glassfish</groupId>
+			<artifactId>jakarta.el</artifactId>
+			<scope>test</scope>
 		</dependency>
 	</dependencies>
 
@@ -252,12 +233,32 @@
 		<defaultGoal>install</defaultGoal>
 		<directory>${basedir}/target</directory>
 		<finalName>${project.artifactId}-${project.version}</finalName>
+		<resources>
+			<resource>
+				<directory>src/main/resources</directory>
+			</resource>
+			<!-- 내장 HSQL DB 초기화 스크립트 : DATABASE/hsql 을 classpath:/db/hsql 로 패키징 -->
+			<resource>
+				<directory>DATABASE/hsql</directory>
+				<targetPath>db/hsql</targetPath>
+				<includes>
+					<include>all_*_hsql.sql</include>
+				</includes>
+			</resource>
+		</resources>
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
 				<configuration>
 					<release>${java.version}</release>
+					<annotationProcessorPaths>
+						<path>
+							<groupId>org.projectlombok</groupId>
+							<artifactId>lombok</artifactId>
+							<version>${lombok.version}</version>
+						</path>
+					</annotationProcessorPaths>
 				</configuration>
 			</plugin>
 			<plugin>
@@ -267,17 +268,14 @@
 					<failOnMissingWebXml>false</failOnMissingWebXml>
 				</configuration>
 			</plugin>
-			<!-- PMD manven plugin -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-pmd-plugin</artifactId>
 			</plugin>
-			<!-- EMMA -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
 				<configuration>
-					<skipTests>true</skipTests>
 					<reportFormat>xml</reportFormat>
 					<excludes>
 						<exclude>**/Abstract*.java</exclude>
@@ -286,9 +284,19 @@
 					<includes>
 						<include>**/*Test.java</include>
 					</includes>
+					<!-- 테스트 실행 시에만 Servlet 6.0 API 로 교체 -->
+					<classpathDependencyExcludes>
+						<classpathDependencyExclude>jakarta.servlet:jakarta.servlet-api</classpathDependencyExclude>
+					</classpathDependencyExcludes>
+					<additionalClasspathDependencies>
+						<additionalClasspathDependency>
+							<groupId>jakarta.servlet</groupId>
+							<artifactId>jakarta.servlet-api</artifactId>
+							<version>${test.jakarta.servlet-api.version}</version>
+						</additionalClasspathDependency>
+					</additionalClasspathDependencies>
 				</configuration>
 			</plugin>
-			<!--  JavaDoc -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-javadoc-plugin</artifactId>

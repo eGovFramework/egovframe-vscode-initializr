@@ -5,7 +5,7 @@
     <parent>
 		<groupId>org.egovframe.boot</groupId>
 		<artifactId>egovframe-boot-starter-parent</artifactId>
-		<version>5.0.0</version>
+		<version>5.1.0</version>
 		<relativePath/>
 	</parent>
 
@@ -18,6 +18,9 @@
 
     <properties>
         <java.version>17</java.version>
+        <!-- DJL PyTorch 네이티브 버전 -->
+        <djl.version>0.32.0</djl.version>
+        <djl.pytorch.version>2.5.1</djl.pytorch.version>
     </properties>
 
     <repositories>
@@ -81,6 +84,21 @@
             <groupId>org.springframework.ai</groupId>
             <artifactId>spring-ai-starter-model-transformers</artifactId>
         </dependency>
+        <!-- DJL PyTorch 네이티브 라이브러리 -->
+        <dependency>
+            <groupId>ai.djl.pytorch</groupId>
+            <artifactId>pytorch-native-cpu</artifactId>
+            <version>${djl.pytorch.version}</version>
+            <classifier>${djl.pytorch.classifier}</classifier>
+            <scope>runtime</scope>
+        </dependency>
+        <!-- JNI 브리지. 모든 OS의 바이너리가 한 jar에 들어 있어 classifier가 없다. -->
+        <dependency>
+            <groupId>ai.djl.pytorch</groupId>
+            <artifactId>pytorch-jni</artifactId>
+            <version>${djl.pytorch.version}-${djl.version}</version>
+            <scope>runtime</scope>
+        </dependency>
         <dependency>
             <groupId>org.springframework.ai</groupId>
             <artifactId>spring-ai-pdf-document-reader</artifactId>
@@ -88,6 +106,11 @@
         <dependency>
             <groupId>org.springframework.ai</groupId>
             <artifactId>spring-ai-markdown-document-reader</artifactId>
+        </dependency>
+        <!-- MS Word(.docx) 문서 파싱 (POI는 egovframe-rte-fdl-excel 전이 의존성으로 제공) -->
+        <dependency>
+            <groupId>org.egovframe.rte</groupId>
+            <artifactId>egovframe-rte-fdl-excel</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -120,10 +143,27 @@
 				</exclusion>
 			</exclusions>
 		</dependency>
+        <!-- HWP 문서 파싱 (공공 행정문서 지원) -->
+        <dependency>
+            <groupId>kr.dogfoot</groupId>
+            <artifactId>hwplib</artifactId>
+            <version>1.1.9</version>
+        </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <optional>true</optional>
+        </dependency>
+        <!-- HWPX 문서 파싱 (한글 .hwpx 형식, Apache-2.0) -->
+        <dependency>
+            <groupId>kr.dogfoot</groupId>
+            <artifactId>hwpxlib</artifactId>
+            <version>1.0.8</version>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -131,6 +171,36 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+
+    <profiles>
+        <profile>
+            <id>djl-native-windows</id>
+            <activation>
+                <os><family>windows</family></os>
+            </activation>
+            <properties>
+                <djl.pytorch.classifier>win-x86_64</djl.pytorch.classifier>
+            </properties>
+        </profile>
+        <profile>
+            <id>djl-native-linux</id>
+            <activation>
+                <os><name>linux</name></os>
+            </activation>
+            <properties>
+                <djl.pytorch.classifier>linux-x86_64</djl.pytorch.classifier>
+            </properties>
+        </profile>
+        <profile>
+            <id>djl-native-mac</id>
+            <activation>
+                <os><family>mac</family></os>
+            </activation>
+            <properties>
+                <djl.pytorch.classifier>osx-aarch64</djl.pytorch.classifier>
+            </properties>
+        </profile>
+    </profiles>
 
     <build>
         <plugins>

@@ -1,47 +1,31 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>###GROUP_ID###</groupId>
 	<artifactId>###ARTIFACT_ID###</artifactId>
-	<packaging>jar</packaging>
 	<version>###VERSION###</version>
+	<packaging>war</packaging>
 	<name>###NAME###</name>
 	<url>###URL###</url>
 
 	<licenses>
 		<license>
 			<name>The Apache Software License, Version 2.0</name>
-			<url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+			<url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
 		</license>
 	</licenses>
 
-	<!-- eGovFramework Boot Parent 설정 -->
+	<!-- eGovFrame Boot Parent -->
 	<parent>
 		<groupId>org.egovframe.boot</groupId>
 		<artifactId>egovframe-boot-starter-parent</artifactId>
-		<version>5.0.0</version>
+		<version>5.1.0</version>
+		<relativePath/>
 	</parent>
 
-	<properties>
-		<java.version>17</java.version>
-		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-		<protobuf.java.version>3.25.5</protobuf.java.version>
-	</properties>
-
 	<repositories>
-		<repository>
-			<id>mvn2s</id>
-			<url>https://repo1.maven.org/maven2/</url>
-			<releases>
-				<enabled>true</enabled>
-			</releases>
-			<snapshots>
-				<enabled>true</enabled>
-			</snapshots>
-		</repository>
 		<repository>
 			<id>egovframe</id>
 			<url>https://maven.egovframe.go.kr/maven/</url>
@@ -55,25 +39,24 @@
 	</repositories>
 
 	<dependencies>
-		<!-- eGovFramework -->
+		<!-- eGovFrame -->
 		<dependency>
 			<groupId>org.egovframe.rte</groupId>
 			<artifactId>egovframe-rte-bat-core</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.egovframe.rte</groupId>
-			<artifactId>egovframe-rte-fdl-idgnr</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.egovframe.rte</groupId>
-			<artifactId>egovframe-rte-psl-dataaccess</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.egovframe.rte</groupId>
-			<artifactId>egovframe-rte-fdl-property</artifactId>
+			<!-- 런타임 불필요(테스트 라이브러리, 미사용 iBATIS 2) -->
+			<exclusions>
+				<exclusion>
+					<groupId>org.springframework.batch</groupId>
+					<artifactId>spring-batch-test</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>org.apache.ibatis</groupId>
+					<artifactId>ibatis-sqlmap</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 
-		<!-- Spring Boot -->
+		<!-- Spring Boot (logging: log4j2) -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter</artifactId>
@@ -86,127 +69,32 @@
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-batch</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-autoconfigure</artifactId>
-		</dependency>
-
-		<!-- Spring -->
-		<dependency>
-			<groupId>org.springframework</groupId>
-			<artifactId>spring-context</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework</groupId>
-			<artifactId>spring-jdbc</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework</groupId>
-			<artifactId>spring-tx</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.batch</groupId>
-			<artifactId>spring-batch-core</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.batch</groupId>
-			<artifactId>spring-batch-infrastructure</artifactId>
-		</dependency>
-
-		<!-- Jakarta APIs -->
-		<dependency>
-			<groupId>jakarta.annotation</groupId>
-			<artifactId>jakarta.annotation-api</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>jakarta.persistence</groupId>
-			<artifactId>jakarta.persistence-api</artifactId>
-		</dependency>
-
-		<!-- Commons & Utils -->
-		<dependency>
-			<groupId>org.apache.commons</groupId>
-			<artifactId>commons-dbcp2</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>commons-io</groupId>
-			<artifactId>commons-io</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.quartz-scheduler</groupId>
-			<artifactId>quartz</artifactId>
+			<artifactId>spring-boot-starter-log4j2</artifactId>
 		</dependency>
 
 		<!-- Database -->
 		<dependency>
-			<groupId>org.hsqldb</groupId>
-			<artifactId>hsqldb</artifactId>
+			<groupId>com.zaxxer</groupId>
+			<artifactId>HikariCP</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>com.googlecode.log4jdbc</groupId>
-			<artifactId>log4jdbc</artifactId>
-			<exclusions>
-				<exclusion>
-					<artifactId>slf4j-api</artifactId>
-					<groupId>org.slf4j</groupId>
-				</exclusion>
-			</exclusions>
+			<groupId>org.hsqldb</groupId>
+			<artifactId>hsqldb</artifactId>
+			<scope>runtime</scope>
 		</dependency>
 		<dependency>
 			<groupId>com.mysql</groupId>
 			<artifactId>mysql-connector-j</artifactId>
+			<scope>runtime</scope>
 		</dependency>
+		<!-- 그 밖의 DB 는 해당 JDBC 드라이버를 runtime 스코프로 추가 (README 참고) -->
 
-		<!-- CVE-2024-7254: mysql-connector-j에서 주입되는 protobuf-java 3.25.1 취약점
-		보완용 직접 주입 -->
+		<!-- Test -->
 		<dependency>
-			<groupId>com.google.protobuf</groupId>
-			<artifactId>protobuf-java</artifactId>
-			<version>${protobuf.java.version}</version>
-		</dependency>
-
-		<!-- Testing -->
-		<dependency>
-			<groupId>org.springframework</groupId>
-			<artifactId>spring-test</artifactId>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
 		</dependency>
-		<dependency>
-			<groupId>org.junit.jupiter</groupId>
-			<artifactId>junit-jupiter-api</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.junit.jupiter</groupId>
-			<artifactId>junit-jupiter-engine</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<!-- oracle 11g driver -->
-		<!--<dependency>
-			<groupId>project</groupId>
-			<artifactId>ojdbc6</artifactId>
-			<version>11.2.0.3</version>
-		</dependency>-->
-		<!-- altibase driver -->
-		<!--<dependency>
-			<groupId>project</groupId>
-			<artifactId>altibase</artifactId>
-			<version>7.1.0</version>
-		</dependency>-->
-		<!-- tibero driver -->
-		<!--<dependency>
-			<groupId>project</groupId>
-			<artifactId>tibero5</artifactId>
-			<version>5.0.0</version>
-		</dependency>-->
-		<!-- cubrid driver -->
-		<!--<dependency>
-			<groupId>project</groupId>
-			<artifactId>cubrid</artifactId>
-			<version>10.2.0</version>
-		</dependency>-->
 	</dependencies>
 
 	<build>
@@ -216,26 +104,6 @@
 				<artifactId>spring-boot-maven-plugin</artifactId>
 				<configuration>
 					<mainClass>egovframework.example.EgovBootApplication</mainClass>
-					<excludes>
-						<exclude>
-							<groupId>org.projectlombok</groupId>
-							<artifactId>lombok</artifactId>
-						</exclude>
-					</excludes>
-				</configuration>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<configuration>
-					<source>${java.version}</source>
-					<target>${java.version}</target>
-					<annotationProcessorPaths>
-						<path>
-							<groupId>org.projectlombok</groupId>
-							<artifactId>lombok</artifactId>
-						</path>
-					</annotationProcessorPaths>
 				</configuration>
 			</plugin>
 		</plugins>
