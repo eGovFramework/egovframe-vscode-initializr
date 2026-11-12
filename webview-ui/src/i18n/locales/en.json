@@ -80,7 +80,7 @@
 		"categoryBoot": "Spring Boot based projects",
 		"categoryMSA": "Microservices architecture projects",
 		"categoryModulith": "Spring Modulith based modular monolith projects",
-		"categoryMobile": "Mobile and hybrid app projects",
+		"categoryMobile": "Mobile app/web projects",
 		"categoryBatch": "Batch processing projects",
 		"categoryAI": "AI-powered application projects",
 		"generationStarted": "Starting project generation...",
