@@ -533,6 +533,8 @@
 					<excludes>
 						<exclude>**/Abstract*.java</exclude>
 						<exclude>**/*Suite.java</exclude>
+						<!-- 전자정부 저장소 루트의 src/script/ddl 디렉터리를 전제하는 테스트 (템플릿에는 script/ddl 만 존재) -->
+						<exclude>**/MberNmDdlConsistencyTest.java</exclude>
 					</excludes>
 					<includes>
 						<include>**/*Test.java</include>

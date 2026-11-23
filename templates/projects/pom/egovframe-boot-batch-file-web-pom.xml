@@ -6,7 +6,7 @@
 	<groupId>###GROUP_ID###</groupId>
 	<artifactId>###ARTIFACT_ID###</artifactId>
 	<version>###VERSION###</version>
-	<packaging>war</packaging>
+	<packaging>jar</packaging>
 	<name>###NAME###</name>
 	<url>###URL###</url>
 
