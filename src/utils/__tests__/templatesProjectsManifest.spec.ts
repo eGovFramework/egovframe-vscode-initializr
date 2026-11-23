@@ -32,7 +32,7 @@ describe("templates/templates-projects.json", () => {
 
 		expect(resolved.included).toBe(false)
 		expect(resolved.downloadUrl).toBe("v4.3.2/egovframe-boot-web.zip")
-		expect(resolved.sha256).toBe("198fea08152906cd3ba58f4f42f90908e1d75c453fb1ffb1ca5ea52b1663a547")
-		expect(resolved.pomSha256).toBe("e49d2ed79ed758db90100a1b3a6fb04f2bd9ddd182a47a033e027d29d85ffb53")
+		expect(resolved.sha256).toBe("c897a8deac08b362c6543f61b6451def6b344d9ce4bd087a3e0390ac151bfb8d")
+		expect(resolved.pomSha256).toBe("a3d0f880a70f5ade55475ad70587dc1770681771cfb9d58dfb8115b77aa3c7cb")
 	})
 })

@@ -21,7 +21,7 @@
 					"releaseDate": "2026-11-26",
 					"isLatest": true,
 					"included": true,
-					"fileSize": "12MB"
+					"fileSize": "1.3MB"
 				},
 				{
 					"version": "4.3.2",
@@ -31,10 +31,10 @@
 					"isLatest": false,
 					"included": false,
 					"downloadUrl": "v4.3.2/egovframe-web.zip",
-					"sha256": "bdd4d6ec4d9b89bf329fa2bdcfa0711a0cec4348200821880838a9bd8432f97e",
+					"sha256": "58dc9197ab9a517b51a75e0a3580039dd5e79b39c3fb4af3a0fc4cafe8f41f49",
 					"pomDownloadUrl": "v4.3.2/egovframe-web-pom.xml",
 					"pomSha256": "1d576f772df5b2aabe30d0de5182e82f19ea8bcef63909ddda63205f2f94371d",
-					"fileSize": "10MB"
+					"fileSize": "1.3MB"
 				}
 			]
 		},
@@ -53,7 +53,7 @@
 					"releaseDate": "2026-11-26",
 					"isLatest": true,
 					"included": true,
-					"fileSize": "18MB"
+					"fileSize": "1.6MB"
 				},
 				{
 					"version": "4.3.2",
@@ -63,10 +63,10 @@
 					"isLatest": false,
 					"included": false,
 					"downloadUrl": "v4.3.2/egovframe-template-simple.zip",
-					"sha256": "81b2968f16dda796c0e04c51c631dfb23563eb15b1b1ceba91d65099453a9c31",
+					"sha256": "50967c1bd736218749f22d80d0ff191c57b25eae5bdf671f96dba46e500712cc",
 					"pomDownloadUrl": "v4.3.2/egovframe-template-simple-pom.xml",
 					"pomSha256": "140b77afc49cc10167ce71e2cc8f55b7ac8569f9e9c4077e28eecf77bdf5eb13",
-					"fileSize": "16MB"
+					"fileSize": "1.6MB"
 				}
 			]
 		},
@@ -85,7 +85,7 @@
 					"releaseDate": "2026-11-26",
 					"isLatest": true,
 					"included": true,
-					"fileSize": "20MB"
+					"fileSize": "4.3MB"
 				},
 				{
 					"version": "4.3.2",
@@ -95,10 +95,10 @@
 					"isLatest": false,
 					"included": false,
 					"downloadUrl": "v4.3.2/egovframe-template-portal.zip",
-					"sha256": "5eca2d2cd3da844038fef875bcdadb125404d597434ef5a9900da2a1e63392c5",
+					"sha256": "f11a5f341b3988b1dced1804ad7cbed9d69f155f8fa33fa55e8086eec13444f9",
 					"pomDownloadUrl": "v4.3.2/egovframe-template-portal-pom.xml",
-					"pomSha256": "fa80a158182f65b4fc599134b9ff28ae01e2731a1ecfca471a0f8ac044ca7550",
-					"fileSize": "18MB"
+					"pomSha256": "d60644bb6dd234ff7c3688e840e0187b3bd2530403d02e626d08790fd4c7c7b6",
+					"fileSize": "4.3MB"
 				}
 			]
 		},
@@ -117,7 +117,7 @@
 					"releaseDate": "2026-11-26",
 					"isLatest": true,
 					"included": true,
-					"fileSize": "22MB"
+					"fileSize": "1.5MB"
 				},
 				{
 					"version": "4.3.2",
@@ -127,10 +127,10 @@
 					"isLatest": false,
 					"included": false,
 					"downloadUrl": "v4.3.2/egovframe-template-enterprise.zip",
-					"sha256": "8ee60f6de82b732f856c9468139999648be309335a2b85e87b7206e2aa54ee16",
+					"sha256": "75fabe2efb26f6034db9b8c3e5de40b6e202616ff0be4407d621c660b723cab1",
 					"pomDownloadUrl": "v4.3.2/egovframe-template-enterprise-pom.xml",
 					"pomSha256": "ad796fe140b4e818759dcee49e8997a86cc9d4e1993c8784fbefd8408ff5bdf7",
-					"fileSize": "20MB"
+					"fileSize": "1.5MB"
 				}
 			]
 		},
@@ -149,7 +149,7 @@
 					"releaseDate": "2026-11-26",
 					"isLatest": true,
 					"included": true,
-					"fileSize": "25MB"
+					"fileSize": "23.4MB"
 				},
 				{
 					"version": "4.3.2",
@@ -159,10 +159,10 @@
 					"isLatest": false,
 					"included": false,
 					"downloadUrl": "v4.3.2/egovframe-template-common-components.zip",
-					"sha256": "4fa5cc8ddffdaf0038ef1254843ef08574f6421192bc79e80e43c2043589674a",
+					"sha256": "df136bbaeb3df32499a0a016658ecd65ef67434583d417f46126c77bdfb4eb4c",
 					"pomDownloadUrl": "v4.3.2/egovframe-template-common-components-pom.xml",
-					"pomSha256": "c0b31f54644143b1a84ce691b81b6d95b4c6a2cbd04f5776155342edf82c2095",
-					"fileSize": "23MB"
+					"pomSha256": "af4ae4797e5da344fbb6d087872e22f1c446fb6df83317f8bb16166b1e611138",
+					"fileSize": "15.8MB"
 				}
 			]
 		},
@@ -181,7 +181,7 @@
 					"releaseDate": "2026-11-26",
 					"isLatest": true,
 					"included": true,
-					"fileSize": "15MB"
+					"fileSize": "1.2MB"
 				},
 				{
 					"version": "4.3.2",
@@ -191,10 +191,10 @@
 					"isLatest": false,
 					"included": false,
 					"downloadUrl": "v4.3.2/egovframe-boot-web.zip",
-					"sha256": "198fea08152906cd3ba58f4f42f90908e1d75c453fb1ffb1ca5ea52b1663a547",
+					"sha256": "c897a8deac08b362c6543f61b6451def6b344d9ce4bd087a3e0390ac151bfb8d",
 					"pomDownloadUrl": "v4.3.2/egovframe-boot-web-pom.xml",
-					"pomSha256": "e49d2ed79ed758db90100a1b3a6fb04f2bd9ddd182a47a033e027d29d85ffb53",
-					"fileSize": "12MB"
+					"pomSha256": "a3d0f880a70f5ade55475ad70587dc1770681771cfb9d58dfb8115b77aa3c7cb",
+					"fileSize": "1.2MB"
 				}
 			]
 		},
@@ -213,7 +213,7 @@
 					"releaseDate": "2026-11-26",
 					"isLatest": true,
 					"included": true,
-					"fileSize": "16MB"
+					"fileSize": "373KB"
 				},
 				{
 					"version": "4.3.2",
@@ -223,10 +223,10 @@
 					"isLatest": false,
 					"included": false,
 					"downloadUrl": "v4.3.2/egovframe-boot-simple-backend.zip",
-					"sha256": "1d530ceb9f25ce0bfd1b5d62199c8e20a385b22ce9785c9c9a85170458db3833",
+					"sha256": "a355d532732127aec575a1b2bb6386ca46e49ad80261ce6a4bf319e22adf10e6",
 					"pomDownloadUrl": "v4.3.2/egovframe-boot-simple-backend-pom.xml",
-					"pomSha256": "4063057efb7a60eabe89491f30f91c7b73d3fb23c3eabbe6decdde50b997f70f",
-					"fileSize": "14MB"
+					"pomSha256": "41bd41d461143215272b58217e50941baf864c555e572c23e21493ba5c016376",
+					"fileSize": "374KB"
 				}
 			]
 		},
@@ -245,7 +245,7 @@
 					"releaseDate": "2026-11-26",
 					"isLatest": true,
 					"included": true,
-					"fileSize": "12MB"
+					"fileSize": "3.7MB"
 				},
 				{
 					"version": "4.3.2",
@@ -256,7 +256,7 @@
 					"included": false,
 					"downloadUrl": "v4.3.2/egovframe-boot-simple-frontend.zip",
 					"sha256": "c4c47e8e4d6761f2491314ccc4192264f855a0db5be1452f86bdf2e702e5d1ac",
-					"fileSize": "10MB"
+					"fileSize": "3.7MB"
 				}
 			]
 		},
@@ -275,7 +275,7 @@
 					"releaseDate": "2026-11-26",
 					"isLatest": true,
 					"included": true,
-					"fileSize": "30MB"
+					"fileSize": "25.1MB"
 				},
 				{
 					"version": "4.3.2",
@@ -285,8 +285,8 @@
 					"isLatest": false,
 					"included": false,
 					"downloadUrl": "v4.3.2/egovframe-msa-common-components.zip",
-					"sha256": "6fafb28eeb2511016c5e8a174fff5984d67b38b3dd90a84c1185a3534408a463",
-					"fileSize": "28MB"
+					"sha256": "6c7633657c4a3224e767c850ab64eda5099d062e12e92108224b142694c46fa9",
+					"fileSize": "25.1MB"
 				}
 			]
 		},
@@ -305,7 +305,7 @@
 					"releaseDate": "2026-11-26",
 					"isLatest": true,
 					"included": true,
-					"fileSize": "18MB"
+					"fileSize": "1.2MB"
 				},
 				{
 					"version": "4.3.2",
@@ -315,8 +315,8 @@
 					"isLatest": false,
 					"included": false,
 					"downloadUrl": "v4.3.2/egovframe-msa-portal-backend.zip",
-					"sha256": "adf24cbca46723a581c1d3a9bdb04e6492e7bf12603350cf71f2e6958a26f988",
-					"fileSize": "16MB"
+					"sha256": "4c8a5a8249365f9cefd33a9c11a0ab774e251e2e2cba771e8f5712bf25382ff7",
+					"fileSize": "1.4MB"
 				}
 			]
 		},
@@ -335,7 +335,7 @@
 					"releaseDate": "2026-11-26",
 					"isLatest": true,
 					"included": true,
-					"fileSize": "15MB"
+					"fileSize": "7.0MB"
 				},
 				{
 					"version": "4.3.2",
@@ -345,8 +345,8 @@
 					"isLatest": false,
 					"included": false,
 					"downloadUrl": "v4.3.2/egovframe-msa-portal-frontend.zip",
-					"sha256": "077cb25bc73eb19f7a2f0a245f47150256511e659edc3d9308cf81465cec1265",
-					"fileSize": "13MB"
+					"sha256": "fd27fcc02908e36fdbb00919cfad89ab1bb6bc21cf156ec41f952ce6b583aefe",
+					"fileSize": "6.5MB"
 				}
 			]
 		},
@@ -365,7 +365,7 @@
 					"releaseDate": "2026-11-26",
 					"isLatest": true,
 					"included": true,
-					"fileSize": "30MB"
+					"fileSize": "10.1MB"
 				}
 			]
 		},
@@ -384,7 +384,7 @@
 					"releaseDate": "2026-11-26",
 					"isLatest": true,
 					"included": true,
-					"fileSize": "14MB"
+					"fileSize": "1.3MB"
 				},
 				{
 					"version": "4.3.2",
@@ -394,10 +394,10 @@
 					"isLatest": false,
 					"included": false,
 					"downloadUrl": "v4.3.2/egovframe-mobile-web.zip",
-					"sha256": "34f97d91183b199316880415e9255ee7d4af5f887d171e967fb0a2f8c374180c",
+					"sha256": "5b52699caee98f848995bcad88e839514e16a1e09efd3be5370c2ee042a30932",
 					"pomDownloadUrl": "v4.3.2/egovframe-mobile-web-pom.xml",
 					"pomSha256": "c5d2ad5a8dad97366319f8fb052605d449a3996710cc6851f6b98a4f2e3d8027",
-					"fileSize": "12MB"
+					"fileSize": "1.3MB"
 				}
 			]
 		},
@@ -416,7 +416,7 @@
 					"releaseDate": "2026-11-26",
 					"isLatest": true,
 					"included": true,
-					"fileSize": "16MB"
+					"fileSize": "15.7MB"
 				},
 				{
 					"version": "4.3.2",
@@ -426,10 +426,10 @@
 					"isLatest": false,
 					"included": false,
 					"downloadUrl": "v4.3.2/egovframe-mobile-common-components.zip",
-					"sha256": "bc1fcce6fc61a1083c26b72e772118e10948a08130dfb575ef52120203e30611",
+					"sha256": "611f40ee51794af5d6b273c0ebfb86e007bdc09726250a7e0338ee8667c7b099",
 					"pomDownloadUrl": "v4.3.2/egovframe-mobile-common-components-pom.xml",
 					"pomSha256": "d19c16434dc0688575afded580e16ad44250959d6c5f1a443b4f673a46e335a5",
-					"fileSize": "14MB"
+					"fileSize": "15.8MB"
 				}
 			]
 		},
@@ -448,7 +448,7 @@
 					"releaseDate": "2026-11-26",
 					"isLatest": true,
 					"included": true,
-					"fileSize": "10MB"
+					"fileSize": "1.4MB"
 				},
 				{
 					"version": "4.3.2",
@@ -458,10 +458,10 @@
 					"isLatest": false,
 					"included": false,
 					"downloadUrl": "v4.3.2/egovframe-mobile-deviceapi.zip",
-					"sha256": "794680f1afa4e44be25aa520f11fc9b84c2234bba780ecb44f9428689a53fda9",
+					"sha256": "e7620fa84c3fe65da57f67f3c4fcd1d05df2b8e4e53ed0dc92012f61c44bdb66",
 					"pomDownloadUrl": "v4.3.2/egovframe-mobile-deviceapi-pom.xml",
-					"pomSha256": "021ae6bc6b9a2b941982d3bb38b81e089b72c7c2ce62ccf4f43fe6fac3107596",
-					"fileSize": "8MB"
+					"pomSha256": "c4f53d9fb36af6ebb1a59e93ee7455d5f3a3c8408e537132717c328847ef633b",
+					"fileSize": "1.4MB"
 				}
 			]
 		},
@@ -480,7 +480,7 @@
 					"releaseDate": "2026-11-26",
 					"isLatest": true,
 					"included": true,
-					"fileSize": "8MB"
+					"fileSize": "43KB"
 				},
 				{
 					"version": "4.3.2",
@@ -490,10 +490,10 @@
 					"isLatest": false,
 					"included": false,
 					"downloadUrl": "v4.3.2/egovframe-boot-batch-file-scheduler.zip",
-					"sha256": "63d52c539cf986a0db689a6ebecb845fb55cce4a84aa95d096720cdd988009a8",
+					"sha256": "fdaa91a7089c865ea9b124528e87fb90f815d13e8b5775f32cc483c1d6034ad0",
 					"pomDownloadUrl": "v4.3.2/egovframe-boot-batch-file-scheduler-pom.xml",
-					"pomSha256": "865709d463675a438625491cfcf6bd578020df1f1ae751e8e7f53f82747d8136",
-					"fileSize": "7MB"
+					"pomSha256": "6e31349ae774d2d38f79ccaba28aeb944fdeb50d50d7642ec806db4f6dad9387",
+					"fileSize": "44KB"
 				}
 			]
 		},
@@ -512,7 +512,7 @@
 					"releaseDate": "2026-11-26",
 					"isLatest": true,
 					"included": true,
-					"fileSize": "7MB"
+					"fileSize": "41KB"
 				},
 				{
 					"version": "4.3.2",
@@ -522,10 +522,10 @@
 					"isLatest": false,
 					"included": false,
 					"downloadUrl": "v4.3.2/egovframe-boot-batch-file-commandline.zip",
-					"sha256": "bde54960fd12b64c2c58a5cdbf05663b307ef6546764600fd5d45e0f82bd124e",
+					"sha256": "ac043da53fc85fd568b793a7212194f082c7b5edf4fbda8dc26aa008bf06c9fe",
 					"pomDownloadUrl": "v4.3.2/egovframe-boot-batch-file-commandline-pom.xml",
-					"pomSha256": "cbc555e71dbae19551d93ab9d80f56e947957483f7a74fd460b46a73dbaa1333",
-					"fileSize": "6MB"
+					"pomSha256": "385216a88994676eb9d05893db6e68087721e6b714d2de61fbd9e5739caf0895",
+					"fileSize": "43KB"
 				}
 			]
 		},
@@ -544,7 +544,7 @@
 					"releaseDate": "2026-11-26",
 					"isLatest": true,
 					"included": true,
-					"fileSize": "10MB"
+					"fileSize": "57KB"
 				},
 				{
 					"version": "4.3.2",
@@ -554,10 +554,10 @@
 					"isLatest": false,
 					"included": false,
 					"downloadUrl": "v4.3.2/egovframe-boot-batch-file-web.zip",
-					"sha256": "502457eb448c2115e44c440b8a97c7218b78d6a9b259ae6c3002c04b0e625fea",
+					"sha256": "21ddc5a9566ff49e8daa05dcc267028743d152dbef2df2ac68e2e07368c0f560",
 					"pomDownloadUrl": "v4.3.2/egovframe-boot-batch-file-web-pom.xml",
-					"pomSha256": "9b94e6756093bd8b191e6084184df102b6f2c9f3696c55e1123ac1cc710d0679",
-					"fileSize": "9MB"
+					"pomSha256": "20718c575c5eccdc6673c3776a8247ef0a701b10a849b40d9ba296dc82da095d",
+					"fileSize": "59KB"
 				}
 			]
 		},
@@ -576,7 +576,7 @@
 					"releaseDate": "2026-11-26",
 					"isLatest": true,
 					"included": true,
-					"fileSize": "9MB"
+					"fileSize": "42KB"
 				},
 				{
 					"version": "4.3.2",
@@ -586,10 +586,10 @@
 					"isLatest": false,
 					"included": false,
 					"downloadUrl": "v4.3.2/egovframe-boot-batch-db-scheduler.zip",
-					"sha256": "3fa0cc5aeca7adfc09857fcbf1eb0aeba1386f8a730c313fd925bd7f042460ca",
+					"sha256": "2787a993772dd2f3bc7295afb3370f5e4c5c3eb4fc94dd9bc4acb72baf497822",
 					"pomDownloadUrl": "v4.3.2/egovframe-boot-batch-db-scheduler-pom.xml",
-					"pomSha256": "865709d463675a438625491cfcf6bd578020df1f1ae751e8e7f53f82747d8136",
-					"fileSize": "8MB"
+					"pomSha256": "6e31349ae774d2d38f79ccaba28aeb944fdeb50d50d7642ec806db4f6dad9387",
+					"fileSize": "43KB"
 				}
 			]
 		},
@@ -608,7 +608,7 @@
 					"releaseDate": "2026-11-26",
 					"isLatest": true,
 					"included": true,
-					"fileSize": "8MB"
+					"fileSize": "40KB"
 				},
 				{
 					"version": "4.3.2",
@@ -618,10 +618,10 @@
 					"isLatest": false,
 					"included": false,
 					"downloadUrl": "v4.3.2/egovframe-boot-batch-db-commandline.zip",
-					"sha256": "a1564df511d3f7f3d512b171b23a98ee19ba540ddb6b16ff70a02ce0be0c8e25",
+					"sha256": "3b5be29c15f6ca0353af3a2bb7e9a28525e152fb525dbe5578bfb391877482db",
 					"pomDownloadUrl": "v4.3.2/egovframe-boot-batch-db-commandline-pom.xml",
-					"pomSha256": "cbc555e71dbae19551d93ab9d80f56e947957483f7a74fd460b46a73dbaa1333",
-					"fileSize": "7MB"
+					"pomSha256": "385216a88994676eb9d05893db6e68087721e6b714d2de61fbd9e5739caf0895",
+					"fileSize": "42KB"
 				}
 			]
 		},
@@ -640,7 +640,7 @@
 					"releaseDate": "2026-11-26",
 					"isLatest": true,
 					"included": true,
-					"fileSize": "11MB"
+					"fileSize": "62KB"
 				},
 				{
 					"version": "4.3.2",
@@ -650,10 +650,10 @@
 					"isLatest": false,
 					"included": false,
 					"downloadUrl": "v4.3.2/egovframe-boot-batch-db-web.zip",
-					"sha256": "1275b2c0cd77456a089a3dac51322f27e57709e476d73fd854444660c2dee0c2",
+					"sha256": "364ab5d935730b234059e3d118650bd09ff2cb6902aaf326bbd7788ece907862",
 					"pomDownloadUrl": "v4.3.2/egovframe-boot-batch-db-web-pom.xml",
-					"pomSha256": "e669348328e6dceddd8529b11df278080f6f077c91b12cca7c14fae5507b7983",
-					"fileSize": "10MB"
+					"pomSha256": "8f915ce621b26d27babf821512f43b7473a31d543a3779cf8b25e7d15f880481",
+					"fileSize": "64KB"
 				}
 			]
 		},
@@ -672,7 +672,7 @@
 					"releaseDate": "2026-11-26",
 					"isLatest": true,
 					"included": true,
-					"fileSize": "15MB"
+					"fileSize": "147KB"
 				}
 			]
 		},
@@ -691,7 +691,7 @@
 					"releaseDate": "2026-11-26",
 					"isLatest": true,
 					"included": true,
-					"fileSize": "15MB"
+					"fileSize": "141KB"
 				}
 			]
 		}
