@@ -12,6 +12,11 @@
   - 생성된 Thymeleaf 등록/수정 화면이 정의되지 않은 `contextPath` 변수를 참조해 등록·수정·삭제·목록 버튼이 동작하지 않던 문제 수정 — 목록 화면을 포함해 폼 action을 Thymeleaf 링크 표현식(`[[@{...}]]`)으로 생성하여 컨텍스트 경로가 루트가 아닌 환경에서도 동작
   - 생성된 Thymeleaf 등록/수정 화면의 `th:errors`가 `*price`처럼 잘못 렌더링되어 바인딩 오류 시 500이 발생하던 문제 수정
   - 생성된 Controller의 미사용 `RequestParam` import 제거, VO의 `EgovNullCheck` import를 사용부와 함께 주석 처리
+  - 날짜·시간 컬럼을 화면에서 입력할 수 없던 문제 수정 — DATE/TIME/DATETIME/TIMESTAMP를 `java.time.LocalDate`/`LocalTime`/`LocalDateTime`으로 매핑하고 VO 필드에 `@DateTimeFormat`을 붙여 `date`·`time`·`datetime-local` 입력란의 값이 그대로 바인딩되도록 함 (기존에는 `java.sql.Timestamp` 등으로 매핑되어 `yyyy-MM-dd HH:mm:ss` 형식만 받고 빈 값은 오류). `WITH TIME ZONE` 컬럼은 기존 `java.sql` 매핑 유지
+  - 비운 입력란이 빈 문자열(`''`)로 저장되어 NULL 허용 FK 컬럼을 비우면 FK 위반으로 등록이 실패하던 문제 수정 — 생성된 Controller에 `@InitBinder`로 `StringTrimmerEditor(true)`를 등록해 빈 문자열을 null로 변환
+  - 값을 비운 컬럼에 NULL이 저장되어 DDL의 DEFAULT가 적용되지 않던 문제 수정 — 생성된 Mapper의 INSERT가 값이 있는 컬럼만 포함하도록 `<trim>`/`<if>`로 변경
+  - 삭제되었거나 없는 글의 수정 화면에 접근하면 NullPointerException이 나던 문제 수정 — 생성된 ServiceImpl이 조회 결과가 없으면 `info.nodata.msg` 예외를 던짐
+  - 생성된 등록/수정 화면(Thymeleaf·JSP)의 입력란을 컬럼 타입에 맞게 생성 — 숫자는 `type="number"`, 날짜·시간은 `date`·`time`·`datetime-local`, Boolean은 빈 값·true·false 선택란. 템플릿 컨텍스트의 컬럼 정보에 `inputType`·`inputStep`·`dateTimePattern` 추가
 - Config Generation
   - AOP 트랜잭션 설정 템플릿에서 txAdvisor의 잘못된 직접 메서드 호출 수정 (Refs: PR #12)
   - TransactionForm의 READ_UNCOMMITTED 오타 수정 (Refs: PR #9)

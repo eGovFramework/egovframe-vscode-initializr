@@ -98,7 +98,21 @@
                         <label for="{{ccName}}">{{pcName}}</label>
                     </div>
                     <div class="form-conts">
+                      {{#if (eq inputType "boolean")}}
+                        <!-- 빈 선택지는 null 로 전송되어 테이블에 정의된 DEFAULT 가 적용된다 -->
+                        <select id="{{ccName}}" name="{{ccName}}" class="krds-form-select">
+                            <option value=""></option>
+                            <option value="true" th:selected="{{concat "${" @root.voInstanceName "." ccName}} == true}">true</option>
+                            <option value="false" th:selected="{{concat "${" @root.voInstanceName "." ccName}} == false}">false</option>
+                        </select>
+                      {{else if dateTimePattern}}
+                        <input type="{{inputType}}" class="krds-input" th:field="{{concat "*{" ccName "}"}}">
+                      {{else if (eq inputType "number")}}
+                        <input type="number" step="{{inputStep}}" id="{{ccName}}" name="{{ccName}}" class="krds-input" th:value="{{concat "${" @root.voInstanceName "." ccName "}"}}">
+                      {{else}}
                         <input type="text" id="{{ccName}}" name="{{ccName}}" class="krds-input" th:value="{{concat "${" @root.voInstanceName "." ccName "}"}}">
+{{!-- else if 연쇄를 닫는 태그를 들여쓰면 Handlebars 가 마지막 분기 뒤에 그 공백을 남기므로 줄 맨 앞에 둔다 --}}
+{{/if}}
                         <span class="error-message" th:if="${#fields.hasErrors('{{ccName}}')}" th:errors="{{concat "*{" ccName "}"}}"></span>
                     </div>
                 </div>

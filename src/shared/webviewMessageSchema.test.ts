@@ -61,6 +61,9 @@ const validColumn = {
 	dataType: "VARCHAR",
 	javaType: "String",
 	comment: "사용자 ID",
+	inputType: "text",
+	inputStep: "",
+	dateTimePattern: "",
 }
 
 const validTemplateContext = {
@@ -295,6 +298,22 @@ describe("parseWebviewMessage", () => {
 	it("showError/showWarning의 value는 문자열이어야 한다", () => {
 		parseFail({ type: "showError" })
 		parseFail({ type: "showWarning", value: { nested: "object" } })
+	})
+
+	it("downloadTemplateContext의 컬럼 입력란 정보(inputType·inputStep·dateTimePattern)는 strip되지 않고 보존된다", () => {
+		const column = {
+			...validColumn,
+			javaType: "java.time.LocalDateTime",
+			inputType: "datetime-local",
+			inputStep: "",
+			dateTimePattern: "yyyy-MM-dd'T'HH:mm",
+		}
+		const parsed = parseOk({
+			type: "downloadTemplateContext",
+			ddl: "CREATE TABLE t (id INT)",
+			context: { ...validTemplateContext, attributes: [column], pkAttributes: [] },
+		})
+		expect(parsed).toMatchObject({ context: { attributes: [column] } })
 	})
 
 	it("exportArchResults의 DAO 상세 필드와 skipped 목록은 strip되지 않고 보존된다", () => {

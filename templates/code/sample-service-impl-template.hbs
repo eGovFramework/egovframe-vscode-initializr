@@ -96,8 +96,9 @@ public class {{className}}ServiceImpl extends EgovAbstractServiceImpl implements
 	@Override
 	public {{className}}VO select{{className}}({{className}}VO vo) throws Exception {
 		{{className}}VO resultVO = {{classNameFirstCharLower}}Mapper.select{{className}}(vo);
-		// if (resultVO == null)
-		//  	throw processException("info.nodata.msg");
+		if (resultVO == null) {
+			throw processException("info.nodata.msg");
+		}
 		return resultVO;
 	}
 

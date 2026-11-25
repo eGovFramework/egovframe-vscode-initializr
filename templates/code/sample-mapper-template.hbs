@@ -10,22 +10,18 @@
 
 	<insert id="insert{{className}}">
 
-			INSERT INTO {{dbTableName}} (
+			<!-- 값이 없는 컬럼은 INSERT 에서 제외해 테이블에 정의된 DEFAULT 가 적용되도록 한다 -->
+			INSERT INTO {{dbTableName}}
+			<trim prefix="(" suffix=")" suffixOverrides=",">
 			{{#each attributes}}
-				{{#if @first}}
-				{{columnName}}
-				{{else}}
-				, {{columnName}}
-				{{/if}}
-			{{/each}} )
-			VALUES (
+				<if test="{{ccName}} != null">{{columnName}},</if>
+			{{/each}}
+			</trim>
+			<trim prefix="VALUES (" suffix=")" suffixOverrides=",">
 			{{#each attributes}}
-				{{#if @first}}
-				{{concat "#{" ccName "}"}}
-				{{else}}
-				, {{concat "#{" ccName "}"}}
-				{{/if}}
-			{{/each}} )
+				<if test="{{ccName}} != null">{{concat "#{" ccName "}"}},</if>
+			{{/each}}
+			</trim>
 
 	</insert>
 

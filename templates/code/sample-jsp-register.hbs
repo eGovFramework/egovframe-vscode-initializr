@@ -114,7 +114,21 @@
                         <label for="{{ccName}}">{{pcName}}</label>
                     </div>
                     <div class="form-conts">
+                      {{#if (eq inputType "boolean")}}
+                        <%-- 빈 선택지는 null 로 전송되어 테이블에 정의된 DEFAULT 가 적용된다 --%>
+                        <form:select path="{{ccName}}" cssClass="krds-form-select">
+                            <form:option value="" label="" />
+                            <form:option value="true" label="true" />
+                            <form:option value="false" label="false" />
+                        </form:select>
+                      {{else if dateTimePattern}}
+                        <form:input type="{{inputType}}" path="{{ccName}}" cssClass="krds-input" />
+                      {{else if (eq inputType "number")}}
+                        <form:input type="number" step="{{inputStep}}" path="{{ccName}}" cssClass="krds-input" />
+                      {{else}}
                         <form:input path="{{ccName}}" cssClass="krds-input" />
+{{!-- else if 연쇄를 닫는 태그를 들여쓰면 Handlebars 가 마지막 분기 뒤에 그 공백을 남기므로 줄 맨 앞에 둔다 --}}
+{{/if}}
                         <form:errors path="{{ccName}}" cssClass="error-message" />
                     </div>
                 </div>

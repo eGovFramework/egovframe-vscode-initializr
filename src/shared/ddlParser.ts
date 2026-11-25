@@ -1,4 +1,4 @@
-import { getJavaClassName } from "./dataTypes"
+import { getDateTimePattern, getInputStep, getInputType, getJavaClassName } from "./dataTypes"
 
 // 데이터베이스 컬럼의 정보를 담는 인터페이스
 export interface Column {
@@ -9,6 +9,9 @@ export interface Column {
 	dataType: string // SQL data type
 	javaType: string // Java type
 	comment: string // column comment (DDL COMMENT 절에서 추출, 없으면 columnName)
+	inputType: string // 등록/수정 화면 입력란 종류: text | number | boolean | date | datetime-local | time
+	inputStep: string // 숫자 입력란의 step (정수 "1", 소수 "any", 숫자가 아니면 빈 문자열)
+	dateTimePattern: string // @DateTimeFormat 패턴 (날짜·시간 타입이 아니면 빈 문자열)
 }
 
 export interface ParsedDDL {
@@ -366,6 +369,11 @@ export function parseDDL(ddl: string): ParsedDDL {
 				? (pgColumnComments[columnName] ?? columnName)
 				: decodeSqlComment(mysqlCommentMatch[1])
 
+		// NUMBER(15,2)처럼 크기 정보가 매핑에 필요하므로 원본 타입을 넘긴다.
+		// rawDataType 은 타입의 첫 단어뿐이라 TIMESTAMP WITH TIME ZONE 의 뒷부분은 컬럼 정의에서 따로 확인한다.
+		const hasTimeZone = /\bWITH\s+TIME\s+ZONE\b/i.test(columnDefWithoutComment)
+		const javaType = getJavaClassName(hasTimeZone ? `${rawDataType} WITH TIME ZONE` : rawDataType)
+
 		// Column 객체 생성
 		const column: Column = {
 			ccName,
@@ -373,9 +381,11 @@ export function parseDDL(ddl: string): ParsedDDL {
 			isPrimaryKey,
 			pcName: convertCamelcaseToPascalcase(ccName),
 			dataType,
-			// NUMBER(15,2)처럼 크기 정보가 매핑에 필요하므로 원본 타입을 넘긴다
-			javaType: getJavaClassName(rawDataType),
+			javaType,
 			comment,
+			inputType: getInputType(javaType),
+			inputStep: getInputStep(javaType),
+			dateTimePattern: getDateTimePattern(javaType),
 		}
 
 		attributes.push(column)

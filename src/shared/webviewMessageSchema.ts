@@ -73,6 +73,9 @@ const columnSchema = z.object({
 	dataType: z.string(),
 	javaType: z.string(),
 	comment: z.string(),
+	inputType: z.string(),
+	inputStep: z.string(),
+	dateTimePattern: z.string(),
 })
 
 const templateContextSchema = z.object({

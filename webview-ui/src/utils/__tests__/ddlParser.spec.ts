@@ -22,6 +22,9 @@ describe("ddlParser", () => {
 			dataType: "INT",
 			javaType: "java.lang.Integer",
 			isPrimaryKey: true,
+			inputType: "number",
+			inputStep: "1",
+			dateTimePattern: "",
 		})
 		expect(result.attributes[1]).toMatchObject({
 			columnName: "user_name",
@@ -30,15 +33,45 @@ describe("ddlParser", () => {
 			dataType: "VARCHAR",
 			javaType: "java.lang.String",
 			isPrimaryKey: false,
+			inputType: "text",
+			inputStep: "",
+			dateTimePattern: "",
 		})
 		expect(result.attributes[2]).toMatchObject({
 			columnName: "created_at",
 			ccName: "createdAt",
 			pcName: "CreatedAt",
 			dataType: "TIMESTAMP",
-			javaType: "java.sql.Timestamp",
+			javaType: "java.time.LocalDateTime",
 			isPrimaryKey: false,
+			inputType: "datetime-local",
+			inputStep: "",
+			dateTimePattern: "yyyy-MM-dd'T'HH:mm",
 		})
+	})
+
+	// 타입의 첫 단어만 보면 TIMESTAMP 와 구분되지 않는다. 오프셋이 있는 컬럼은 기존 java.sql 매핑과 text 입력란을 유지한다.
+	it("should keep the java.sql mapping for WITH TIME ZONE columns", () => {
+		const result = parseDDL(`
+			CREATE TABLE events (
+				id INT PRIMARY KEY,
+				created_at TIMESTAMP WITH TIME ZONE NOT NULL,
+				updated_at TIMESTAMP(6) WITHOUT TIME ZONE,
+				note VARCHAR(100) COMMENT 'stored with time zone'
+			);
+		`)
+
+		expect(result.attributes[1]).toMatchObject({
+			dataType: "TIMESTAMP",
+			javaType: "java.sql.Timestamp",
+			inputType: "text",
+			dateTimePattern: "",
+		})
+		expect(result.attributes[2]).toMatchObject({
+			javaType: "java.time.LocalDateTime",
+			inputType: "datetime-local",
+		})
+		expect(result.attributes[3]).toMatchObject({ javaType: "java.lang.String", inputType: "text" })
 	})
 
 	it("should parse table-level primary key and decimal type with precision", () => {
