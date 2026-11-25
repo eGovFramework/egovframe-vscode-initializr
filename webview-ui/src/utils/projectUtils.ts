@@ -1,3 +1,44 @@
+import type { ProjectGenerationErrorCode } from "@shared/ExtensionMessage"
+
+// Version information for a template
+export interface TemplateVersion {
+	version: string
+	fileName: string
+	pomFile: string
+	releaseDate: string
+	isLatest: boolean
+	included: boolean // true: Extension에 포함됨, false: 다운로드 필요
+	downloadUrl?: string // included가 false일 때 다운로드 URL
+	pomDownloadUrl?: string // included가 false일 때 POM 다운로드 URL
+	fileSize?: string
+}
+
+// Template manifest structure (from templates-projects.json)
+export interface TemplateManifest {
+	templateId: string
+	displayName: string
+	description: string
+	category: string
+	projectName?: string
+	latestVersion: string
+	versions: TemplateVersion[]
+}
+
+// Repository information for downloading templates
+export interface TemplateRepository {
+	owner: string
+	repo: string
+	baseUrl: string
+}
+
+// Full manifest structure
+export interface ProjectTemplatesManifest {
+	description: string
+	repository: TemplateRepository
+	templates: TemplateManifest[]
+}
+
+// Project template with version information (used in UI)
 export interface ProjectTemplate {
 	displayName: string
 	fileName: string
@@ -6,6 +47,15 @@ export interface ProjectTemplate {
 	category?: string
 	projectName?: string
 	artifactId?: string
+	// Version-related fields
+	templateId?: string
+	version?: string
+	isLatest?: boolean
+	included?: boolean // true: Extension에 포함됨, false: 다운로드 필요
+	downloadUrl?: string
+	pomDownloadUrl?: string
+	fileSize?: string
+	releaseDate?: string
 }
 
 export interface ProjectConfig {
@@ -28,6 +78,46 @@ export interface EgovProjectGenerationResponse {
 	message: string
 	projectPath?: string
 	error?: string
+}
+
+/**
+ * Manifest에서 ProjectTemplate 배열로 변환 (최신 버전 기준)
+ */
+export function convertManifestToTemplates(manifest: ProjectTemplatesManifest): ProjectTemplate[] {
+	const templates: ProjectTemplate[] = []
+
+	manifest.templates.forEach((template) => {
+		// Get latest version
+		const latestVersion = template.versions.find((v) => v.isLatest) || template.versions[0]
+		if (latestVersion) {
+			templates.push({
+				displayName: template.displayName,
+				fileName: latestVersion.fileName,
+				pomFile: latestVersion.pomFile || "",
+				description: template.description,
+				category: template.category,
+				projectName: template.projectName,
+				version: latestVersion.version,
+				isLatest: latestVersion.isLatest,
+				included: latestVersion.included,
+				downloadUrl: latestVersion.downloadUrl,
+				pomDownloadUrl: latestVersion.pomDownloadUrl,
+				fileSize: latestVersion.fileSize,
+				releaseDate: latestVersion.releaseDate,
+				templateId: template.templateId,
+			})
+		}
+	})
+
+	return templates
+}
+
+/**
+ * 특정 템플릿의 모든 버전 정보 가져오기
+ */
+export function getTemplateVersions(manifest: ProjectTemplatesManifest, templateId: string): TemplateVersion[] {
+	const template = manifest.templates.find((t) => t.templateId === templateId)
+	return template?.versions || []
 }
 
 /**
@@ -103,6 +193,10 @@ export function createGenerateProjectByCommandMessage() {
 }
 
 export function createProjectGenerationMessage(config: ProjectConfig, method: "form" | "command") {
+	const { templateId, version } = config.template
+	if (!templateId || !version) {
+		throw new Error("Selected template is missing its templateId or version")
+	}
 	return {
 		type: "generateProject" as const,
 		projectConfig: {
@@ -112,12 +206,31 @@ export function createProjectGenerationMessage(config: ProjectConfig, method: "f
 			version: config.version,
 			url: config.url,
 			outputPath: config.outputPath,
+			// 템플릿은 식별자와 버전만 보낸다. 파일명·다운로드 경로는 확장 호스트가 manifest에서 확정한다.
 			template: {
 				displayName: config.template.displayName,
-				fileName: config.template.fileName,
-				pomFile: config.template.pomFile,
+				templateId,
+				version,
 			},
 		},
 		method,
 	}
+}
+
+/** 번역 함수 (react-i18next의 t와 호환) */
+export type Translate = (key: string) => string
+
+/**
+ * 프로젝트 생성 실패 상태 문구를 만든다. 기본 실패 문구 뒤에 호스트가 보낸 사유를 붙이고,
+ * 사유 코드에 대응하는 안내(예: 템플릿 무결성 실패 → 확장 업데이트)가 있으면 다음 줄에 덧붙인다.
+ */
+export function formatProjectGenerationFailure(
+	t: Translate,
+	result: { error?: string; errorCode?: ProjectGenerationErrorCode },
+): string {
+	const base = `❌ ${t("projects.generationFailed")} ${result.error ?? ""}`.trimEnd()
+	if (result.errorCode === "templateIntegrity") {
+		return `${base}\n${t("projects.templateIntegrityHint")}`
+	}
+	return base
 }

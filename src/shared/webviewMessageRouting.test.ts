@@ -29,6 +29,14 @@ describe("webviewMessageRouting", () => {
 			expect(isMessageForScope({ type: "selectedOutputPath", scope: "projects", text: "/tmp/out" }, "code")).toBe(false)
 		})
 
+		it("archCheck 스코프 error는 다른 뷰에서 거부하고 archCheck 뷰에서 허용한다", () => {
+			const message = { type: "error", scope: "archCheck" as const, text: "Architecture check failed" }
+
+			expect(isMessageForScope(message, "code")).toBe(false)
+			expect(isMessageForScope(message, "config")).toBe(false)
+			expect(isMessageForScope(message, "archCheck")).toBe(true)
+		})
+
 		it("scope가 없는 메시지는 모든 뷰에서 허용한다", () => {
 			const message = { type: "selectedOutputPath", text: "/tmp/out" }
 

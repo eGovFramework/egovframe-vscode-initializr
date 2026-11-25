@@ -176,3 +176,47 @@ describe("sample mapper template", () => {
 		},
 	)
 })
+
+// 값이 없는 컬럼까지 INSERT 에 넣으면 NULL 이 저장되어 DDL 의 DEFAULT 가 적용되지 않는다.
+describe("sample mapper template insert", () => {
+	const rendered = renderTemplate(
+		createContext([
+			{ columnName: "SAMPLE_ID", ccName: "sampleId", isPrimaryKey: true },
+			{ columnName: "SAMPLE_NAME", ccName: "sampleName", isPrimaryKey: false },
+			{ columnName: "VIEW_COUNT", ccName: "viewCount", isPrimaryKey: false },
+		]),
+	)
+	const insert = rendered.match(/<insert id="insertSample">[\s\S]*?<\/insert>/)?.[0] ?? ""
+
+	it("includes each column only when its value is present", () => {
+		for (const [columnName, ccName] of [
+			["SAMPLE_ID", "sampleId"],
+			["SAMPLE_NAME", "sampleName"],
+			["VIEW_COUNT", "viewCount"],
+		]) {
+			expect(insert).toContain(`<if test="${ccName} != null">${columnName},</if>`)
+			expect(insert).toContain(`<if test="${ccName} != null">#{${ccName}},</if>`)
+		}
+	})
+
+	it("does not bind any column outside an <if> block", () => {
+		const withoutIfBlocks = insert.replace(/<if test="[^"]*">[\s\S]*?<\/if>/g, "")
+
+		expect(withoutIfBlocks).not.toContain("#{")
+		expect(withoutIfBlocks).not.toMatch(/SAMPLE_NAME|VIEW_COUNT/)
+	})
+
+	it("wraps the column and value lists in <trim> so trailing commas are removed", () => {
+		expect(insert).toContain("INSERT INTO SAMPLE")
+		expect(insert).toContain(`<trim prefix="(" suffix=")" suffixOverrides=",">`)
+		expect(insert).toContain(`<trim prefix="VALUES (" suffix=")" suffixOverrides=",">`)
+	})
+
+	it("leaves the update statement binding every non-key column", () => {
+		const update = rendered.match(/<update id="updateSample">[\s\S]*?<\/update>/)?.[0] ?? ""
+
+		expect(update).toContain("SAMPLE_NAME=#{sampleName}")
+		expect(update).toContain("VIEW_COUNT=#{viewCount}")
+		expect(update).not.toContain("<if")
+	})
+})

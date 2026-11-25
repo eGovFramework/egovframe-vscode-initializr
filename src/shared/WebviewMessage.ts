@@ -10,19 +10,24 @@
  * 이 파일은 웹뷰(webview-ui)에서도 import 하므로 순수 타입만 두고 런타임 의존성(zod 등)을 두지 않는다.
  */
 
+import type { ArchCheckResults, RuntimeGeneration } from "./archCheck"
 import type { TemplateContext } from "./templateContext"
 
 // ---------------------------------------------------------------------------
 // 페이로드 타입
 // ---------------------------------------------------------------------------
 
-/** 프로젝트 생성 템플릿 정보 (templates/templates-projects.json 항목 중 생성에 필요한 부분집합) */
+/**
+ * 프로젝트 생성 템플릿 선택 정보 — 웹뷰는 선택한 템플릿의 식별자와 버전만 보낸다.
+ * 파일명·다운로드 경로·해시 같은 "어떻게 가져오는지"는 확장 호스트가
+ * templates/templates-projects.json(확장에 번들된 manifest)에서 확정한다.
+ */
 export interface ProjectTemplatePayload {
 	displayName: string
-	/** templates/projects/examples/ 아래의 ZIP 파일명 */
-	fileName: string
-	/** templates/projects/pom/ 아래의 POM 템플릿 파일명. POM이 없는 템플릿은 빈 문자열 */
-	pomFile: string
+	/** templates-projects.json manifest의 템플릿 식별자 */
+	templateId: string
+	/** 선택한 템플릿 버전 (예: "4.3.1") */
+	version: string
 }
 
 /** 프로젝트 생성 폼 입력 값 */
@@ -73,7 +78,7 @@ export interface EgovSettingsPayload {
 // ---------------------------------------------------------------------------
 
 /** 웹뷰 탭별 메시지 발신 스코프 */
-export type WebviewScope = "projects" | "code" | "config" | "settings"
+export type WebviewScope = "projects" | "code" | "config" | "settings" | "archCheck"
 
 /** 페이로드 없이 type만으로 동작하는 단순 요청 메시지 */
 export interface SimpleWebviewMessage {
@@ -92,7 +97,7 @@ export interface SimpleWebviewMessage {
 
 /** 탭 스코프를 선택적으로 포함하는 요청 메시지 */
 export interface ScopedRequestMessage {
-	type: "selectOutputPath" | "getWorkspacePath" | "getEgovSettings"
+	type: "selectOutputPath" | "getWorkspacePath" | "getEgovSettings" | "selectProjectPath"
 	scope?: WebviewScope
 }
 
@@ -159,6 +164,29 @@ export interface UpdateEgovSettingsMessage {
 	settings: EgovSettingsPayload
 }
 
+/**
+ * 아키텍처 점검 시작 — projectPath는 사용자가 다이얼로그로 선택한 프로젝트 루트.
+ * runtimeGeneration을 주면 빌드 파일에서 판정한 세대 대신 그 세대로 점검한다(수동 지정).
+ */
+export interface StartArchCheckMessage {
+	type: "startArchCheck"
+	projectPath: string
+	runtimeGeneration?: RuntimeGeneration
+}
+
+/** 아키텍처 점검 결과를 프로젝트 폴더에 파일로 내보내기 */
+export interface ExportArchResultsMessage {
+	type: "exportArchResults"
+	results: ArchCheckResults
+	projectPath: string
+}
+
+/** 점검 결과 목록에서 클릭한 파일을 에디터로 열기 */
+export interface OpenFileMessage {
+	type: "openFile"
+	filePath: string
+}
+
 export type WebviewMessage =
 	| SimpleWebviewMessage
 	| ScopedRequestMessage
@@ -173,3 +201,6 @@ export type WebviewMessage =
 	| ShowErrorMessage
 	| ShowWarningMessage
 	| UpdateEgovSettingsMessage
+	| StartArchCheckMessage
+	| ExportArchResultsMessage
+	| OpenFileMessage

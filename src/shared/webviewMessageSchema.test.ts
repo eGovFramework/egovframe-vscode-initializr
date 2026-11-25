@@ -25,10 +25,11 @@ const validProjectConfig = {
 	version: "1.0.0",
 	url: "https://www.egovframe.go.kr",
 	outputPath: "/Users/dev/workspace",
+	// 웹뷰는 선택한 템플릿의 식별자와 버전만 보낸다 — 파일명·다운로드 경로는 호스트가 manifest에서 조회한다
 	template: {
 		displayName: "eGovFrame Web Project",
-		fileName: "egovframe-web.zip",
-		pomFile: "egovframe-web-pom.xml",
+		templateId: "web-project",
+		version: "5.1.0-beta.1",
 	},
 }
 
@@ -60,6 +61,11 @@ const validColumn = {
 	dataType: "VARCHAR",
 	javaType: "String",
 	comment: "사용자 ID",
+	inputType: "text",
+	inputStep: "",
+	dateTimePattern: "",
+	isNotNull: true,
+	hasDefault: false,
 }
 
 const validTemplateContext = {
@@ -104,6 +110,10 @@ describe("parseWebviewMessage", () => {
 			scope: "projects",
 		})
 		expect(parseOk({ type: "getEgovSettings", scope: "settings" })).toEqual({ type: "getEgovSettings", scope: "settings" })
+		expect(parseOk({ type: "selectProjectPath", scope: "archCheck" })).toEqual({
+			type: "selectProjectPath",
+			scope: "archCheck",
+		})
 		expect(parseOk({ type: "selectOutputPath" })).toEqual({ type: "selectOutputPath" })
 		parseFail({ type: "selectOutputPath", scope: "unknown" })
 	})
@@ -155,29 +165,46 @@ describe("parseWebviewMessage", () => {
 			}
 		})
 
-		it("template.fileName은 경로 구분자 없는 .zip 파일명만 허용한다", () => {
-			for (const fileName of ["../../../etc/passwd", "evil/x.zip", "..\\x.zip", "x.txt", "..zip", ""]) {
-				parseFail({
-					type: "generateProject",
-					projectConfig: { ...validProjectConfig, template: { ...validProjectConfig.template, fileName } },
-					method: "form",
-				})
-			}
-		})
-
-		it("template.pomFile은 빈 문자열 또는 경로 구분자 없는 .xml 파일명만 허용한다", () => {
-			parseOk({
+		it("template에는 templateId와 version이 모두 필요하다", () => {
+			const { templateId, version, ...withoutIds } = validProjectConfig.template
+			parseFail({ type: "generateProject", projectConfig: { ...validProjectConfig, template: withoutIds }, method: "form" })
+			parseFail({
 				type: "generateProject",
-				projectConfig: { ...validProjectConfig, template: { ...validProjectConfig.template, pomFile: "" } },
+				projectConfig: { ...validProjectConfig, template: { ...withoutIds, templateId } },
 				method: "form",
 			})
-			for (const pomFile of ["../x.xml", "a/b.xml", "x.hbs"]) {
-				parseFail({
-					type: "generateProject",
-					projectConfig: { ...validProjectConfig, template: { ...validProjectConfig.template, pomFile } },
-					method: "form",
-				})
+			parseFail({
+				type: "generateProject",
+				projectConfig: { ...validProjectConfig, template: { ...withoutIds, version } },
+				method: "form",
+			})
+			parseFail({
+				type: "generateProject",
+				projectConfig: { ...validProjectConfig, template: { ...validProjectConfig.template, version: 431 } },
+				method: "form",
+			})
+		})
+
+		it("웹뷰가 보낸 파일명·다운로드 필드는 수신 시 제거된다 (호스트가 manifest에서 다시 조회한다)", () => {
+			const message = parseOk({
+				type: "generateProject",
+				projectConfig: {
+					...validProjectConfig,
+					template: {
+						...validProjectConfig.template,
+						fileName: "../../evil.zip",
+						pomFile: "../evil-pom.xml",
+						included: false,
+						downloadUrl: "https://evil.example/payload.zip",
+						pomDownloadUrl: "http://evil.example/pom.xml",
+					},
+				},
+				method: "form",
+			})
+			if (message.type !== "generateProject") {
+				throw new Error("unexpected message type")
 			}
+			expect(message.projectConfig.template).toEqual(validProjectConfig.template)
 		})
 
 		it("templateFolder와 템플릿 파일명의 탈출 시도를 거부한다", () => {
@@ -273,5 +300,217 @@ describe("parseWebviewMessage", () => {
 	it("showError/showWarning의 value는 문자열이어야 한다", () => {
 		parseFail({ type: "showError" })
 		parseFail({ type: "showWarning", value: { nested: "object" } })
+	})
+
+	it("downloadTemplateContext의 컬럼 입력란 정보(inputType·inputStep·dateTimePattern·isNotNull·hasDefault)는 strip되지 않고 보존된다", () => {
+		const column = {
+			...validColumn,
+			javaType: "java.time.LocalDateTime",
+			inputType: "datetime-local",
+			inputStep: "",
+			dateTimePattern: "yyyy-MM-dd'T'HH:mm",
+			isNotNull: true,
+			hasDefault: true,
+		}
+		const parsed = parseOk({
+			type: "downloadTemplateContext",
+			ddl: "CREATE TABLE t (id INT)",
+			context: { ...validTemplateContext, attributes: [column], pkAttributes: [] },
+		})
+		expect(parsed).toMatchObject({ context: { attributes: [column] } })
+	})
+
+	it("exportArchResults의 DAO 상세 필드와 skipped 목록은 strip되지 않고 보존된다", () => {
+		const dao = {
+			filePath: "/p/src/main/java/a/UserDAO.java",
+			fileName: "UserDAO.java",
+			parentPath: "/p/src/main/java/a",
+			check1: true,
+			check2: true,
+			check3: true,
+			result: "OK",
+			type: "DAO",
+			daoStyle: "mybatisDao",
+			check1Detail: "MyBatis DAO",
+			check2Detail: "@Repository",
+			check3State: "skipped",
+			check3Detail: "n/a",
+			inheritancePath: ["EgovComAbstractDAO"],
+			annotationText: '@EgovMapper("m")',
+		}
+		const skipped = {
+			filePath: "/p/src/main/java/a/EgovComAbstractDAO.java",
+			fileName: "EgovComAbstractDAO.java",
+			reason: "abstract",
+		}
+		const parsed = parseOk({
+			type: "exportArchResults",
+			projectPath: "/p",
+			results: { DAO: { totalFiles: 1, passedFiles: 1, failedFiles: 0, results: [dao], skipped: [skipped] } },
+		})
+		expect(parsed).toMatchObject({ results: { DAO: { results: [dao], skipped: [skipped] } } })
+	})
+
+	it("exportArchResults의 skipped reason unreadable은 보존된다", () => {
+		const skipped = {
+			filePath: "/p/src/main/java/a/BrokenDAO.java",
+			fileName: "BrokenDAO.java",
+			reason: "unreadable",
+			detail: "EACCES: permission denied",
+		}
+		const parsed = parseOk({
+			type: "exportArchResults",
+			projectPath: "/p",
+			results: { DAO: { totalFiles: 0, passedFiles: 0, failedFiles: 0, results: [], skipped: [skipped] } },
+		})
+		expect(parsed).toMatchObject({ results: { DAO: { skipped: [skipped] } } })
+	})
+
+	it("exportArchResults는 type Mapper와 알 수 없는 check3State를 거부한다", () => {
+		const base = {
+			filePath: "/p/A.java",
+			fileName: "A.java",
+			parentPath: "/p",
+			check1: true,
+			check2: false,
+			check3: false,
+			result: "NotFound",
+		}
+		const summary = (r: object) => ({ totalFiles: 1, passedFiles: 0, failedFiles: 1, results: [r] })
+		expect(
+			parseFail({ type: "exportArchResults", projectPath: "/p", results: { DAO: summary({ ...base, type: "Mapper" }) } }),
+		).toContain("type")
+		expect(
+			parseFail({
+				type: "exportArchResults",
+				projectPath: "/p",
+				results: { DAO: summary({ ...base, type: "DAO", check3State: "maybe" }) },
+			}),
+		).toContain("check3State")
+	})
+
+	it("startArchCheck의 runtimeGeneration은 3.x/4.x/5.x만 보존하고 그 외 값은 거부한다", () => {
+		expect(parseOk({ type: "startArchCheck", projectPath: "/p", runtimeGeneration: "5.x" })).toEqual({
+			type: "startArchCheck",
+			projectPath: "/p",
+			runtimeGeneration: "5.x",
+		})
+		expect(parseOk({ type: "startArchCheck", projectPath: "/p" })).toEqual({ type: "startArchCheck", projectPath: "/p" })
+		expect(parseFail({ type: "startArchCheck", projectPath: "/p", runtimeGeneration: "6.x" })).toContain("runtimeGeneration")
+	})
+
+	it("exportArchResults의 project(모듈·4종·일관성)는 strip되지 않고 왕복 보존된다", () => {
+		const project = {
+			generation: "5.x",
+			version: "5.0.0",
+			versionConsistency: {
+				state: "pass",
+				versions: ["5.0.0"],
+				evidence: "managed by BOM egovframe-web-config-parent:5.0.0",
+			},
+			modules: [
+				{
+					buildFile: "pom.xml",
+					buildTool: "maven",
+					aggregate: false,
+					runtime: {
+						generation: "5.x",
+						version: "5.0.0",
+						source: "bom",
+						evidence: "bom egovframe-web-config-parent:5.0.0 (assumed = rte version)",
+					},
+					requiredLibraries: [
+						{ name: "ptl-mvc", status: "direct", evidence: "declared org.egovframe.rte:egovframe-rte-ptl-mvc" },
+						{
+							name: "fdl-cmmn",
+							status: "transitive",
+							via: ["ptl-mvc", "fdl-cmmn"],
+							evidence: "via ptl-mvc > fdl-cmmn (static graph 5.0.x)",
+						},
+						{ name: "fdl-logging", status: "unknown", evidence: "unparsed: apply from" },
+						{ name: "psl-dataaccess", status: "missing", evidence: "not declared" },
+					],
+					result: "NotFound",
+					notes: ["profiles ignored"],
+				},
+			],
+			result: "NotFound",
+		}
+		const parsed = parseOk({ type: "exportArchResults", projectPath: "/p", results: { project } })
+		expect(parsed).toEqual({ type: "exportArchResults", projectPath: "/p", results: { project } })
+	})
+
+	it("exportArchResults의 project.dataAccessConfig·unclassifiedDataAccessFiles는 strip되지 않고 왕복 보존된다", () => {
+		const project = {
+			generation: "4.x",
+			versionConsistency: { state: "skipped", versions: [], evidence: "no resolvable version" },
+			modules: [],
+			result: "Unknown",
+			dataAccessConfig: {
+				findings: [
+					{
+						kind: "sqlMapClientFactoryBean",
+						filePath: "/p/src/main/resources/context-sqlMap.xml",
+						fileName: "context-sqlMap.xml",
+						evidence: "org.springframework.orm.ibatis",
+					},
+					{ kind: "mapperScan", filePath: "/p/C.java", fileName: "C.java", evidence: "basePackages" },
+				],
+				warnings: ["@MapperScan without annotationClass registers every interface under basePackages"],
+			},
+			unclassifiedDataAccessFiles: [
+				{
+					filePath: "/p/src/main/java/R.java",
+					fileName: "R.java",
+					relativePath: "src/main/java/R.java",
+					evidence: "EntityManager",
+				},
+			],
+		}
+		const parsed = parseOk({ type: "exportArchResults", projectPath: "/p", results: { project } })
+		expect(parsed).toEqual({ type: "exportArchResults", projectPath: "/p", results: { project } })
+
+		const withKind = (kind: string) => ({
+			type: "exportArchResults",
+			projectPath: "/p",
+			results: {
+				project: {
+					...project,
+					dataAccessConfig: { findings: [{ kind, filePath: "/p/a", fileName: "a", evidence: "" }], warnings: [] },
+				},
+			},
+		})
+		expect(parseFail(withKind("jdbcTemplate"))).toContain("kind")
+	})
+
+	it("exportArchResults의 project는 알 수 없는 enum 값을 거부한다", () => {
+		const module = {
+			buildFile: "pom.xml",
+			buildTool: "maven",
+			aggregate: false,
+			runtime: { generation: "5.x", source: "bom", evidence: "e" },
+			requiredLibraries: [{ name: "ptl-mvc", status: "direct", evidence: "e" }],
+			result: "OK",
+		}
+		const project = (overrides: object, moduleOverrides: object = {}) => ({
+			type: "exportArchResults",
+			projectPath: "/p",
+			results: {
+				project: {
+					generation: "5.x",
+					versionConsistency: { state: "pass", versions: [], evidence: "" },
+					modules: [{ ...module, ...moduleOverrides }],
+					result: "OK",
+					...overrides,
+				},
+			},
+		})
+		parseOk(project({}))
+		expect(parseFail(project({ result: "Skipped" }))).toContain("result")
+		expect(parseFail(project({ generation: "6.x" }))).toContain("generation")
+		expect(parseFail(project({}, { buildTool: "ant" }))).toContain("buildTool")
+		expect(parseFail(project({}, { requiredLibraries: [{ name: "fdl-idgnr", status: "direct", evidence: "e" }] }))).toContain(
+			"name",
+		)
 	})
 })

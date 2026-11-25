@@ -31,7 +31,8 @@
 	"tabs": {
 		"projects": "Projects",
 		"codeGenerator": "Code Generator",
-		"configuration": "Configuration"
+		"configuration": "Configuration",
+		"checkArch": "Check Arch"
 	},
 	"projects": {
 		"title": "Generate eGovFrame Projects",
@@ -78,12 +79,14 @@
 		"categoryTemplate": "Pre-configured project templates",
 		"categoryBoot": "Spring Boot based projects",
 		"categoryMSA": "Microservices architecture projects",
-		"categoryMobile": "Mobile and hybrid app projects",
+		"categoryModulith": "Spring Modulith based modular monolith projects",
+		"categoryMobile": "Mobile app/web projects",
 		"categoryBatch": "Batch processing projects",
 		"categoryAI": "AI-powered application projects",
 		"generationStarted": "Starting project generation...",
 		"generationSuccess": "Project generated successfully at:",
-		"generationFailed": "Generation failed:"
+		"generationFailed": "Generation failed:",
+		"templateIntegrityHint": "The downloaded template does not match the hash recorded in this extension, so it was not extracted. Update the extension to the latest version, or run \"eGovFrame: Clear Template Cache\" and try again."
 	},
 	"code": {
 		"title": "Generate eGovFrame Code from DDL",

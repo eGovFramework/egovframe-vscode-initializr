@@ -4,7 +4,13 @@
  * 익스텐션이 웹뷰로 보내는 메시지 타입
  */
 
+import type { ArchCheckResults } from "./archCheck"
 import type { WebviewScope } from "./WebviewMessage"
+
+/** 프로젝트 생성 실패 사유 분류 — 웹뷰가 사유별 안내 문구를 고르는 데 쓴다 */
+export type ProjectGenerationErrorCode =
+	/** 내려받은 템플릿이 manifest에 기록된 sha256과 다르거나, 해시가 기록되어 있지 않아 다운로드를 거부함 */
+	"templateIntegrity"
 
 export type ExtensionMessage =
 	| {
@@ -32,6 +38,7 @@ export type ExtensionMessage =
 			text: string
 			projectPath?: string
 			error?: string
+			errorCode?: ProjectGenerationErrorCode
 	  }
 	| {
 			type: "success" | "error"
@@ -97,14 +104,32 @@ export type ExtensionMessage =
 	  }
 	| {
 			type: "projectTemplates"
-			templates: Array<{
-				displayName: string
-				fileName: string
-				pomFile: string
-				description?: string
-				category?: string
-				projectName?: string
-			}>
+			templates: {
+				description: string
+				repository: {
+					owner: string
+					repo: string
+					baseUrl: string
+				}
+				templates: Array<{
+					templateId: string
+					displayName: string
+					description: string
+					category: string
+					latestVersion: string
+					versions: Array<{
+						version: string
+						fileName: string
+						pomFile: string
+						releaseDate: string
+						isLatest: boolean
+						included: boolean
+						downloadUrl?: string
+						pomDownloadUrl?: string
+						fileSize?: string
+					}>
+				}>
+			}
 	  }
 	| {
 			type: "configTemplates"
@@ -118,4 +143,21 @@ export type ExtensionMessage =
 				yamlTemplate: string
 				propertiesTemplate: string
 			}>
+	  }
+	| {
+			type: "selectedProjectPath"
+			text: string
+			scope?: WebviewScope
+	  }
+	| {
+			type: "archCheckProgress"
+			text: string
+			scope?: WebviewScope
+	  }
+	| {
+			type: "archCheckResult"
+			success: boolean
+			results?: ArchCheckResults
+			error?: string
+			scope?: WebviewScope
 	  }

@@ -37,10 +37,12 @@ const predefinedDataTypes: { [key: string]: string } = {
 	BIGSERIAL: "java.lang.Long",
 
 	// Date/Time types
-	DATE: "java.sql.Date",
-	TIME: "java.sql.Time",
-	DATETIME: "java.util.Date",
-	TIMESTAMP: "java.sql.Timestamp",
+	// java.time 타입은 @DateTimeFormat 으로 형식을 지정할 수 있어 date · datetime-local · time 입력란과 바로 맞물린다.
+	// WITH TIME ZONE 타입은 getJavaClassName 에서 따로 처리한다.
+	DATE: "java.time.LocalDate",
+	TIME: "java.time.LocalTime",
+	DATETIME: "java.time.LocalDateTime",
+	TIMESTAMP: "java.time.LocalDateTime",
 
 	// Boolean types
 	BOOLEAN: "java.lang.Boolean",
@@ -102,5 +104,62 @@ export function getJavaClassName(dataType: string): string {
 		return getJavaTypeByNumberPrecision(upperType)
 	}
 
+	// 오프셋이 있는 값은 LocalDateTime · LocalTime 으로 읽지 못하는 드라이버가 있어 기존 java.sql 매핑을 유지한다.
+	if (/\bWITH\s+TIME\s+ZONE\b/.test(upperType)) {
+		if (baseType === "TIMESTAMP") {
+			return "java.sql.Timestamp"
+		}
+		if (baseType === "TIME") {
+			return "java.sql.Time"
+		}
+	}
+
 	return predefinedDataTypes[baseType] || "java.lang.Object"
+}
+
+// 등록/수정 화면의 입력란 종류. boolean 은 input 이 아니라 select 로 렌더링한다.
+export type InputType = "text" | "number" | "boolean" | "date" | "datetime-local" | "time"
+
+const INTEGER_JAVA_TYPES = ["java.lang.Integer", "java.lang.Long", "java.lang.Short", "java.lang.Byte"]
+const DECIMAL_JAVA_TYPES = ["java.math.BigDecimal", "java.lang.Float", "java.lang.Double"]
+
+// 날짜·시간 타입별 입력란 종류와 형식. 패턴은 브라우저가 해당 입력란에서 보내는 값의 형식과 같다.
+const DATE_TIME_INPUTS: { [javaType: string]: { inputType: InputType; pattern: string } } = {
+	"java.time.LocalDate": { inputType: "date", pattern: "yyyy-MM-dd" },
+	"java.time.LocalDateTime": { inputType: "datetime-local", pattern: "yyyy-MM-dd'T'HH:mm" },
+	"java.time.LocalTime": { inputType: "time", pattern: "HH:mm" },
+}
+
+/**
+ * Get the HTML input kind for the given Java type
+ * 주어진 Java 타입에 맞는 등록/수정 화면 입력란 종류 반환 (형식을 정할 수 없는 타입은 text)
+ */
+export function getInputType(javaType: string): InputType {
+	if (INTEGER_JAVA_TYPES.includes(javaType) || DECIMAL_JAVA_TYPES.includes(javaType)) {
+		return "number"
+	}
+	if (javaType === "java.lang.Boolean") {
+		return "boolean"
+	}
+	return DATE_TIME_INPUTS[javaType]?.inputType ?? "text"
+}
+
+/**
+ * 숫자 입력란의 step 값 반환 (정수는 "1", 소수는 "any", 숫자가 아니면 빈 문자열)
+ */
+export function getInputStep(javaType: string): string {
+	if (INTEGER_JAVA_TYPES.includes(javaType)) {
+		return "1"
+	}
+	if (DECIMAL_JAVA_TYPES.includes(javaType)) {
+		return "any"
+	}
+	return ""
+}
+
+/**
+ * 날짜·시간 타입의 @DateTimeFormat 패턴 반환 (날짜·시간 타입이 아니면 빈 문자열)
+ */
+export function getDateTimePattern(javaType: string): string {
+	return DATE_TIME_INPUTS[javaType]?.pattern ?? ""
 }

@@ -10,16 +10,31 @@ vi.mock("../../../../utils/vscode", () => ({
 	},
 }))
 
-const projectTemplates = [
-	{
-		displayName: "Sample Project",
-		fileName: "sample-project.zip",
-		pomFile: "",
-		description: "Sample project template",
-		category: "Sample",
-		projectName: "sample-project",
-	},
-]
+// develop의 projectTemplates 메시지는 평면 배열이 아니라 manifest 객체를 싣는다 (projectUtils.ProjectTemplatesManifest)
+const projectTemplates = {
+	description: "Test manifest",
+	repository: { owner: "eGovFramework", repo: "egovframe-vscode-initializr", baseUrl: "https://example.invalid" },
+	templates: [
+		{
+			templateId: "sample-project",
+			displayName: "Sample Project",
+			description: "Sample project template",
+			category: "Sample",
+			projectName: "sample-project",
+			latestVersion: "1.0.0",
+			versions: [
+				{
+					version: "1.0.0",
+					fileName: "sample-project.zip",
+					pomFile: "",
+					releaseDate: "2026-01-01",
+					isLatest: true,
+					included: true,
+				},
+			],
+		},
+	],
+}
 
 const renderProjectsView = () =>
 	render(

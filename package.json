@@ -1,8 +1,8 @@
 {
 	"name": "egovframe-vscode-initializr",
 	"displayName": "eGovFrame Initializr in VSCode",
-	"description": "eGovFrame project generation, code generation, and config generation tools for Visual Studio Code.",
-	"version": "5.0.6",
+	"description": "eGovFrame project generation, code generation, and config generation, and architecture check tools for Visual Studio Code.",
+	"version": "5.1.0-alpha.2",
 	"icon": "assets/icons/icon.png",
 	"engines": {
 		"vscode": "^1.84.0"
@@ -77,6 +77,14 @@
 					"light": "assets/icons/settings-light.svg",
 					"dark": "assets/icons/settings-dark.svg"
 				}
+			},
+			{
+				"command": "egovframe.clearTemplateCache",
+				"title": "eGovFrame: Clear Template Cache"
+			},
+			{
+				"command": "egovframe.showTemplateCacheInfo",
+				"title": "eGovFrame: Show Template Cache Info"
 			}
 		],
 		"keybindings": [],
@@ -161,6 +169,7 @@
 		"@types/vscode": "1.84.0",
 		"@typescript-eslint/eslint-plugin": "7.15.0",
 		"@typescript-eslint/parser": "7.15.0",
+		"@vscode/ripgrep": "1.18.0",
 		"@vscode/vsce": "3.7.1",
 		"esbuild": "0.25.0",
 		"eslint": "8.57.1",

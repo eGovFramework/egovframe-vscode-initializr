@@ -17,8 +17,6 @@ import { PROJECT_NAME_PATTERN } from "../utils/pathSafety"
 import type { WebviewMessage } from "./WebviewMessage"
 
 // 단일 경로 컴포넌트로만 쓸 수 있는 파일명: 경로 구분자(/, \)가 없고, 점으로 시작하거나 연속된 점(..)을 포함할 수 없다
-const SAFE_ZIP_FILE_PATTERN = /^(?!\.)(?!.*\.\.)[A-Za-z0-9._-]+\.zip$/
-const SAFE_XML_FILE_PATTERN = /^(?!\.)(?!.*\.\.)[A-Za-z0-9._-]+\.xml$/
 const SAFE_HBS_FILE_PATTERN = /^(?!\.)(?!.*\.\.)[A-Za-z0-9._-]+\.hbs$/
 const TEMPLATE_FOLDER_PATTERN = /^[A-Za-z0-9_-]+$/
 // 웹뷰 validateCodeConfig와 동일한 Java 패키지명 규칙 — 점으로 구분된 각 세그먼트가 소문자로 시작해야 한다
@@ -27,10 +25,13 @@ const JAVA_PACKAGE_PATTERN = /^[a-z][a-z0-9]*(\.[a-z][a-z0-9]*)*$/
 // templates-context-xml.json은 "변형 템플릿 없음"을 빈 문자열로 표기하므로 빈 문자열도 허용한다
 const optionalHbsFileSchema = z.literal("").or(z.string().regex(SAFE_HBS_FILE_PATTERN)).optional()
 
+// 웹뷰는 템플릿의 식별자와 버전만 보낸다. 파일명·다운로드 경로·해시는 호스트가 (templateId, version)으로
+// 확장에 번들된 manifest를 조회해 확정하므로, 웹뷰가 임의의 다운로드 URL이나 캐시 경로를 지정할 수 없다.
+// 선언되지 않은 키(fileName, downloadUrl 등)는 z.object가 제거한다.
 const projectTemplateSchema = z.object({
 	displayName: z.string(),
-	fileName: z.string().regex(SAFE_ZIP_FILE_PATTERN),
-	pomFile: z.literal("").or(z.string().regex(SAFE_XML_FILE_PATTERN)),
+	templateId: z.string(),
+	version: z.string(),
 })
 
 const projectConfigSchema = z.object({
@@ -72,6 +73,11 @@ const columnSchema = z.object({
 	dataType: z.string(),
 	javaType: z.string(),
 	comment: z.string(),
+	inputType: z.string(),
+	inputStep: z.string(),
+	dateTimePattern: z.string(),
+	isNotNull: z.boolean(),
+	hasDefault: z.boolean(),
 })
 
 const templateContextSchema = z.object({
@@ -94,7 +100,130 @@ const egovSettingsSchema = z.object({
 	language: z.string().optional(),
 })
 
-const webviewScopeSchema = z.enum(["projects", "code", "config", "settings"])
+// 아키텍처 점검 결과 — src/shared/archCheck.ts의 타입과 1:1 대응
+// (선언하지 않은 키는 z.object가 수신 시 제거하므로 타입에 필드를 추가하면 여기에도 반드시 추가한다)
+const archCheckResultSchema = z.object({
+	filePath: z.string(),
+	fileName: z.string(),
+	parentPath: z.string(),
+	check1: z.boolean(),
+	check2: z.boolean(),
+	check3: z.boolean(),
+	result: z.enum(["OK", "NotFound"]),
+	type: z.enum(["Controller", "Service", "DAO"]),
+	mappedMethodCount: z.number().int().nonnegative().optional(),
+	methodCount: z.number().int().nonnegative().optional(),
+	hasClassLevelMapping: z.boolean().optional(),
+	// DAO 전용 상세 필드
+	daoStyle: z.enum(["ibatisDao", "mybatisDao", "mapperInterface"]).optional(),
+	check1Detail: z.string().optional(),
+	check2Detail: z.string().optional(),
+	check3State: z.enum(["pass", "fail", "skipped"]).optional(),
+	check3Detail: z.string().optional(),
+	inheritancePath: z.array(z.string()).optional(),
+	annotationText: z.string().optional(),
+})
+
+// 점검 대상에서 제외된 파일
+const skippedFileSchema = z.object({
+	filePath: z.string(),
+	fileName: z.string(),
+	reason: z.enum([
+		"abstract",
+		"configuration",
+		"not-data-access",
+		"spring-data",
+		"mapstruct",
+		"base-class",
+		"not-a-class",
+		"unreadable",
+	]),
+	detail: z.string().optional(),
+})
+
+const archCheckSummarySchema = z.object({
+	totalFiles: z.number(),
+	passedFiles: z.number(),
+	failedFiles: z.number(),
+	results: z.array(archCheckResultSchema),
+	skipped: z.array(skippedFileSchema).optional(),
+})
+
+const runtimeGenerationSchema = z.enum(["3.x", "4.x", "5.x"])
+const generationOrUnknownSchema = z.enum(["3.x", "4.x", "5.x", "unknown"])
+
+// 프로젝트 빌드 점검 결과 — archCheck.ts의 RequiredLibraryCheck / BuildModuleCheck / ProjectCheckSummary와 1:1 대응
+const requiredLibraryCheckSchema = z.object({
+	name: z.enum(["ptl-mvc", "fdl-cmmn", "fdl-logging", "psl-dataaccess"]),
+	status: z.enum(["direct", "transitive", "excluded", "missing", "unknown"]),
+	via: z.array(z.string()).optional(),
+	evidence: z.string(),
+})
+
+const buildModuleCheckSchema = z.object({
+	buildFile: z.string(),
+	buildTool: z.enum(["maven", "gradle", "gradle-kts"]),
+	aggregate: z.boolean(),
+	runtime: z.object({
+		generation: generationOrUnknownSchema,
+		version: z.string().optional(),
+		source: z.enum(["property", "bom", "dependency-version", "artifact-pattern", "manual", "none"]),
+		evidence: z.string(),
+	}),
+	requiredLibraries: z.array(requiredLibraryCheckSchema),
+	result: z.enum(["OK", "NotFound", "Unknown", "Skipped"]),
+	notes: z.array(z.string()).optional(),
+})
+
+// 데이터 접근 설정 정보 — archCheck.ts의 DataAccessConfigFinding / DataAccessConfigInfo / UnclassifiedDataAccessFile과 1:1 대응
+const dataAccessConfigFindingSchema = z.object({
+	kind: z.enum([
+		"sqlMapClientFactoryBean",
+		"sqlSessionFactoryBean",
+		"mapperConfigurer",
+		"mapperScan",
+		"mybatisStarter",
+		"mapperLocations",
+	]),
+	filePath: z.string(),
+	fileName: z.string(),
+	evidence: z.string(),
+})
+
+const unclassifiedDataAccessFileSchema = z.object({
+	filePath: z.string(),
+	fileName: z.string(),
+	relativePath: z.string(),
+	evidence: z.string(),
+})
+
+const projectCheckSummarySchema = z.object({
+	generation: generationOrUnknownSchema,
+	version: z.string().optional(),
+	versionConsistency: z.object({
+		state: z.enum(["pass", "fail", "skipped"]),
+		versions: z.array(z.string()),
+		evidence: z.string(),
+	}),
+	modules: z.array(buildModuleCheckSchema),
+	result: z.enum(["OK", "NotFound", "Unknown"]),
+	dataAccessConfig: z
+		.object({
+			findings: z.array(dataAccessConfigFindingSchema),
+			warnings: z.array(z.string()),
+		})
+		.optional(),
+	unclassifiedDataAccessFiles: z.array(unclassifiedDataAccessFileSchema).optional(),
+})
+
+const archCheckResultsSchema = z.object({
+	Controller: archCheckSummarySchema.optional(),
+	Service: archCheckSummarySchema.optional(),
+	DAO: archCheckSummarySchema.optional(),
+	project: projectCheckSummarySchema.optional(),
+})
+
+const webviewScopeSchema = z.enum(["projects", "code", "config", "settings", "archCheck"])
 
 /** 페이로드 없이 type만 전달하는 단순 요청 메시지 */
 const simpleMessage = <T extends string>(type: T) => z.object({ type: z.literal(type) })
@@ -114,6 +243,7 @@ export const webviewMessageSchema = z.discriminatedUnion("type", [
 	simpleMessage("getExtensionInfo"),
 	simpleMessage("getProjectTemplates"),
 	simpleMessage("getConfigTemplates"),
+	scopedRequest("selectProjectPath"),
 	z.object({
 		type: z.literal("generateProject"),
 		projectConfig: projectConfigSchema,
@@ -169,6 +299,22 @@ export const webviewMessageSchema = z.discriminatedUnion("type", [
 	z.object({
 		type: z.literal("updateEgovSettings"),
 		settings: egovSettingsSchema,
+	}),
+	// projectPath/filePath는 OS 파일 선택 다이얼로그나 점검 결과에서 온 절대 경로라
+	// 패턴으로 제한할 수 없다 — 아키텍처 점검은 사용자가 지정한 임의 프로젝트를 읽는 기능이다.
+	z.object({
+		type: z.literal("startArchCheck"),
+		projectPath: z.string(),
+		runtimeGeneration: runtimeGenerationSchema.optional(),
+	}),
+	z.object({
+		type: z.literal("exportArchResults"),
+		results: archCheckResultsSchema,
+		projectPath: z.string(),
+	}),
+	z.object({
+		type: z.literal("openFile"),
+		filePath: z.string(),
 	}),
 ])
 

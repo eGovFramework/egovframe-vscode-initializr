@@ -1304,15 +1304,16 @@ const CodeView = () => {
 								</div>
 								<div>src/main/resources/</div>
 								<div style={{ paddingLeft: "10px" }}>
-									├── mapper/ - <b>MyBatis XML</b>
+									├── egovframework/sqlmap/example/mappers/ - <b>MyBatis XML</b>
 								</div>
 								<div style={{ paddingLeft: "10px" }}>
 									└── templates/thymeleaf/{parsedDDL?.tableName[0].toLowerCase()}
 									{parsedDDL?.tableName.slice(1)}/ - <b>Thymeleaf</b>
 								</div>
-								<div>src/main/webapp/WEB-INF/jsp/</div>
+								<div>src/main/webapp/WEB-INF/jsp/egovframework/example/</div>
 								<div style={{ paddingLeft: "10px" }}>
-									└── {packageName.replace(/\./g, "/")}/ - <b>JSP</b>
+									└── {parsedDDL?.tableName[0].toLowerCase()}
+									{parsedDDL?.tableName.slice(1)}/ - <b>JSP</b>
 								</div>
 							</div>
 						</div>

@@ -1,5 +1,11 @@
 import { describe, it, expect } from "vitest"
-import { validateProjectConfig, categoriesFromProjectTemplates, getTemplatesByCategory } from "../projectUtils"
+import {
+	validateProjectConfig,
+	categoriesFromProjectTemplates,
+	getTemplatesByCategory,
+	createProjectGenerationMessage,
+	formatProjectGenerationFailure,
+} from "../projectUtils"
 import type { ProjectTemplate } from "../projectUtils"
 
 const makeTemplate = (overrides: Partial<ProjectTemplate> = {}): ProjectTemplate => ({
@@ -251,5 +257,60 @@ describe("getTemplatesByCategory", () => {
 
 	it("해당하는 카테고리가 없으면 빈 배열을 반환한다", () => {
 		expect(getTemplatesByCategory(templates, "NonExistent")).toHaveLength(0)
+	})
+})
+
+describe("createProjectGenerationMessage", () => {
+	const config = {
+		projectName: "my-project",
+		artifactId: "my-project",
+		groupId: "egovframework.example",
+		outputPath: "/tmp/out",
+		template: makeTemplate({
+			templateId: "boot-web-project",
+			version: "4.3.1",
+			included: false,
+			downloadUrl: "v4.3/egovframe-boot-web.zip",
+			pomDownloadUrl: "v4.3/egovframe-boot-web-pom.xml",
+		}),
+	}
+
+	it("템플릿은 displayName·templateId·version만 보내고 파일명·다운로드 정보는 보내지 않는다", () => {
+		const message = createProjectGenerationMessage(config, "form")
+
+		expect(message.type).toBe("generateProject")
+		expect(message.method).toBe("form")
+		expect(message.projectConfig.template).toEqual({
+			displayName: "Sample Template",
+			templateId: "boot-web-project",
+			version: "4.3.1",
+		})
+	})
+
+	it("templateId나 version이 없는 템플릿으로는 메시지를 만들지 않는다", () => {
+		expect(() =>
+			createProjectGenerationMessage({ ...config, template: makeTemplate({ version: "4.3.1" }) }, "form"),
+		).toThrow()
+		expect(() =>
+			createProjectGenerationMessage({ ...config, template: makeTemplate({ templateId: "boot-web-project" }) }, "form"),
+		).toThrow()
+	})
+})
+
+describe("formatProjectGenerationFailure", () => {
+	const t = (key: string) => `[${key}]`
+
+	it("기본 실패 문구 뒤에 호스트가 보낸 사유를 붙인다", () => {
+		expect(formatProjectGenerationFailure(t, { error: "HTTP 404" })).toBe("❌ [projects.generationFailed] HTTP 404")
+	})
+
+	it("무결성 실패(templateIntegrity)에는 확장 업데이트 안내를 다음 줄에 덧붙인다", () => {
+		expect(formatProjectGenerationFailure(t, { error: "Integrity check failed", errorCode: "templateIntegrity" })).toBe(
+			"❌ [projects.generationFailed] Integrity check failed\n[projects.templateIntegrityHint]",
+		)
+	})
+
+	it("사유가 없으면 'undefined'를 출력하지 않는다", () => {
+		expect(formatProjectGenerationFailure(t, {})).toBe("❌ [projects.generationFailed]")
 	})
 })

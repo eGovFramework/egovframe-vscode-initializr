@@ -22,6 +22,9 @@ describe("ddlParser", () => {
 			dataType: "INT",
 			javaType: "java.lang.Integer",
 			isPrimaryKey: true,
+			inputType: "number",
+			inputStep: "1",
+			dateTimePattern: "",
 		})
 		expect(result.attributes[1]).toMatchObject({
 			columnName: "user_name",
@@ -30,14 +33,109 @@ describe("ddlParser", () => {
 			dataType: "VARCHAR",
 			javaType: "java.lang.String",
 			isPrimaryKey: false,
+			inputType: "text",
+			inputStep: "",
+			dateTimePattern: "",
 		})
 		expect(result.attributes[2]).toMatchObject({
 			columnName: "created_at",
 			ccName: "createdAt",
 			pcName: "CreatedAt",
 			dataType: "TIMESTAMP",
-			javaType: "java.sql.Timestamp",
+			javaType: "java.time.LocalDateTime",
 			isPrimaryKey: false,
+			inputType: "datetime-local",
+			inputStep: "",
+			dateTimePattern: "yyyy-MM-dd'T'HH:mm",
+		})
+	})
+
+	// 타입의 첫 단어만 보면 TIMESTAMP 와 구분되지 않는다. 오프셋이 있는 컬럼은 기존 java.sql 매핑과 text 입력란을 유지한다.
+	it("should keep the java.sql mapping for WITH TIME ZONE columns", () => {
+		const result = parseDDL(`
+			CREATE TABLE events (
+				id INT PRIMARY KEY,
+				created_at TIMESTAMP WITH TIME ZONE NOT NULL,
+				updated_at TIMESTAMP(6) WITHOUT TIME ZONE,
+				note VARCHAR(100) COMMENT 'stored with time zone'
+			);
+		`)
+
+		expect(result.attributes[1]).toMatchObject({
+			dataType: "TIMESTAMP",
+			javaType: "java.sql.Timestamp",
+			inputType: "text",
+			dateTimePattern: "",
+		})
+		expect(result.attributes[2]).toMatchObject({
+			javaType: "java.time.LocalDateTime",
+			inputType: "datetime-local",
+		})
+		expect(result.attributes[3]).toMatchObject({ javaType: "java.lang.String", inputType: "text" })
+	})
+
+	describe("NOT NULL / DEFAULT 판별", () => {
+		const columnsOf = (body: string) =>
+			Object.fromEntries(parseDDL(`CREATE TABLE t (${body});`).attributes.map((column) => [column.columnName, column]))
+
+		it("should flag NOT NULL columns and columns the database fills in", () => {
+			const columns = columnsOf(`
+				id VARCHAR(36) PRIMARY KEY,
+				title VARCHAR(200) NOT NULL,
+				content TEXT,
+				use_yn CHAR(1) NOT NULL DEFAULT 'Y',
+				view_count INT DEFAULT 0,
+				nickname VARCHAR(50) NULL
+			`)
+
+			expect(columns.title).toMatchObject({ isNotNull: true, hasDefault: false })
+			expect(columns.content).toMatchObject({ isNotNull: false, hasDefault: false })
+			expect(columns.use_yn).toMatchObject({ isNotNull: true, hasDefault: true })
+			expect(columns.view_count).toMatchObject({ isNotNull: false, hasDefault: true })
+			expect(columns.nickname).toMatchObject({ isNotNull: false, hasDefault: false })
+		})
+
+		it("should treat primary key columns as NOT NULL", () => {
+			const inline = columnsOf("id VARCHAR(36) PRIMARY KEY, name VARCHAR(10)")
+			const tableLevel = columnsOf("id VARCHAR(36), name VARCHAR(10), PRIMARY KEY (id)")
+
+			expect(inline.id.isNotNull).toBe(true)
+			expect(tableLevel.id.isNotNull).toBe(true)
+			expect(inline.name.isNotNull).toBe(false)
+		})
+
+		it("should treat auto-generated columns as having a default", () => {
+			const columns = columnsOf(`
+				seq INT NOT NULL AUTO_INCREMENT,
+				pg_seq SERIAL NOT NULL,
+				identity_seq BIGINT GENERATED ALWAYS AS IDENTITY,
+				created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+			`)
+
+			expect(columns.seq).toMatchObject({ isNotNull: true, hasDefault: true })
+			expect(columns.pg_seq).toMatchObject({ isNotNull: true, hasDefault: true })
+			expect(columns.identity_seq.hasDefault).toBe(true)
+			expect(columns.created_at).toMatchObject({ isNotNull: true, hasDefault: true })
+		})
+
+		// 문자열 리터럴과 COMMENT 본문의 문구를 제약조건으로 오인하면 안 된다.
+		it("should ignore the words inside string literals and comments", () => {
+			const columns = columnsOf(`
+				memo VARCHAR(100) COMMENT 'must be not null, default is empty',
+				state VARCHAR(20) DEFAULT 'not null',
+				label VARCHAR(20) NOT NULL COMMENT 'has no default'
+			`)
+
+			expect(columns.memo).toMatchObject({ isNotNull: false, hasDefault: false })
+			expect(columns.state).toMatchObject({ isNotNull: false, hasDefault: true })
+			expect(columns.label).toMatchObject({ isNotNull: true, hasDefault: false })
+		})
+
+		it("should be case-insensitive", () => {
+			const columns = columnsOf("title varchar(200) not null, use_yn char(1) not  null default 'Y'")
+
+			expect(columns.title).toMatchObject({ isNotNull: true, hasDefault: false })
+			expect(columns.use_yn).toMatchObject({ isNotNull: true, hasDefault: true })
 		})
 	})
 

@@ -112,7 +112,9 @@ export class Controller {
 			// Form-based Project Generation
 			case "generateProject": {
 				if (message.projectConfig && message.method) {
-					const { generateEgovProject, openProjectInVSCode } = await import("../../utils/projectGenerator")
+					const { generateEgovProject } = await import("../../utils/projectGenerator")
+					const { loadProjectTemplatesManifest, resolveProjectTemplate } = await import("../../utils/templateManifest")
+					const { getTemplateCacheRoot } = await import("../../utils/templateCache")
 
 					try {
 						// Send progress updates to webview
@@ -123,20 +125,29 @@ export class Controller {
 							})
 						}
 
+						// 웹뷰가 보낸 template은 (templateId, version) 조회 키로만 쓴다. 파일명·다운로드 경로·해시는
+						// 확장에 번들된 manifest에서 확정하므로 웹뷰가 임의의 URL이나 캐시 경로를 지정할 수 없다.
+						const { template: selectedTemplate, ...projectFields } = message.projectConfig
+						const manifest = await loadProjectTemplatesManifest(this.context.extensionPath)
+						const template = resolveProjectTemplate(manifest, selectedTemplate.templateId, selectedTemplate.version)
+
+						// 번들 템플릿은 확장 디렉터리에서, 내려받은 템플릿은 VS Code globalStorage의 캐시에서 읽는다
+						const paths = {
+							extensionPath: this.context.extensionPath,
+							templateCacheRoot: getTemplateCacheRoot(this.context.globalStorageUri.fsPath),
+						}
+
 						// Generate the project
-						const result = await generateEgovProject(
-							message.projectConfig, // { projectName: string, artifactId: string, groupId: string, version: string(초기값 "1.0.0"), url: string(초기값 "http://www.egovframe.go.kr"), outputPath: string, template: {displayName: string, fileName: string, pomFile: string} }
-							this.context.extensionPath,
-							sendProgress,
-						)
+						const result = await generateEgovProject({ ...projectFields, template }, paths, sendProgress)
 
 						// Send result to webview
 						await this.postMessageToWebview({
 							type: "projectGenerationResult",
-							success: result.success, // boolean
+							success: result.success,
 							text: result.message,
 							projectPath: result.projectPath,
 							error: result.error,
+							errorCode: result.errorCode,
 						})
 
 						if (result.error) {
@@ -625,11 +636,11 @@ export class Controller {
 						"templates-projects.json",
 					)
 					const templatesJsonContent = await vscode.workspace.fs.readFile(templatesJsonPath)
-					const templates = JSON.parse(templatesJsonContent.toString())
+					const manifest = JSON.parse(templatesJsonContent.toString())
 
 					await this.postMessageToWebview({
 						type: "projectTemplates",
-						templates,
+						templates: manifest,
 					})
 				} catch (error) {
 					console.error("Error reading project templates:", error)
@@ -664,6 +675,124 @@ export class Controller {
 						text: "Failed to load config templates",
 						scope: "config",
 					})
+				}
+				break
+			}
+
+			// Architecture Check - Project Path Selection
+			case "selectProjectPath": {
+				console.log("Received selectProjectPath message")
+				const { getHomeDirectoryUri } = await import("../../utils/path")
+
+				try {
+					const folders = await vscode.window.showOpenDialog({
+						canSelectFolders: true,
+						canSelectFiles: false,
+						canSelectMany: false,
+						openLabel: "Select Project Directory",
+						defaultUri: vscode.workspace.workspaceFolders?.[0].uri || getHomeDirectoryUri() || undefined,
+						title: "Select eGovFrame Project Root Directory",
+					})
+
+					if (folders && folders.length > 0) {
+						await this.postMessageToWebview({
+							type: "selectedProjectPath",
+							text: folders[0].fsPath,
+							scope: message.scope,
+						})
+					}
+				} catch (error) {
+					console.error("Error in selectProjectPath:", error)
+					await this.postMessageToWebview({
+						type: "error",
+						text: "Failed to select project path",
+						scope: message.scope ?? "archCheck",
+					})
+				}
+				break
+			}
+
+			// Architecture Check - Start Check
+			case "startArchCheck": {
+				if (message.projectPath) {
+					try {
+						const { checkEgovArchitecture } = await import("../../utils/archChecker")
+						const { resolveRipgrepPath } = await import("../../utils/ripgrepPath")
+						// VS Code가 함께 설치한 rg(없으면 개발 환경의 node_modules @vscode/ripgrep 플랫폼 패키지). 못 찾으면 엔진이 fs 탐색으로 대체한다
+						const rgPath = resolveRipgrepPath({
+							appRoot: vscode.env.appRoot,
+							extensionPath: this.context.extensionPath,
+						})
+
+						// Progress callback to send updates to webview
+						const progressCallback = (progressMessage: string) => {
+							this.postMessageToWebview({
+								type: "archCheckProgress",
+								text: progressMessage,
+								scope: "archCheck",
+							})
+						}
+
+						const results = await checkEgovArchitecture(message.projectPath, progressCallback, {
+							rgPath,
+							runtimeGeneration: message.runtimeGeneration,
+						})
+
+						await this.postMessageToWebview({
+							type: "archCheckResult",
+							success: true,
+							results,
+							scope: "archCheck",
+						})
+					} catch (error) {
+						console.error("Architecture check error:", error)
+						await this.postMessageToWebview({
+							type: "archCheckResult",
+							success: false,
+							error: error instanceof Error ? error.message : "Architecture check failed",
+							scope: "archCheck",
+						})
+					}
+				} else {
+					await this.postMessageToWebview({
+						type: "error",
+						text: "No project path provided for architecture check",
+						scope: "archCheck",
+					})
+				}
+				break
+			}
+
+			// Architecture Check - Export Results
+			case "exportArchResults": {
+				if (message.results && message.projectPath) {
+					try {
+						const { exportArchResults } = await import("../../utils/archChecker")
+						await exportArchResults(message.results, message.projectPath)
+						vscode.window.showInformationMessage("✅ Architecture check results exported successfully")
+					} catch (error) {
+						console.error("Export results error:", error)
+						vscode.window.showErrorMessage(
+							`❌ Failed to export results: ${error instanceof Error ? error.message : "Unknown error"}`,
+						)
+					}
+				} else {
+					vscode.window.showWarningMessage("No results to export")
+				}
+				break
+			}
+
+			// Open File in Editor
+			case "openFile": {
+				if (message.filePath) {
+					try {
+						const fileUri = vscode.Uri.file(message.filePath)
+						const document = await vscode.workspace.openTextDocument(fileUri)
+						await vscode.window.showTextDocument(document)
+					} catch (error) {
+						console.error("Error opening file:", error)
+						vscode.window.showErrorMessage(`Failed to open file: ${message.filePath}`)
+					}
 				}
 				break
 			}

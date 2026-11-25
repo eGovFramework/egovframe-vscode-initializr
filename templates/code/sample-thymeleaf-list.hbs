@@ -15,15 +15,13 @@
 	<script th:inline="javascript" th:src="@{/js/jquery.min.js}"></script>
 	<script th:inline="javascript" th:src="@{/js/egovframework/common.js}" defer></script>
 	<script th:inline="javascript" defer>
-		const contextPath = $('#contextPathHolder').attr('data-contextPath') ? $('#contextPathHolder').attr('data-contextPath') : '';
-
 		function notNullCheck(value) {
 		    return !(value === '' || value == null || (typeof value == 'object' && !Object.keys(value).length));
 		}
 
 		function fn_egov_selectList() {
             if (notNullCheck($('#searchKeyword').val())) {
-				$('#listForm').attr('method', 'get').attr('action', contextPath + '{{listPath}}').submit();
+				$('#listForm').attr('method', 'get').attr('action', {{concat "[[@{" listPath "}]]"}}).submit();
             } else {
             	alert('Please enter search keyword');
             }
@@ -31,11 +29,11 @@
 
 		function fn_egov_link_page(pageIndex) {
         	$('#pageIndex').val(pageIndex);
-        	$('#listForm').attr('method', 'get').attr('action', contextPath + '{{listPath}}').submit();
+        	$('#listForm').attr('method', 'get').attr('action', {{concat "[[@{" listPath "}]]"}}).submit();
         }
 
         function fn_egov_addView() {
-        	$('#listForm').attr('method', `post`).attr('action', contextPath + '{{addViewPath}}').submit();
+        	$('#listForm').attr('method', `post`).attr('action', {{concat "[[@{" addViewPath "}]]"}}).submit();
         }
 
         function fn_egov_select({{#if pkAttributes.length}}{{#each pkAttributes}}{{ccName}}{{#unless @last}}, {{/unless}}{{/each}}{{else}}{{attributes.[0].ccName}}{{/if}}) {
@@ -46,7 +44,7 @@
 			{{else}}
 			$('#{{attributes.[0].ccName}}').val({{attributes.[0].ccName}});
 			{{/if}}
-            $('#listForm').attr('method', 'post').attr('action', contextPath + '{{updateViewPath}}').submit();
+            $('#listForm').attr('method', 'post').attr('action', {{concat "[[@{" updateViewPath "}]]"}}).submit();
         }
     </script>
 </head>

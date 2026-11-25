@@ -5,6 +5,7 @@ import { Button, useVSCodeTheme, LanguageSelector } from "../ui"
 import ProjectsView from "./tabs/ProjectsView"
 import CodeView from "./tabs/CodeView"
 import ConfigView from "./tabs/ConfigView"
+import CheckArchView from "./tabs/CheckArchView"
 
 interface EgovViewProps {
 	onDone: () => void
@@ -55,6 +56,11 @@ const EgovView = memo(({ onDone, initialTab }: EgovViewProps) => {
 							{t("tabs.configuration")}
 						</TabButton>
 					</div>
+					<div style={{ flex: "auto", textAlign: "center" }}>
+						<TabButton isActive={activeTab === "checkArch"} onClick={() => handleTabChange("checkArch")}>
+							{t("tabs.checkArch")}
+						</TabButton>
+					</div>
 				</div>
 
 				{/* Content container */}
@@ -67,6 +73,9 @@ const EgovView = memo(({ onDone, initialTab }: EgovViewProps) => {
 					</div>
 					<div style={{ display: activeTab === "config" ? "block" : "none" }}>
 						<ConfigView />
+					</div>
+					<div style={{ display: activeTab === "checkArch" ? "block" : "none" }}>
+						<CheckArchView />
 					</div>
 				</div>
 			</div>

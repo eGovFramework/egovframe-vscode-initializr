@@ -1,19 +1,37 @@
 # Changelog
 
-## Unreleased
+## v5.1.0 (2026-11-26)
+- Architecture Check 탭 및 기능 신설
 - Code Generation
   - DDL 입력 내용을 기반으로 테이블, 컬럼, PK/FK, 1:N 관계를 표시하는 ERD Preview 추가 (Refs: PR #10)
   - DDL COMMENT를 파싱해 VO 필드 주석에 반영 (Refs: PR #18)
   - NUMBER 타입을 정밀도/스케일 기반으로 매핑하고 누락된 SQL 타입 보강 (Refs: PR #19)
   - TEXT/BLOB/BYTE 타입을 각각 String/byte[]/byte[]로 변환하도록 매핑 추가 (Refs: PR #16)
   - ERD Preview에서 컬럼 COMMENT 본문의 "primary key"·"references" 문구를 제약조건으로 오인해 PK/FK가 잘못 표시되던 문제 수정 (Refs: PR #33)
+  - 생성된 MyBatis Mapper XML과 JSP가 프로젝트 템플릿이 읽지 않는 위치에 만들어져 목록 화면이 500(`Invalid bound statement`)·404로 실패하던 문제 수정 — Mapper XML은 `src/main/resources/egovframework/sqlmap/example/mappers/`, JSP는 `src/main/webapp/WEB-INF/jsp/egovframework/example/<table>/`에 생성 (Web Project·Boot > Web Project 템플릿의 매퍼 위치·뷰 리졸버 접두어와 일치, 패키지명과 무관하게 고정)
+  - 생성된 Thymeleaf 등록/수정 화면이 정의되지 않은 `contextPath` 변수를 참조해 등록·수정·삭제·목록 버튼이 동작하지 않던 문제 수정 — 목록 화면을 포함해 폼 action을 Thymeleaf 링크 표현식(`[[@{...}]]`)으로 생성하여 컨텍스트 경로가 루트가 아닌 환경에서도 동작
+  - 생성된 Thymeleaf 등록/수정 화면의 `th:errors`가 `*price`처럼 잘못 렌더링되어 바인딩 오류 시 500이 발생하던 문제 수정
+  - 생성된 Controller의 미사용 `RequestParam` import 제거, VO의 `EgovNullCheck` import를 사용부와 함께 주석 처리
+  - 날짜·시간 컬럼을 화면에서 입력할 수 없던 문제 수정 — DATE/TIME/DATETIME/TIMESTAMP를 `java.time.LocalDate`/`LocalTime`/`LocalDateTime`으로 매핑하고 VO 필드에 `@DateTimeFormat`을 붙여 `date`·`time`·`datetime-local` 입력란의 값이 그대로 바인딩되도록 함 (기존에는 `java.sql.Timestamp` 등으로 매핑되어 `yyyy-MM-dd HH:mm:ss` 형식만 받고 빈 값은 오류). `WITH TIME ZONE` 컬럼은 기존 `java.sql` 매핑 유지
+  - 비운 입력란이 빈 문자열(`''`)로 저장되어 NULL 허용 FK 컬럼을 비우면 FK 위반으로 등록이 실패하던 문제 수정 — 생성된 Controller에 `@InitBinder`로 `StringTrimmerEditor(true)`를 등록해 빈 문자열을 null로 변환
+  - 값을 비운 컬럼에 NULL이 저장되어 DDL의 DEFAULT가 적용되지 않던 문제 수정 — 생성된 Mapper의 INSERT가 값이 있는 컬럼만 포함하도록 `<trim>`/`<if>`로 변경
+  - 삭제되었거나 없는 글의 수정 화면에 접근하면 NullPointerException이 나던 문제 수정 — 생성된 ServiceImpl이 조회 결과가 없으면 `info.nodata.msg` 예외를 던짐
+  - 생성된 등록/수정 화면(Thymeleaf·JSP)의 입력란을 컬럼 타입에 맞게 생성 — 숫자는 `type="number"`, 날짜·시간은 `date`·`time`·`datetime-local`, Boolean은 빈 값·true·false 선택란. 템플릿 컨텍스트의 컬럼 정보에 `inputType`·`inputStep`·`dateTimePattern` 추가
+  - 생성된 등록/수정 화면에서 NOT NULL 컬럼을 비운 채 저장하면 DB 제약 위반으로 500이 나던 문제 수정 — DDL의 NOT NULL·DEFAULT를 읽어 필수 입력란에 `required`를 붙이고(DEFAULT가 있는 컬럼은 수정 화면에서만 필수), 등록·수정 전에 `reportValidity()`로 브라우저 입력 검사를 실행. 템플릿 컨텍스트의 컬럼 정보에 `isNotNull`·`hasDefault` 추가
 - Config Generation
   - AOP 트랜잭션 설정 템플릿에서 txAdvisor의 잘못된 직접 메서드 호출 수정 (Refs: PR #12)
   - TransactionForm의 READ_UNCOMMITTED 오타 수정 (Refs: PR #9)
 - Internationalization
   - 웹뷰 UI(*.tsx) 다국어(i18n) 처리 (Refs: PR #29)
 - Project Generation
+  - modulith 카테고리 신설
+  - 구버전(4.3.x) 템플릿 다운로드 캐시를 확장 설치 디렉터리 밖인 VS Code globalStorage(`<globalStorageUri>/template-cache/{examples,pom}/<version>/`)로 이동 — 확장 업데이트 후에도 캐시가 유지되고 VSIX 패키징에 섞여 들어가지 않으며, manifest가 버전마다 같은 파일명을 써도 서로 덮어쓰지 않음. 임시 파일 이름에 프로세스 ID를 넣어 여러 창의 동시 다운로드가 겹치지 않게 하고, 하루 넘게 남은 임시 파일은 다음 다운로드 때 정리
+  - 템플릿 무결성 검증에 실패하면 Projects 탭에 확장 업데이트·캐시 삭제 안내를 표시
+  - 표준프레임워크 실행환경 5.1 베타 버전 및 4.3.2 버전이 적용된 템플릿으로 최신화
 - Security
+  - GitHub Releases에서 내려받는 구버전 템플릿 ZIP·POM의 sha256을 manifest(`templates-projects.json`의 `sha256`/`pomSha256`)에 기록하고, 다운로드 직후와 캐시 사용 시마다 대조해 일치할 때만 압축 해제 — 해시가 기록되지 않은 항목은 다운로드를 거부하고, 불일치한 캐시는 삭제 후 한 번 다시 받음
+  - 템플릿 다운로드가 웹뷰가 보낸 downloadUrl·파일명을 그대로 신뢰하던 문제 수정 — 웹뷰는 templateId·version만 보내고 호스트가 번들 manifest에서 다운로드 경로·파일명을 확정
+  - 템플릿 다운로드에 https 강제, 리다이렉트 횟수 상한(5회)·https 유지, 응답 크기 상한(200MB), 소켓 타임아웃을 적용하고 임시 파일에 받아 검증 후 캐시로 이동
 - Refactoring
   - 컬럼 유효성 검사 로직 분리 (Refs: PR #13)
   - 불필요한 try/catch(no-useless-catch) 제거 (codeGenerator.ts) (Refs: PR #24)

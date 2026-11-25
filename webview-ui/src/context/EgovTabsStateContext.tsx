@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, ReactNode } from "react"
 import { ParsedDDL } from "@shared/ddlParser"
-import { ProjectTemplate } from "../utils/projectUtils"
+import { ProjectTemplate, ProjectTemplatesManifest, TemplateVersion } from "../utils/projectUtils"
 import { TemplateConfig } from "../components/egov/types/templates"
 
 // CodeView 상태
@@ -46,6 +46,10 @@ interface ProjectsViewState {
 	// Extension에서 가져온 프로젝트 템플릿 목록
 	projectTemplates: ProjectTemplate[]
 	isTemplatesLoading: boolean
+	// 버전 관련 상태
+	manifest: ProjectTemplatesManifest | null // 전체 매니페스트 데이터
+	selectedVersion: string // 현재 선택된 버전
+	availableVersions: TemplateVersion[] // 선택된 템플릿의 사용 가능한 버전 목록
 }
 
 // ConfigView 상태
@@ -118,6 +122,10 @@ const initialProjectsViewState: ProjectsViewState = {
 	// Extension에서 가져온 프로젝트 템플릿 목록
 	projectTemplates: [],
 	isTemplatesLoading: true,
+	// 버전 관련 초기 상태
+	manifest: null,
+	selectedVersion: "",
+	availableVersions: [],
 }
 
 // 초기 상태 - Config View

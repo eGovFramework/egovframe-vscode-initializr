@@ -1,6 +1,10 @@
+{{#each attributes}}{{#if dateTimePattern}}{{setVar "hasDateTimeField" true}}{{/if}}{{/each~}}
 package {{packageName}}.service;
 
-import org.egovframe.rte.ptl.reactive.validation.EgovNullCheck;
+// import org.egovframe.rte.ptl.reactive.validation.EgovNullCheck; // egovframe-Todo: Null Check 적용시 주석 해제
+{{#if hasDateTimeField}}
+import org.springframework.format.annotation.DateTimeFormat;
+{{/if}}
 
 /**
  * @Class Name : {{className}}VO.java
@@ -27,6 +31,9 @@ public class {{className}}VO extends {{className}}DefaultVO {
   {{#unless isPrimaryKey}}
 	// @EgovNullCheck(message="{{ccName}} is required") // egovframe-Todo: Null Check 적용시 좌측 주석 코드 참고
   {{/unless}}
+  {{#if dateTimePattern}}
+	@DateTimeFormat(pattern = "{{{dateTimePattern}}}")
+  {{/if}}
 	private {{javaType}} {{ccName}};
 
 {{/each}}

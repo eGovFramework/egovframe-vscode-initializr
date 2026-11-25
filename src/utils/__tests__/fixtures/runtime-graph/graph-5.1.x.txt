@@ -1,0 +1,480 @@
+# source: egovframe-rte-*-5.1.0-sources.jar (META-INF/maven pom.xml), v5.1.0 beta, extracted 2026-11-03
+== all-5.1.x/AI_org.egovframe.rte.ai.core_pom.xml
+   artifact=(parent):egovframe-rte-ai-core:(parent) parent=org.egovframe.rte:egovframe-rte-root:5.1.0 packaging=jar
+   dep org.slf4j:slf4j-api:(managed) scope=compile optional=false
+   dep kr.dogfoot:hwplib:(managed) scope=compile optional=true
+   dep kr.dogfoot:hwpxlib:(managed) scope=compile optional=true
+   dep org.apache.poi:poi-ooxml:(managed) scope=compile optional=true
+   dep org.apache.commons:commons-compress:(managed) scope=compile optional=true
+   dep org.apache.pdfbox:pdfbox:(managed) scope=compile optional=true
+   dep redis.clients:jedis:(managed) scope=compile optional=true
+   dep org.springframework:spring-jdbc:(managed) scope=compile optional=true
+   dep org.springframework:spring-tx:(managed) scope=compile optional=true
+   dep org.junit.jupiter:junit-jupiter-api:(managed) scope=test optional=false
+   dep org.hsqldb:hsqldb:(managed) scope=test optional=false
+   dep org.apache.logging.log4j:log4j-core:(managed) scope=test optional=false
+   dep org.apache.logging.log4j:log4j-slf4j2-impl:(managed) scope=test optional=false
+== all-5.1.x/AI_org.egovframe.rte.ai.langchain4j_pom.xml
+   artifact=(parent):egovframe-rte-ai-langchain4j:(parent) parent=org.egovframe.rte:egovframe-rte-root:5.1.0 packaging=jar
+   dep org.egovframe.rte:egovframe-rte-ai-core:(managed) scope=compile optional=false
+   dep dev.langchain4j:langchain4j-core:(managed) scope=compile optional=false
+   dep com.fasterxml.jackson.core:jackson-databind:(managed) scope=compile optional=false
+   dep org.slf4j:slf4j-api:(managed) scope=compile optional=false
+   dep org.springframework:spring-jdbc:(managed) scope=compile optional=true
+   dep org.springframework:spring-tx:(managed) scope=compile optional=true
+   dep io.micrometer:micrometer-observation:(managed) scope=compile optional=true
+   dep dev.langchain4j:langchain4j:(managed) scope=test optional=false
+   dep org.junit.jupiter:junit-jupiter-api:(managed) scope=test optional=false
+   dep org.hsqldb:hsqldb:(managed) scope=test optional=false
+   dep org.apache.pdfbox:pdfbox:(managed) scope=test optional=false
+   dep org.apache.logging.log4j:log4j-core:(managed) scope=test optional=false
+   dep org.apache.logging.log4j:log4j-slf4j2-impl:(managed) scope=test optional=false
+== all-5.1.x/AI_org.egovframe.rte.ai.springai_pom.xml
+   artifact=(parent):egovframe-rte-ai-springai:(parent) parent=org.egovframe.rte:egovframe-rte-root:5.1.0 packaging=jar
+   dep org.egovframe.rte:egovframe-rte-ai-core:(managed) scope=compile optional=false
+   dep org.springframework.ai:spring-ai-commons:(managed) scope=compile optional=false
+   dep org.springframework.ai:spring-ai-model:(managed) scope=compile optional=false
+   dep org.springframework.ai:spring-ai-client-chat:(managed) scope=compile optional=false
+   dep org.springframework.ai:spring-ai-rag:(managed) scope=compile optional=false
+   dep org.springframework.ai:spring-ai-vector-store:(managed) scope=compile optional=false
+   dep org.springframework.ai:spring-ai-retry:(managed) scope=compile optional=false
+   dep org.springframework:spring-core:(managed) scope=compile optional=false
+   dep io.projectreactor:reactor-core:(managed) scope=compile optional=false
+   dep org.slf4j:slf4j-api:(managed) scope=compile optional=false
+   dep org.junit.jupiter:junit-jupiter-api:(managed) scope=test optional=false
+   dep org.apache.pdfbox:pdfbox:(managed) scope=test optional=false
+   dep org.apache.logging.log4j:log4j-core:(managed) scope=test optional=false
+   dep org.apache.logging.log4j:log4j-slf4j2-impl:(managed) scope=test optional=false
+== all-5.1.x/Batch_org.egovframe.rte.bat.core_pom.xml
+   artifact=(parent):egovframe-rte-bat-core:(parent) parent=org.egovframe.rte:egovframe-rte-root:5.1.0 packaging=jar
+   dep org.egovframe.rte:egovframe-rte-fdl-cmmn:(managed) scope=compile optional=false
+   dep org.egovframe.rte:egovframe-rte-fdl-idgnr:(managed) scope=test optional=false
+   dep org.egovframe.rte:egovframe-rte-psl-dataaccess:(managed) scope=compile optional=false
+   dep org.springframework:spring-aop:(managed) scope=compile optional=false
+   dep org.springframework.batch:spring-batch-core:(managed) scope=compile optional=false
+   dep org.springframework.batch:spring-batch-infrastructure:(managed) scope=compile optional=false
+   dep org.springframework.batch:spring-batch-test:(managed) scope=compile optional=false
+   dep org.springframework.batch:spring-batch-integration:(managed) scope=compile optional=false
+   dep org.springframework.integration:spring-integration-core:(managed) scope=compile optional=false
+   dep org.springframework:spring-context-support:(managed) scope=compile optional=false
+   dep org.springframework:spring-jdbc:(managed) scope=compile optional=false
+   dep org.springframework:spring-messaging:(managed) scope=compile optional=false
+   dep org.springframework:spring-orm:(managed) scope=compile optional=false
+   dep org.springframework:spring-oxm:(managed) scope=test optional=false
+   dep org.springframework:spring-tx:(managed) scope=compile optional=false
+   dep org.springframework:spring-test:(managed) scope=test optional=false
+   dep org.springframework:spring-webmvc:(managed) scope=compile optional=false
+   dep jakarta.annotation:jakarta.annotation-api:(managed) scope=test optional=false
+   dep jakarta.persistence:jakarta.persistence-api:(managed) scope=test optional=false
+   dep jakarta.mail:jakarta.mail-api:(managed) scope=test optional=false
+   dep jakarta.validation:jakarta.validation-api:(managed) scope=test optional=false
+   dep org.apache.logging.log4j:log4j-core:(managed) scope=compile optional=false
+   dep org.apache.logging.log4j:log4j-slf4j2-impl:(managed) scope=compile optional=false
+   dep org.slf4j:jcl-over-slf4j:(managed) scope=compile optional=false
+   dep org.slf4j:log4j-over-slf4j:(managed) scope=compile optional=false
+   dep org.apache.commons:commons-dbcp2:(managed) scope=test optional=false
+   dep commons-io:commons-io:(managed) scope=compile optional=false
+   dep org.quartz-scheduler:quartz:(managed) scope=test optional=false
+   dep org.hsqldb:hsqldb:(managed) scope=test optional=false
+   dep com.googlecode.log4jdbc:log4jdbc:(managed) scope=test optional=false
+   dep org.junit.jupiter:junit-jupiter-api:(managed) scope=test optional=false
+   dep org.junit.jupiter:junit-jupiter-engine:(managed) scope=test optional=false
+== all-5.1.x/Foundation_org.egovframe.rte.fdl.access_pom.xml
+   artifact=(parent):egovframe-rte-fdl-access:(parent) parent=org.egovframe.rte:egovframe-rte-root:5.1.0 packaging=jar
+   dep org.egovframe.rte:egovframe-rte-fdl-cmmn:(managed) scope=compile optional=false
+   dep org.springframework:spring-webmvc:(managed) scope=compile optional=false
+   dep org.springframework:spring-test:(managed) scope=test optional=false
+   dep jakarta.servlet:jakarta.servlet-api:(managed) scope=provided optional=false
+   dep com.fasterxml.jackson.core:jackson-core:(managed) scope=compile optional=false
+   dep com.fasterxml.jackson.core:jackson-databind:(managed) scope=compile optional=false
+   dep com.fasterxml.jackson.core:jackson-annotations:(managed) scope=compile optional=false
+   dep org.apache.commons:commons-dbcp2:(managed) scope=test optional=false
+   dep org.springframework:spring-jdbc:(managed) scope=compile optional=false
+   dep org.hsqldb:hsqldb:(managed) scope=test optional=false
+   dep com.googlecode.log4jdbc:log4jdbc:(managed) scope=test optional=false
+   dep org.junit.jupiter:junit-jupiter-api:(managed) scope=test optional=false
+== all-5.1.x/Foundation_org.egovframe.rte.fdl.cmmn_pom.xml
+   artifact=(parent):egovframe-rte-fdl-cmmn:(parent) parent=org.egovframe.rte:egovframe-rte-root:5.1.0 packaging=jar
+   dep org.egovframe.rte:egovframe-rte-fdl-logging:(managed) scope=compile optional=false
+   dep org.springframework:spring-context-support:(managed) scope=compile optional=false
+   dep org.springframework:spring-jdbc:(managed) scope=compile optional=false
+   dep org.springframework:spring-tx:(managed) scope=compile optional=false
+   dep org.springframework:spring-test:(managed) scope=test optional=false
+   dep org.springframework:spring-webmvc:(managed) scope=test optional=false
+   dep jakarta.servlet:jakarta.servlet-api:(managed) scope=test optional=false
+   dep jakarta.annotation:jakarta.annotation-api:(managed) scope=compile optional=false
+   dep jakarta.mail:jakarta.mail-api:(managed) scope=test optional=false
+   dep org.apache.commons:commons-dbcp2:(managed) scope=test optional=false
+   dep org.apache.commons:commons-lang3:(managed) scope=test optional=false
+   dep org.easymock:easymock:(managed) scope=test optional=false
+   dep org.ehcache:ehcache:(managed) scope=test optional=false
+   dep aopalliance:aopalliance:(managed) scope=test optional=false
+   dep org.aspectj:aspectjrt:(managed) scope=compile optional=false
+   dep org.aspectj:aspectjweaver:(managed) scope=compile optional=false
+   dep org.hsqldb:hsqldb:(managed) scope=test optional=false
+   dep com.googlecode.log4jdbc:log4jdbc:(managed) scope=test optional=false
+   dep org.junit.jupiter:junit-jupiter-api:(managed) scope=test optional=false
+== all-5.1.x/Foundation_org.egovframe.rte.fdl.crypto_pom.xml
+   artifact=(parent):egovframe-rte-fdl-crypto:(parent) parent=org.egovframe.rte:egovframe-rte-root:5.1.0 packaging=jar
+   dep org.egovframe.rte:egovframe-rte-fdl-property:(managed) scope=compile optional=false
+   dep org.springframework:spring-beans:(managed) scope=compile optional=false
+   dep org.springframework:spring-context:(managed) scope=compile optional=false
+   dep org.springframework:spring-jdbc:(managed) scope=test optional=false
+   dep org.springframework:spring-test:(managed) scope=test optional=false
+   dep org.hsqldb:hsqldb:(managed) scope=test optional=false
+   dep jakarta.annotation:jakarta.annotation-api:(managed) scope=test optional=false
+   dep com.fasterxml.jackson.core:jackson-core:(managed) scope=compile optional=false
+   dep com.fasterxml.jackson.core:jackson-databind:(managed) scope=compile optional=false
+   dep com.fasterxml.jackson.core:jackson-annotations:(managed) scope=compile optional=false
+   dep commons-codec:commons-codec:(managed) scope=compile optional=false
+   dep org.apache.commons:commons-dbcp2:(managed) scope=test optional=false
+   dep commons-io:commons-io:(managed) scope=compile optional=false
+   dep org.easymock:easymock:(managed) scope=test optional=false
+   dep org.jasypt:jasypt:(managed) scope=compile optional=false
+   dep org.junit.jupiter:junit-jupiter-api:(managed) scope=test optional=false
+== all-5.1.x/Foundation_org.egovframe.rte.fdl.excel_pom.xml
+   artifact=(parent):egovframe-rte-fdl-excel:(parent) parent=org.egovframe.rte:egovframe-rte-root:5.1.0 packaging=jar
+   dep org.egovframe.rte:egovframe-rte-fdl-cmmn:(managed) scope=compile optional=false
+   dep org.egovframe.rte:egovframe-rte-fdl-filehandling:(managed) scope=compile optional=false
+   dep org.egovframe.rte:egovframe-rte-psl-dataaccess:(managed) scope=compile optional=false
+   dep org.springframework:spring-webmvc:(managed) scope=compile optional=false
+   dep org.springframework:spring-test:(managed) scope=test optional=false
+   dep jakarta.annotation:jakarta.annotation-api:(managed) scope=test optional=false
+   dep jakarta.servlet:jakarta.servlet-api:(managed) scope=provided optional=false
+   dep commons-beanutils:commons-beanutils:(managed) scope=compile optional=false
+   dep commons-io:commons-io:(managed) scope=compile optional=false
+   dep org.apache.commons:commons-dbcp2:(managed) scope=test optional=false
+   dep org.apache.commons:commons-lang3:(managed) scope=compile optional=false
+   dep org.apache.poi:poi:(managed) scope=compile optional=false
+   dep org.apache.poi:poi-ooxml:(managed) scope=compile optional=false
+   dep org.jxls:jxls-poi:(managed) scope=compile optional=false
+   dep org.mockito:mockito-junit-jupiter:(managed) scope=test optional=false
+   dep org.mockito:mockito-core:(managed) scope=test optional=false
+   dep org.hsqldb:hsqldb:(managed) scope=test optional=false
+   dep com.googlecode.log4jdbc:log4jdbc:(managed) scope=test optional=false
+   dep org.junit.jupiter:junit-jupiter-api:(managed) scope=test optional=false
+== all-5.1.x/Foundation_org.egovframe.rte.fdl.filehandling_pom.xml
+   artifact=(parent):egovframe-rte-fdl-filehandling:(parent) parent=org.egovframe.rte:egovframe-rte-root:5.1.0 packaging=jar
+   dep org.egovframe.rte:egovframe-rte-fdl-string:(managed) scope=compile optional=false
+   dep org.springframework:spring-test:(managed) scope=test optional=false
+   dep commons-io:commons-io:(managed) scope=compile optional=false
+   dep org.apache.commons:commons-lang3:(managed) scope=compile optional=false
+   dep org.apache.commons:commons-compress:(managed) scope=compile optional=true
+   dep org.apache.commons:commons-vfs2:(managed) scope=compile optional=false
+   dep org.junit.jupiter:junit-jupiter-api:(managed) scope=test optional=false
+== all-5.1.x/Foundation_org.egovframe.rte.fdl.idgnr_pom.xml
+   artifact=(parent):egovframe-rte-fdl-idgnr:(parent) parent=org.egovframe.rte:egovframe-rte-root:5.1.0 packaging=jar
+   dep org.egovframe.rte:egovframe-rte-fdl-cmmn:(managed) scope=compile optional=false
+   dep org.springframework:spring-context:(managed) scope=compile optional=false
+   dep org.springframework:spring-jdbc:(managed) scope=compile optional=false
+   dep org.springframework:spring-test:(managed) scope=test optional=false
+   dep jakarta.annotation:jakarta.annotation-api:(managed) scope=test optional=false
+   dep org.apache.commons:commons-dbcp2:(managed) scope=test optional=false
+   dep org.apache.commons:commons-lang3:(managed) scope=test optional=false
+   dep org.easymock:easymock:(managed) scope=test optional=false
+   dep org.hsqldb:hsqldb:(managed) scope=test optional=false
+   dep com.googlecode.log4jdbc:log4jdbc:(managed) scope=test optional=false
+   dep org.junit.jupiter:junit-jupiter:(managed) scope=test optional=false
+== all-5.1.x/Foundation_org.egovframe.rte.fdl.logging_pom.xml
+   artifact=(parent):egovframe-rte-fdl-logging:(parent) parent=org.egovframe.rte:egovframe-rte-root:5.1.0 packaging=jar
+   dep org.springframework:spring-context:(managed) scope=compile optional=false
+   dep org.springframework:spring-jdbc:(managed) scope=test optional=false
+   dep org.springframework:spring-jms:(managed) scope=test optional=false
+   dep org.springframework:spring-test:(managed) scope=test optional=false
+   dep jakarta.annotation:jakarta.annotation-api:(managed) scope=test optional=false
+   dep org.apache.logging.log4j:log4j-core:(managed) scope=compile optional=false
+   dep org.apache.logging.log4j:log4j-slf4j2-impl:(managed) scope=compile optional=false
+   dep org.slf4j:jcl-over-slf4j:(managed) scope=compile optional=false
+   dep org.slf4j:log4j-over-slf4j:(managed) scope=compile optional=false
+   dep org.apache.commons:commons-dbcp2:(managed) scope=test optional=false
+   dep org.apache.commons:commons-lang3:(managed) scope=compile optional=false
+   dep cglib:cglib:(managed) scope=test optional=false
+   dep aopalliance:aopalliance:(managed) scope=test optional=false
+   dep org.aspectj:aspectjrt:(managed) scope=test optional=false
+   dep org.aspectj:aspectjweaver:(managed) scope=test optional=false
+   dep org.hsqldb:hsqldb:(managed) scope=test optional=false
+   dep com.googlecode.log4jdbc:log4jdbc:(managed) scope=test optional=false
+   dep org.junit.jupiter:junit-jupiter-api:(managed) scope=test optional=false
+== all-5.1.x/Foundation_org.egovframe.rte.fdl.property_pom.xml
+   artifact=(parent):egovframe-rte-fdl-property:(parent) parent=org.egovframe.rte:egovframe-rte-root:5.1.0 packaging=jar
+   dep org.egovframe.rte:egovframe-rte-fdl-cmmn:(managed) scope=compile optional=false
+   dep org.springframework:spring-web:(managed) scope=compile optional=false
+   dep org.springframework:spring-jdbc:(managed) scope=compile optional=false
+   dep org.springframework:spring-test:(managed) scope=test optional=false
+   dep jakarta.annotation:jakarta.annotation-api:(managed) scope=test optional=false
+   dep jakarta.servlet:jakarta.servlet-api:(managed) scope=provided optional=false
+   dep org.apache.commons:commons-configuration2:(managed) scope=compile optional=false
+   dep org.apache.commons:commons-lang3:(managed) scope=compile optional=false
+   dep org.easymock:easymock:(managed) scope=test optional=false
+   dep org.hsqldb:hsqldb:(managed) scope=test optional=false
+   dep com.googlecode.log4jdbc:log4jdbc:(managed) scope=test optional=false
+   dep org.junit.jupiter:junit-jupiter-api:(managed) scope=test optional=false
+== all-5.1.x/Foundation_org.egovframe.rte.fdl.reactive_pom.xml
+   artifact=(parent):egovframe-rte-fdl-reactive:(parent) parent=org.egovframe.rte:egovframe-rte-root:5.1.0 packaging=jar
+   dep org.egovframe.rte:egovframe-rte-fdl-logging:(managed) scope=compile optional=false
+   dep org.springframework:spring-webflux:(managed) scope=compile optional=false
+   dep org.springframework:spring-context:(managed) scope=compile optional=false
+   dep org.springframework:spring-test:(managed) scope=test optional=false
+   dep jakarta.annotation:jakarta.annotation-api:(managed) scope=compile optional=false
+   dep org.apache.logging.log4j:log4j-core:(managed) scope=compile optional=false
+   dep org.apache.logging.log4j:log4j-slf4j2-impl:(managed) scope=compile optional=false
+   dep org.slf4j:jcl-over-slf4j:(managed) scope=compile optional=false
+   dep org.slf4j:log4j-over-slf4j:(managed) scope=compile optional=false
+   dep org.mockito:mockito-junit-jupiter:(managed) scope=test optional=false
+   dep org.mockito:mockito-core:(managed) scope=test optional=false
+   dep org.junit.jupiter:junit-jupiter-api:(managed) scope=test optional=false
+== all-5.1.x/Foundation_org.egovframe.rte.fdl.security_pom.xml
+   artifact=(parent):egovframe-rte-fdl-security:(parent) parent=org.egovframe.rte:egovframe-rte-root:5.1.0 packaging=jar
+   dep org.egovframe.rte:egovframe-rte-fdl-string:(managed) scope=compile optional=false
+   dep org.springframework:spring-jdbc:(managed) scope=compile optional=false
+   dep org.springframework:spring-webmvc:(managed) scope=compile optional=false
+   dep org.springframework.security:spring-security-config:(managed) scope=compile optional=false
+   dep org.springframework.security:spring-security-taglibs:(managed) scope=compile optional=false
+   dep org.springframework:spring-test:(managed) scope=test optional=false
+   dep jakarta.annotation:jakarta.annotation-api:(managed) scope=compile optional=false
+   dep jakarta.servlet:jakarta.servlet-api:(managed) scope=provided optional=false
+   dep com.fasterxml.jackson.core:jackson-core:(managed) scope=compile optional=false
+   dep com.fasterxml.jackson.core:jackson-databind:(managed) scope=compile optional=false
+   dep com.fasterxml.jackson.core:jackson-annotations:(managed) scope=compile optional=false
+   dep org.apache.commons:commons-dbcp2:(managed) scope=test optional=false
+   dep org.easymock:easymock:(managed) scope=test optional=false
+   dep org.aspectj:aspectjrt:(managed) scope=test optional=false
+   dep org.aspectj:aspectjweaver:(managed) scope=test optional=false
+   dep org.hsqldb:hsqldb:(managed) scope=test optional=false
+   dep com.googlecode.log4jdbc:log4jdbc:(managed) scope=test optional=false
+   dep org.junit.jupiter:junit-jupiter-api:(managed) scope=test optional=false
+   dep org.junit.jupiter:junit-jupiter-engine:(managed) scope=test optional=false
+== all-5.1.x/Foundation_org.egovframe.rte.fdl.string_pom.xml
+   artifact=(parent):egovframe-rte-fdl-string:(parent) parent=org.egovframe.rte:egovframe-rte-root:5.1.0 packaging=jar
+   dep org.egovframe.rte:egovframe-rte-fdl-logging:(managed) scope=compile optional=false
+   dep org.springframework:spring-context:(managed) scope=compile optional=false
+   dep org.springframework:spring-test:(managed) scope=test optional=false
+   dep commons-codec:commons-codec:(managed) scope=compile optional=false
+   dep com.ibm.icu:icu4j:(managed) scope=compile optional=true
+   dep org.easymock:easymock:(managed) scope=test optional=false
+   dep org.junit.jupiter:junit-jupiter-api:(managed) scope=test optional=false
+== all-5.1.x/Foundation_org.egovframe.rte.fdl.xml_pom.xml
+   artifact=(parent):egovframe-rte-fdl-xml:(parent) parent=org.egovframe.rte:egovframe-rte-root:5.1.0 packaging=jar
+   dep org.egovframe.rte:egovframe-rte-fdl-logging:(managed) scope=compile optional=false
+   dep org.springframework:spring-context-support:(managed) scope=compile optional=false
+   dep org.springframework:spring-test:(managed) scope=test optional=false
+   dep jakarta.annotation:jakarta.annotation-api:(managed) scope=test optional=false
+   dep org.ehcache:ehcache:(managed) scope=test optional=false
+   dep jaxen:jaxen:(managed) scope=test optional=false
+   dep org.junit.jupiter:junit-jupiter-api:(managed) scope=test optional=false
+== all-5.1.x/Integration_org.egovframe.rte.itl.integration_pom.xml
+   artifact=(parent):egovframe-rte-itl-integration:(parent) parent=org.egovframe.rte:egovframe-rte-root:5.1.0 packaging=jar
+   dep org.egovframe.rte:egovframe-rte-fdl-logging:(managed) scope=compile optional=false
+   dep org.springframework:spring-context:(managed) scope=compile optional=false
+   dep org.springframework:spring-context-support:(managed) scope=compile optional=false
+   dep org.springframework:spring-orm:(managed) scope=compile optional=false
+   dep org.springframework:spring-jdbc:(managed) scope=compile optional=true
+   dep org.springframework:spring-test:(managed) scope=test optional=false
+   dep jakarta.persistence:jakarta.persistence-api:(managed) scope=compile optional=false
+   dep jakarta.annotation:jakarta.annotation-api:(managed) scope=test optional=false
+   dep org.hibernate.orm:hibernate-core:(managed) scope=compile optional=false
+   dep org.dbunit:dbunit:(managed) scope=test optional=false
+   dep org.hsqldb:hsqldb:(managed) scope=test optional=false
+   dep org.junit.jupiter:junit-jupiter-api:(managed) scope=test optional=false
+   dep org.junit.jupiter:junit-jupiter-engine:(managed) scope=test optional=false
+   dep org.junit.platform:junit-platform-launcher:(managed) scope=test optional=false
+== all-5.1.x/Integration_org.egovframe.rte.itl.webservice_pom.xml
+   artifact=(parent):egovframe-rte-itl-webservice:(parent) parent=org.egovframe.rte:egovframe-rte-root:5.1.0 packaging=jar
+   dep org.egovframe.rte:egovframe-rte-itl-integration:(managed) scope=compile optional=false
+   dep org.springframework:spring-context:(managed) scope=compile optional=false
+   dep org.springframework:spring-orm:(managed) scope=compile optional=false
+   dep org.springframework:spring-web:(managed) scope=compile optional=false
+   dep org.springframework:spring-test:(managed) scope=test optional=false
+   dep jakarta.persistence:jakarta.persistence-api:(managed) scope=compile optional=false
+   dep jakarta.annotation:jakarta.annotation-api:(managed) scope=test optional=false
+   dep jakarta.servlet:jakarta.servlet-api:(managed) scope=provided optional=false
+   dep jakarta.xml.ws:jakarta.xml.ws-api:(managed) scope=compile optional=false
+   dep org.apache.cxf:cxf-rt-frontend-jaxws:(managed) scope=compile optional=false
+   dep org.apache.cxf:cxf-rt-transports-http-jetty:(managed) scope=compile optional=false
+   dep org.hibernate.orm:hibernate-core:(managed) scope=compile optional=false
+   dep org.dbunit:dbunit:(managed) scope=test optional=false
+   dep org.hsqldb:hsqldb:(managed) scope=test optional=false
+   dep org.junit.jupiter:junit-jupiter-api:(managed) scope=test optional=false
+   dep org.junit.jupiter:junit-jupiter-engine:(managed) scope=test optional=false
+   dep org.junit.platform:junit-platform-launcher:(managed) scope=test optional=false
+== all-5.1.x/Persistence_org.egovframe.rte.psl.data.jpa_pom.xml
+   artifact=(parent):egovframe-rte-psl-data-jpa:(parent) parent=org.egovframe.rte:egovframe-rte-root:5.1.0 packaging=jar
+   dep org.egovframe.rte:egovframe-rte-psl-dataaccess:(managed) scope=compile optional=false
+   dep org.springframework.data:spring-data-jpa:(managed) scope=compile optional=false
+   dep org.springframework:spring-aspects:(managed) scope=compile optional=true
+   dep org.springframework:spring-test:(managed) scope=test optional=false
+   dep jakarta.transaction:jakarta.transaction-api:(managed) scope=runtime optional=false
+   dep jakarta.persistence:jakarta.persistence-api:(managed) scope=compile optional=false
+   dep jakarta.annotation:jakarta.annotation-api:(managed) scope=test optional=false
+   dep org.apache.commons:commons-dbcp2:(managed) scope=test optional=false
+   dep org.easymock:easymock:(managed) scope=test optional=false
+   dep org.projectlombok:lombok:(managed) scope=provided optional=false
+   dep org.hibernate.orm:hibernate-core:(managed) scope=compile optional=false
+   dep com.mysql:mysql-connector-j:(managed) scope=compile optional=false
+   dep com.google.protobuf:protobuf-java:(managed) scope=compile optional=false
+   dep org.hsqldb:hsqldb:(managed) scope=test optional=false
+   dep com.googlecode.log4jdbc:log4jdbc:(managed) scope=test optional=false
+   dep org.junit.jupiter:junit-jupiter-api:(managed) scope=test optional=false
+== all-5.1.x/Persistence_org.egovframe.rte.psl.data.mongodb_pom.xml
+   artifact=(parent):egovframe-rte-psl-data-mongodb:(parent) parent=org.egovframe.rte:egovframe-rte-root:5.1.0 packaging=jar
+   dep org.egovframe.rte:egovframe-rte-fdl-cmmn:(managed) scope=compile optional=false
+   dep org.springframework:spring-context:(managed) scope=compile optional=false
+   dep org.springframework:spring-tx:(managed) scope=compile optional=false
+   dep org.springframework:spring-web:(managed) scope=compile optional=false
+   dep org.springframework:spring-webmvc:(managed) scope=compile optional=false
+   dep org.springframework:spring-test:(managed) scope=test optional=false
+   dep org.springframework.data:spring-data-mongodb:(managed) scope=compile optional=false
+   dep org.mongodb:mongodb-driver-core:(managed) scope=compile optional=false
+   dep org.mongodb:mongodb-driver-sync:(managed) scope=compile optional=false
+   dep org.apache.logging.log4j:log4j-core:(managed) scope=compile optional=false
+   dep org.apache.logging.log4j:log4j-slf4j2-impl:(managed) scope=compile optional=false
+   dep org.slf4j:jcl-over-slf4j:(managed) scope=compile optional=false
+   dep org.slf4j:log4j-over-slf4j:(managed) scope=compile optional=false
+   dep org.easymock:easymock:(managed) scope=test optional=false
+   dep org.projectlombok:lombok:(managed) scope=provided optional=false
+   dep org.junit.jupiter:junit-jupiter-api:(managed) scope=test optional=false
+   dep jakarta.annotation:jakarta.annotation-api:(managed) scope=test optional=false
+== all-5.1.x/Persistence_org.egovframe.rte.psl.dataaccess_pom.xml
+   artifact=(parent):egovframe-rte-psl-dataaccess:(parent) parent=org.egovframe.rte:egovframe-rte-root:5.1.0 packaging=jar
+   dep org.egovframe.rte:egovframe-rte-fdl-logging:(managed) scope=compile optional=false
+   dep org.springframework:spring-context:(managed) scope=compile optional=false
+   dep org.springframework:spring-orm:(managed) scope=compile optional=false
+   dep org.springframework:spring-test:(managed) scope=test optional=false
+   dep jakarta.annotation:jakarta.annotation-api:(managed) scope=compile optional=false
+   dep org.apache.ibatis:ibatis-sqlmap:(managed) scope=compile optional=false
+   dep org.mybatis:mybatis:(managed) scope=compile optional=false
+   dep org.mybatis:mybatis-spring:(managed) scope=compile optional=false
+   dep org.apache.commons:commons-collections4:(managed) scope=compile optional=false
+   dep org.apache.commons:commons-dbcp2:(managed) scope=test optional=false
+   dep org.apache.commons:commons-lang3:(managed) scope=test optional=false
+   dep org.easymock:easymock:(managed) scope=test optional=false
+   dep org.hsqldb:hsqldb:(managed) scope=test optional=false
+   dep com.googlecode.log4jdbc:log4jdbc:(managed) scope=test optional=false
+   dep org.junit.jupiter:junit-jupiter-api:(managed) scope=test optional=false
+== all-5.1.x/Persistence_org.egovframe.rte.psl.reactive.cassandra_pom.xml
+   artifact=(parent):egovframe-rte-psl-reactive-cassandra:(parent) parent=org.egovframe.rte:egovframe-rte-root:5.1.0 packaging=jar
+   dep org.egovframe.rte:egovframe-rte-fdl-logging:(managed) scope=compile optional=false
+   dep org.springframework:spring-context:(managed) scope=compile optional=false
+   dep org.springframework:spring-tx:(managed) scope=compile optional=false
+   dep org.springframework:spring-webflux:(managed) scope=compile optional=false
+   dep org.springframework:spring-test:(managed) scope=test optional=false
+   dep org.springframework.data:spring-data-cassandra:(managed) scope=compile optional=false
+   dep io.projectreactor:reactor-core:(managed) scope=compile optional=false
+   dep io.projectreactor:reactor-test:(managed) scope=test optional=false
+   dep org.apache.cassandra:java-driver-core:(managed) scope=compile optional=false
+   dep com.fasterxml.jackson.core:jackson-core:(managed) scope=compile optional=false
+   dep com.fasterxml.jackson.core:jackson-databind:(managed) scope=compile optional=false
+   dep org.apache.logging.log4j:log4j-core:(managed) scope=compile optional=false
+   dep org.apache.logging.log4j:log4j-slf4j2-impl:(managed) scope=compile optional=false
+   dep org.slf4j:jcl-over-slf4j:(managed) scope=compile optional=false
+   dep org.slf4j:log4j-over-slf4j:(managed) scope=compile optional=false
+   dep org.easymock:easymock:(managed) scope=test optional=false
+   dep org.projectlombok:lombok:(managed) scope=provided optional=false
+   dep org.junit.jupiter:junit-jupiter-api:(managed) scope=test optional=false
+   dep jakarta.annotation:jakarta.annotation-api:(managed) scope=test optional=false
+== all-5.1.x/Persistence_org.egovframe.rte.psl.reactive.mongodb_pom.xml
+   artifact=(parent):egovframe-rte-psl-reactive-mongodb:(parent) parent=org.egovframe.rte:egovframe-rte-root:5.1.0 packaging=jar
+   dep org.egovframe.rte:egovframe-rte-fdl-cmmn:(managed) scope=compile optional=false
+   dep org.springframework:spring-context:(managed) scope=compile optional=false
+   dep org.springframework:spring-tx:(managed) scope=compile optional=false
+   dep org.springframework:spring-webflux:(managed) scope=compile optional=false
+   dep org.springframework:spring-test:(managed) scope=test optional=false
+   dep org.springframework.data:spring-data-mongodb:(managed) scope=compile optional=false
+   dep io.projectreactor:reactor-core:(managed) scope=compile optional=false
+   dep io.projectreactor:reactor-test:(managed) scope=test optional=false
+   dep org.mongodb:mongodb-driver-core:(managed) scope=compile optional=false
+   dep org.mongodb:mongodb-driver-reactivestreams:(managed) scope=compile optional=false
+   dep org.mongodb:mongodb-driver-sync:(managed) scope=compile optional=false
+   dep org.apache.logging.log4j:log4j-core:(managed) scope=compile optional=false
+   dep org.apache.logging.log4j:log4j-slf4j2-impl:(managed) scope=compile optional=false
+   dep org.slf4j:jcl-over-slf4j:(managed) scope=compile optional=false
+   dep org.slf4j:log4j-over-slf4j:(managed) scope=compile optional=false
+   dep org.easymock:easymock:(managed) scope=test optional=false
+   dep org.projectlombok:lombok:(managed) scope=provided optional=false
+   dep org.junit.jupiter:junit-jupiter-api:(managed) scope=test optional=false
+   dep jakarta.annotation:jakarta.annotation-api:(managed) scope=test optional=false
+== all-5.1.x/Persistence_org.egovframe.rte.psl.reactive.r2dbc_pom.xml
+   artifact=(parent):egovframe-rte-psl-reactive-r2dbc:(parent) parent=org.egovframe.rte:egovframe-rte-root:5.1.0 packaging=jar
+   dep org.egovframe.rte:egovframe-rte-fdl-cmmn:(managed) scope=compile optional=false
+   dep org.springframework:spring-context:(managed) scope=compile optional=false
+   dep org.springframework:spring-tx:(managed) scope=compile optional=false
+   dep org.springframework:spring-webflux:(managed) scope=compile optional=false
+   dep org.springframework:spring-test:(managed) scope=test optional=false
+   dep org.springframework.data:spring-data-r2dbc:(managed) scope=compile optional=false
+   dep io.projectreactor:reactor-core:(managed) scope=compile optional=false
+   dep io.projectreactor:reactor-test:(managed) scope=test optional=false
+   dep io.r2dbc:r2dbc-h2:(managed) scope=test optional=false
+   dep org.apache.logging.log4j:log4j-core:(managed) scope=compile optional=false
+   dep org.apache.logging.log4j:log4j-slf4j2-impl:(managed) scope=compile optional=false
+   dep org.slf4j:jcl-over-slf4j:(managed) scope=compile optional=false
+   dep org.slf4j:log4j-over-slf4j:(managed) scope=compile optional=false
+   dep org.easymock:easymock:(managed) scope=test optional=false
+   dep org.projectlombok:lombok:(managed) scope=provided optional=false
+   dep org.junit.jupiter:junit-jupiter-api:(managed) scope=test optional=false
+   dep jakarta.annotation:jakarta.annotation-api:(managed) scope=test optional=false
+== all-5.1.x/Persistence_org.egovframe.rte.psl.reactive.redis_pom.xml
+   artifact=(parent):egovframe-rte-psl-reactive-redis:(parent) parent=org.egovframe.rte:egovframe-rte-root:5.1.0 packaging=jar
+   dep org.egovframe.rte:egovframe-rte-fdl-cmmn:(managed) scope=compile optional=false
+   dep org.springframework:spring-context:(managed) scope=compile optional=false
+   dep org.springframework:spring-tx:(managed) scope=compile optional=false
+   dep org.springframework:spring-webflux:(managed) scope=compile optional=false
+   dep org.springframework:spring-test:(managed) scope=test optional=false
+   dep org.springframework.data:spring-data-redis:(managed) scope=compile optional=false
+   dep io.projectreactor:reactor-core:(managed) scope=compile optional=false
+   dep io.projectreactor:reactor-test:(managed) scope=test optional=false
+   dep io.lettuce:lettuce-core:(managed) scope=compile optional=false
+   dep org.apache.commons:commons-pool2:(managed) scope=compile optional=false
+   dep com.fasterxml.jackson.core:jackson-core:(managed) scope=compile optional=false
+   dep com.fasterxml.jackson.core:jackson-databind:(managed) scope=compile optional=false
+   dep org.apache.logging.log4j:log4j-core:(managed) scope=compile optional=false
+   dep org.apache.logging.log4j:log4j-slf4j2-impl:(managed) scope=compile optional=false
+   dep org.slf4j:jcl-over-slf4j:(managed) scope=compile optional=false
+   dep org.slf4j:log4j-over-slf4j:(managed) scope=compile optional=false
+   dep org.easymock:easymock:(managed) scope=test optional=false
+   dep org.projectlombok:lombok:(managed) scope=provided optional=false
+   dep org.junit.jupiter:junit-jupiter-api:(managed) scope=test optional=false
+== all-5.1.x/Presentation_org.egovframe.rte.ptl.mvc_pom.xml
+   artifact=(parent):egovframe-rte-ptl-mvc:(parent) parent=org.egovframe.rte:egovframe-rte-root:5.1.0 packaging=jar
+   dep org.egovframe.rte:egovframe-rte-fdl-cmmn:(managed) scope=compile optional=false
+   dep org.egovframe.rte:egovframe-rte-fdl-filehandling:(managed) scope=compile optional=false
+   dep org.springframework:spring-webmvc:(managed) scope=compile optional=false
+   dep org.springframework:spring-test:(managed) scope=test optional=false
+   dep jakarta.validation:jakarta.validation-api:(managed) scope=compile optional=false
+   dep jakarta.servlet:jakarta.servlet-api:(managed) scope=provided optional=false
+   dep jakarta.servlet.jsp:jakarta.servlet.jsp-api:(managed) scope=provided optional=false
+   dep org.apache.logging.log4j:log4j-core:(managed) scope=compile optional=false
+   dep org.apache.logging.log4j:log4j-slf4j2-impl:(managed) scope=compile optional=false
+   dep org.slf4j:jcl-over-slf4j:(managed) scope=compile optional=false
+   dep org.slf4j:log4j-over-slf4j:(managed) scope=compile optional=false
+   dep commons-beanutils:commons-beanutils:(managed) scope=compile optional=false
+   dep org.jsoup:jsoup:(managed) scope=compile optional=true
+   dep commons-validator:commons-validator:(managed) scope=compile optional=false
+   dep org.easymock:easymock:(managed) scope=test optional=false
+   dep org.antlr:antlr4:(managed) scope=test optional=false
+   dep com.fasterxml.jackson.core:jackson-databind:(managed) scope=test optional=false
+   dep org.springframework.security:spring-security-core:(managed) scope=test optional=false
+   dep org.hibernate.validator:hibernate-validator:(managed) scope=test optional=false
+   dep org.glassfish:jakarta.el:(managed) scope=test optional=false
+   dep org.junit.jupiter:junit-jupiter-api:(managed) scope=test optional=false
+   dep org.hamcrest:hamcrest:(managed) scope=test optional=false
+== all-5.1.x/Presentation_org.egovframe.rte.ptl.reactive_pom.xml
+   artifact=(parent):egovframe-rte-ptl-reactive:(parent) parent=org.egovframe.rte:egovframe-rte-root:5.1.0 packaging=jar
+   dep org.egovframe.rte:egovframe-rte-fdl-logging:(managed) scope=compile optional=false
+   dep org.springframework:spring-context:(managed) scope=compile optional=false
+   dep org.springframework:spring-webflux:(managed) scope=compile optional=false
+   dep org.springframework:spring-test:(managed) scope=test optional=false
+   dep jakarta.servlet:jakarta.servlet-api:(managed) scope=test optional=false
+   dep jakarta.validation:jakarta.validation-api:(managed) scope=compile optional=false
+   dep jakarta.el:jakarta.el-api:(managed) scope=test optional=false
+   dep org.glassfish:jakarta.el:(managed) scope=test optional=false
+   dep org.apache.logging.log4j:log4j-core:(managed) scope=compile optional=false
+   dep org.apache.logging.log4j:log4j-slf4j2-impl:(managed) scope=compile optional=false
+   dep org.slf4j:jcl-over-slf4j:(managed) scope=compile optional=false
+   dep org.slf4j:log4j-over-slf4j:(managed) scope=compile optional=false
+   dep com.fasterxml.jackson.core:jackson-core:(managed) scope=compile optional=false
+   dep com.fasterxml.jackson.core:jackson-databind:(managed) scope=compile optional=false
+   dep com.fasterxml.jackson.core:jackson-annotations:(managed) scope=compile optional=false
+   dep org.easymock:easymock:(managed) scope=test optional=false
+   dep org.hibernate.validator:hibernate-validator:(managed) scope=test optional=false
+   dep org.junit.jupiter:junit-jupiter-api:(managed) scope=test optional=false
+   dep org.junit.jupiter:junit-jupiter-engine:(managed) scope=test optional=false

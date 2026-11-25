@@ -1,3 +1,5 @@
+{{!-- NOT NULL 컬럼의 필수 입력 속성. DEFAULT 가 있으면 등록 시에는 비워도 되지만, UPDATE 는 DEFAULT 를 적용하지 않으므로 수정 화면에서만 필수다. (값이 빈 동적 속성은 Spring form 태그가 출력하지 않는다) --}}
+{{~#*inline "requiredAttr"}}{{#if isNotNull}}{{#if hasDefault}} required="${registerFlag == 'modify' ? 'required' : ''}"{{else}} required="required"{{/if}}{{/if}}{{/inline~}}
 <%@ page contentType="text/html; charset=utf-8" pageEncoding="utf-8"%>
 <%@ taglib prefix="c"         uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="form"      uri="http://www.springframework.org/tags/form" %>
@@ -39,6 +41,10 @@
     }
 
     function fn_egov_add() {
+        // 필수 입력란(required)과 입력 형식을 브라우저가 검사한다. 스크립트로 submit() 을 호출하면 이 검사를 건너뛰므로 직접 호출한다.
+        if (!document.getElementById("detailForm").reportValidity()) {
+            return;
+        }
         if (confirm('Are you sure you want to register?')) {
             let frm = document.getElementById("detailForm");
             // egovframe-Todo: Validator 적용시 아래 주석 코드 참고
@@ -52,6 +58,10 @@
     }
 
     function fn_egov_update() {
+        // 필수 입력란(required)과 입력 형식을 브라우저가 검사한다. 스크립트로 submit() 을 호출하면 이 검사를 건너뛰므로 직접 호출한다.
+        if (!document.getElementById("detailForm").reportValidity()) {
+            return;
+        }
         if (confirm('Are you sure you want to modify?')) {
             let frm = document.getElementById("detailForm");
             // egovframe-Todo: Validator 적용시 아래 주석 코드 참고
@@ -114,7 +124,21 @@
                         <label for="{{ccName}}">{{pcName}}</label>
                     </div>
                     <div class="form-conts">
-                        <form:input path="{{ccName}}" cssClass="krds-input" />
+                      {{#if (eq inputType "boolean")}}
+                        <%-- 빈 선택지는 null 로 전송되어 테이블에 정의된 DEFAULT 가 적용된다 --%>
+                        <form:select path="{{ccName}}" cssClass="krds-form-select"{{> requiredAttr}}>
+                            <form:option value="" label="" />
+                            <form:option value="true" label="true" />
+                            <form:option value="false" label="false" />
+                        </form:select>
+                      {{else if dateTimePattern}}
+                        <form:input type="{{inputType}}" path="{{ccName}}" cssClass="krds-input"{{> requiredAttr}} />
+                      {{else if (eq inputType "number")}}
+                        <form:input type="number" step="{{inputStep}}" path="{{ccName}}" cssClass="krds-input"{{> requiredAttr}} />
+                      {{else}}
+                        <form:input path="{{ccName}}" cssClass="krds-input"{{> requiredAttr}} />
+{{!-- else if 연쇄를 닫는 태그를 들여쓰면 Handlebars 가 마지막 분기 뒤에 그 공백을 남기므로 줄 맨 앞에 둔다 --}}
+{{/if}}
                         <form:errors path="{{ccName}}" cssClass="error-message" />
                     </div>
                 </div>
