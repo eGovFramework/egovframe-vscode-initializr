@@ -3,6 +3,8 @@
 {{~setVar "addPath" (concat "/" classNameFirstCharLower "/add" className ".do")~}}
 {{~setVar "updatePath" (concat "/" classNameFirstCharLower "/update" className ".do")~}}
 {{~setVar "deletePath" (concat "/" classNameFirstCharLower "/delete" className ".do")~}}
+{{!-- NOT NULL 컬럼의 필수 입력 속성. DEFAULT 가 있으면 등록 시에는 비워도 되지만, UPDATE 는 DEFAULT 를 적용하지 않으므로 수정 화면에서만 필수다. --}}
+{{~#*inline "requiredAttr"}}{{#if isNotNull}}{{#if hasDefault}} th:required="${registerFlag == 'modify'}"{{else}} required{{/if}}{{/if}}{{/inline~}}
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org" th:with="registerFlag=${#strings.isEmpty({{voInstanceName}}.{{#if pkAttributes.length}}{{pkAttributes.[0].ccName}}{{else}}{{attributes.[0].ccName}}{{/if}})} ? 'create' : 'modify'">
 <head>
@@ -28,6 +30,10 @@
         }
 
         function fn_egov_add() {
+            // 필수 입력란(required)과 입력 형식을 브라우저가 검사한다. 스크립트로 submit() 을 호출하면 이 검사를 건너뛰므로 직접 호출한다.
+            if (!document.detailForm.reportValidity()) {
+                return;
+            }
             if (confirm('Are you sure you want to register?')) {
                 let frm = document.detailForm;
                 // egovframe-Todo: Validator 적용시 아래 주석 코드 참고
@@ -40,6 +46,10 @@
         }
 
         function fn_egov_update() {
+            // 필수 입력란(required)과 입력 형식을 브라우저가 검사한다. 스크립트로 submit() 을 호출하면 이 검사를 건너뛰므로 직접 호출한다.
+            if (!document.detailForm.reportValidity()) {
+                return;
+            }
             if (confirm('Are you sure you want to modify?')) {
             	let frm = document.detailForm;
                 // egovframe-Todo: Validator 적용시 아래 주석 코드 참고
@@ -100,17 +110,17 @@
                     <div class="form-conts">
                       {{#if (eq inputType "boolean")}}
                         <!-- 빈 선택지는 null 로 전송되어 테이블에 정의된 DEFAULT 가 적용된다 -->
-                        <select id="{{ccName}}" name="{{ccName}}" class="krds-form-select">
+                        <select id="{{ccName}}" name="{{ccName}}" class="krds-form-select"{{> requiredAttr}}>
                             <option value=""></option>
                             <option value="true" th:selected="{{concat "${" @root.voInstanceName "." ccName}} == true}">true</option>
                             <option value="false" th:selected="{{concat "${" @root.voInstanceName "." ccName}} == false}">false</option>
                         </select>
                       {{else if dateTimePattern}}
-                        <input type="{{inputType}}" class="krds-input" th:field="{{concat "*{" ccName "}"}}">
+                        <input type="{{inputType}}" class="krds-input" th:field="{{concat "*{" ccName "}"}}"{{> requiredAttr}}>
                       {{else if (eq inputType "number")}}
-                        <input type="number" step="{{inputStep}}" id="{{ccName}}" name="{{ccName}}" class="krds-input" th:value="{{concat "${" @root.voInstanceName "." ccName "}"}}">
+                        <input type="number" step="{{inputStep}}" id="{{ccName}}" name="{{ccName}}" class="krds-input"{{> requiredAttr}} th:value="{{concat "${" @root.voInstanceName "." ccName "}"}}">
                       {{else}}
-                        <input type="text" id="{{ccName}}" name="{{ccName}}" class="krds-input" th:value="{{concat "${" @root.voInstanceName "." ccName "}"}}">
+                        <input type="text" id="{{ccName}}" name="{{ccName}}" class="krds-input"{{> requiredAttr}} th:value="{{concat "${" @root.voInstanceName "." ccName "}"}}">
 {{!-- else if 연쇄를 닫는 태그를 들여쓰면 Handlebars 가 마지막 분기 뒤에 그 공백을 남기므로 줄 맨 앞에 둔다 --}}
 {{/if}}
                         <span class="error-message" th:if="${#fields.hasErrors('{{ccName}}')}" th:errors="{{concat "*{" ccName "}"}}"></span>

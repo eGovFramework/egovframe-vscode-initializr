@@ -64,6 +64,8 @@ const validColumn = {
 	inputType: "text",
 	inputStep: "",
 	dateTimePattern: "",
+	isNotNull: true,
+	hasDefault: false,
 }
 
 const validTemplateContext = {
@@ -300,13 +302,15 @@ describe("parseWebviewMessage", () => {
 		parseFail({ type: "showWarning", value: { nested: "object" } })
 	})
 
-	it("downloadTemplateContext의 컬럼 입력란 정보(inputType·inputStep·dateTimePattern)는 strip되지 않고 보존된다", () => {
+	it("downloadTemplateContext의 컬럼 입력란 정보(inputType·inputStep·dateTimePattern·isNotNull·hasDefault)는 strip되지 않고 보존된다", () => {
 		const column = {
 			...validColumn,
 			javaType: "java.time.LocalDateTime",
 			inputType: "datetime-local",
 			inputStep: "",
 			dateTimePattern: "yyyy-MM-dd'T'HH:mm",
+			isNotNull: true,
+			hasDefault: true,
 		}
 		const parsed = parseOk({
 			type: "downloadTemplateContext",

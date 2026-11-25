@@ -201,7 +201,10 @@ describe("sample-jsp-register.hbs typed inputs", () => {
 
 	it("renders number inputs with a step that matches the Java type", () => {
 		expect(jsp).toContain(`<form:input type="number" step="1" path="quantity" cssClass="krds-input" />`)
-		expect(jsp).toContain(`<form:input type="number" step="any" path="totalAmount" cssClass="krds-input" />`)
+		// total_amount 는 NOT NULL 이고 DEFAULT 가 없어 필수 입력이다.
+		expect(jsp).toContain(
+			`<form:input type="number" step="any" path="totalAmount" cssClass="krds-input" required="required" />`,
+		)
 	})
 
 	it("renders date/time inputs", () => {
@@ -223,5 +226,109 @@ describe("sample-jsp-register.hbs typed inputs", () => {
 		for (const field of ["memo", "quantity", "totalAmount", "isPaid", "orderDate", "shipDate", "shipTime"]) {
 			expect(jsp).toContain(`<form:errors path="${field}" cssClass="error-message" />`)
 		}
+	})
+})
+
+// NOT NULL 컬럼을 비우면 빈 문자열이 null 로 바뀌어 DB 제약 위반(500)이 난다. 화면에서 먼저 막는다.
+const requiredDDL = `CREATE TABLE notice(
+  id VARCHAR(36) PRIMARY KEY COMMENT 'Notice ID',
+  title VARCHAR(200) NOT NULL COMMENT 'Title',
+  content TEXT COMMENT 'Content',
+  priority INT NOT NULL COMMENT 'Priority',
+  is_open BOOLEAN NOT NULL COMMENT 'Open',
+  open_date DATE NOT NULL COMMENT 'Open Date',
+  use_yn CHAR(1) NOT NULL DEFAULT 'Y' COMMENT 'Use',
+  view_count INT DEFAULT 0 COMMENT 'View Count'
+) COMMENT 'Notice Table';`
+
+function tagOf(markup: string, pattern: RegExp): string {
+	const tag = markup.match(pattern)?.[0]
+	expect(tag).toBeDefined()
+
+	return tag ?? ""
+}
+
+describe("sample-thymeleaf-register.hbs required inputs", () => {
+	const html = render("sample-thymeleaf-register.hbs", requiredDDL)
+
+	it("marks NOT NULL columns without a default as required", () => {
+		expect(tagOf(html, /<input[^>]*name="title"[^>]*>/)).toMatch(/ required[ >]/)
+		expect(tagOf(html, /<input[^>]*name="priority"[^>]*>/)).toMatch(/ required[ >]/)
+		expect(tagOf(html, /<select[^>]*name="isOpen"[^>]*>/)).toMatch(/ required[ >]/)
+		expect(tagOf(html, /<input[^>]*th:field="\*\{openDate\}"[^>]*>/)).toMatch(/ required[ >]/)
+	})
+
+	// 등록은 비우면 DEFAULT 가 적용되지만, UPDATE 는 DEFAULT 를 적용하지 않으므로 수정 화면에서는 비울 수 없다.
+	it("marks NOT NULL columns with a default as required only on the modify screen", () => {
+		const useYn = tagOf(html, /<input[^>]*name="useYn"[^>]*>/)
+
+		expect(useYn).toContain(`th:required="\${registerFlag == 'modify'}"`)
+		expect(useYn).not.toMatch(/ required[ >]/)
+	})
+
+	it("leaves nullable columns and the primary key optional", () => {
+		for (const pattern of [
+			/<input[^>]*name="content"[^>]*>/,
+			/<input[^>]*name="viewCount"[^>]*>/,
+			/<input[^>]*name="id"[^>]*>/,
+		]) {
+			expect(tagOf(html, pattern)).not.toContain("required")
+		}
+	})
+
+	// 스크립트로 submit() 을 호출하면 브라우저의 입력 검사를 건너뛴다.
+	it("runs the browser validation before submitting on add and update, but not on delete", () => {
+		const functionBody = (name: string) =>
+			html.match(new RegExp(`function ${name}\\(\\) \\{[\\s\\S]*?\\n        \\}`))?.[0] ?? ""
+
+		for (const name of ["fn_egov_add", "fn_egov_update"]) {
+			const body = functionBody(name)
+
+			expect(body).toContain("if (!document.detailForm.reportValidity()) {")
+			expect(body.indexOf("reportValidity()")).toBeLessThan(body.indexOf("confirm("))
+		}
+		expect(functionBody("fn_egov_delete")).not.toContain("reportValidity")
+		expect(functionBody("fn_egov_list")).not.toContain("reportValidity")
+	})
+})
+
+describe("sample-jsp-register.hbs required inputs", () => {
+	const jsp = render("sample-jsp-register.hbs", requiredDDL)
+
+	it("marks NOT NULL columns without a default as required", () => {
+		expect(tagOf(jsp, /<form:input[^>]*path="title"[^>]*\/>/)).toContain(`required="required"`)
+		expect(tagOf(jsp, /<form:input[^>]*path="priority"[^>]*\/>/)).toContain(`required="required"`)
+		expect(tagOf(jsp, /<form:select[^>]*path="isOpen"[^>]*>/)).toContain(`required="required"`)
+		expect(tagOf(jsp, /<form:input[^>]*path="openDate"[^>]*\/>/)).toContain(`required="required"`)
+	})
+
+	// 값이 빈 동적 속성은 Spring form 태그가 출력하지 않는다.
+	it("marks NOT NULL columns with a default as required only on the modify screen", () => {
+		expect(tagOf(jsp, /<form:input[^>]*path="useYn"[^>]*\/>/)).toContain(
+			`required="\${registerFlag == 'modify' ? 'required' : ''}"`,
+		)
+	})
+
+	it("leaves nullable columns and the primary key optional", () => {
+		for (const pattern of [
+			/<form:input[^>]*path="content"[^>]*\/>/,
+			/<form:input[^>]*path="viewCount"[^>]*\/>/,
+			/<form:input[^>]*path="id"[^>]*\/>/,
+		]) {
+			expect(tagOf(jsp, pattern)).not.toContain("required")
+		}
+	})
+
+	it("runs the browser validation before submitting on add and update, but not on delete", () => {
+		const functionBody = (name: string) => jsp.match(new RegExp(`function ${name}\\(\\) \\{[\\s\\S]*?\\n    \\}`))?.[0] ?? ""
+
+		for (const name of ["fn_egov_add", "fn_egov_update"]) {
+			const body = functionBody(name)
+
+			expect(body).toContain(`if (!document.getElementById("detailForm").reportValidity()) {`)
+			expect(body.indexOf("reportValidity()")).toBeLessThan(body.indexOf("confirm("))
+		}
+		expect(functionBody("fn_egov_delete")).not.toContain("reportValidity")
+		expect(functionBody("fn_egov_list")).not.toContain("reportValidity")
 	})
 })

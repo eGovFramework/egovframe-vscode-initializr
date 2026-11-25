@@ -12,6 +12,8 @@ export interface Column {
 	inputType: string // 등록/수정 화면 입력란 종류: text | number | boolean | date | datetime-local | time
 	inputStep: string // 숫자 입력란의 step (정수 "1", 소수 "any", 숫자가 아니면 빈 문자열)
 	dateTimePattern: string // @DateTimeFormat 패턴 (날짜·시간 타입이 아니면 빈 문자열)
+	isNotNull: boolean // NOT NULL 제약 여부 (PRIMARY KEY 포함)
+	hasDefault: boolean // 값을 비워도 DB 가 채우는 컬럼 여부 (DEFAULT · AUTO_INCREMENT · IDENTITY · SERIAL)
 }
 
 export interface ParsedDDL {
@@ -359,6 +361,12 @@ export function parseDDL(ddl: string): ParsedDDL {
 		const isPrimaryKey =
 			primaryKeyColumns.includes(columnName) || columnDefWithoutComment.toUpperCase().includes("PRIMARY KEY")
 
+		// NOT NULL · DEFAULT 확인 (문자열 리터럴 본문은 제외해 DEFAULT 'not null' 같은 값의 오탐 방지)
+		const constraintText = columnDefWithoutComment.replace(/'(?:''|[^'])*'/g, "''")
+		const isNotNull = isPrimaryKey || /\bNOT\s+NULL\b/i.test(constraintText)
+		const hasDefault =
+			/\b(?:DEFAULT|AUTO_INCREMENT|IDENTITY)\b/i.test(constraintText) || /^(?:SMALL|BIG)?SERIAL$/.test(dataType)
+
 		// camelCase 이름 생성
 		const ccName = convertToCamelCase(columnName)
 
@@ -386,6 +394,8 @@ export function parseDDL(ddl: string): ParsedDDL {
 			inputType: getInputType(javaType),
 			inputStep: getInputStep(javaType),
 			dateTimePattern: getDateTimePattern(javaType),
+			isNotNull,
+			hasDefault,
 		}
 
 		attributes.push(column)

@@ -76,6 +76,8 @@ const columnSchema = z.object({
 	inputType: z.string(),
 	inputStep: z.string(),
 	dateTimePattern: z.string(),
+	isNotNull: z.boolean(),
+	hasDefault: z.boolean(),
 })
 
 const templateContextSchema = z.object({

@@ -17,6 +17,7 @@
   - 값을 비운 컬럼에 NULL이 저장되어 DDL의 DEFAULT가 적용되지 않던 문제 수정 — 생성된 Mapper의 INSERT가 값이 있는 컬럼만 포함하도록 `<trim>`/`<if>`로 변경
   - 삭제되었거나 없는 글의 수정 화면에 접근하면 NullPointerException이 나던 문제 수정 — 생성된 ServiceImpl이 조회 결과가 없으면 `info.nodata.msg` 예외를 던짐
   - 생성된 등록/수정 화면(Thymeleaf·JSP)의 입력란을 컬럼 타입에 맞게 생성 — 숫자는 `type="number"`, 날짜·시간은 `date`·`time`·`datetime-local`, Boolean은 빈 값·true·false 선택란. 템플릿 컨텍스트의 컬럼 정보에 `inputType`·`inputStep`·`dateTimePattern` 추가
+  - 생성된 등록/수정 화면에서 NOT NULL 컬럼을 비운 채 저장하면 DB 제약 위반으로 500이 나던 문제 수정 — DDL의 NOT NULL·DEFAULT를 읽어 필수 입력란에 `required`를 붙이고(DEFAULT가 있는 컬럼은 수정 화면에서만 필수), 등록·수정 전에 `reportValidity()`로 브라우저 입력 검사를 실행. 템플릿 컨텍스트의 컬럼 정보에 `isNotNull`·`hasDefault` 추가
 - Config Generation
   - AOP 트랜잭션 설정 템플릿에서 txAdvisor의 잘못된 직접 메서드 호출 수정 (Refs: PR #12)
   - TransactionForm의 READ_UNCOMMITTED 오타 수정 (Refs: PR #9)
