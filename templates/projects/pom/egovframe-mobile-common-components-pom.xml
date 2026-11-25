@@ -172,6 +172,17 @@
 			<artifactId>mysql-connector-j</artifactId>
 			<scope>runtime</scope>
 		</dependency>
+		<dependency>
+			<groupId>org.mariadb.jdbc</groupId>
+			<artifactId>mariadb-java-client</artifactId>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.postgresql</groupId>
+			<artifactId>postgresql</artifactId>
+			<scope>runtime</scope>
+		</dependency>
+		<!-- Oracle, Tibero, Altibase, CUBRID, Goldilocks JDBC 드라이버는 포함하지 않으므로 사용 시 직접 추가한다. -->
 
 		<!-- JSON View(MappingJackson2JsonView) -->
 		<dependency>
@@ -233,7 +244,7 @@
 			</resource>
 			<!-- HSQLDB 초기화 스크립트 (context-datasource.xml) -->
 			<resource>
-				<directory>src/script/hsql</directory>
+				<directory>DATABASE/hsql</directory>
 				<targetPath>egovframework/db/hsql</targetPath>
 			</resource>
 		</resources>

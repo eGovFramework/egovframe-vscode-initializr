@@ -63,7 +63,7 @@
 					"isLatest": false,
 					"included": false,
 					"downloadUrl": "v4.3.2/egovframe-template-simple.zip",
-					"sha256": "50967c1bd736218749f22d80d0ff191c57b25eae5bdf671f96dba46e500712cc",
+					"sha256": "18c170254ff7355c536d5540024bc40586603af3571c062182543f55bb47f59a",
 					"pomDownloadUrl": "v4.3.2/egovframe-template-simple-pom.xml",
 					"pomSha256": "140b77afc49cc10167ce71e2cc8f55b7ac8569f9e9c4077e28eecf77bdf5eb13",
 					"fileSize": "1.6MB"
@@ -149,7 +149,7 @@
 					"releaseDate": "2026-11-26",
 					"isLatest": true,
 					"included": true,
-					"fileSize": "23.4MB"
+					"fileSize": "15.8MB"
 				},
 				{
 					"version": "4.3.2",
@@ -159,10 +159,10 @@
 					"isLatest": false,
 					"included": false,
 					"downloadUrl": "v4.3.2/egovframe-template-common-components.zip",
-					"sha256": "df136bbaeb3df32499a0a016658ecd65ef67434583d417f46126c77bdfb4eb4c",
+					"sha256": "3f67aa802673cd7658b32ea8c5c2064c0c545d14dc64c0f089efbc265839ea72",
 					"pomDownloadUrl": "v4.3.2/egovframe-template-common-components-pom.xml",
 					"pomSha256": "af4ae4797e5da344fbb6d087872e22f1c446fb6df83317f8bb16166b1e611138",
-					"fileSize": "15.8MB"
+					"fileSize": "15.9MB"
 				}
 			]
 		},
@@ -213,7 +213,7 @@
 					"releaseDate": "2026-11-26",
 					"isLatest": true,
 					"included": true,
-					"fileSize": "373KB"
+					"fileSize": "380KB"
 				},
 				{
 					"version": "4.3.2",
@@ -285,8 +285,8 @@
 					"isLatest": false,
 					"included": false,
 					"downloadUrl": "v4.3.2/egovframe-msa-common-components.zip",
-					"sha256": "6c7633657c4a3224e767c850ab64eda5099d062e12e92108224b142694c46fa9",
-					"fileSize": "25.1MB"
+					"sha256": "7f58fc56117ecaaa7d64cdf728a965992590fca1407f7559e14b65bd9ed7f1fd",
+					"fileSize": "25.0MB"
 				}
 			]
 		},
@@ -416,7 +416,7 @@
 					"releaseDate": "2026-11-26",
 					"isLatest": true,
 					"included": true,
-					"fileSize": "15.7MB"
+					"fileSize": "7.5MB"
 				},
 				{
 					"version": "4.3.2",
@@ -426,10 +426,10 @@
 					"isLatest": false,
 					"included": false,
 					"downloadUrl": "v4.3.2/egovframe-mobile-common-components.zip",
-					"sha256": "611f40ee51794af5d6b273c0ebfb86e007bdc09726250a7e0338ee8667c7b099",
+					"sha256": "467d14ef29de4b6c93038c5d831c0acea3a3ab3e899d5ef6b4de0954c29518fb",
 					"pomDownloadUrl": "v4.3.2/egovframe-mobile-common-components-pom.xml",
-					"pomSha256": "d19c16434dc0688575afded580e16ad44250959d6c5f1a443b4f673a46e335a5",
-					"fileSize": "15.8MB"
+					"pomSha256": "7c098a9485c0c59ad7ccecbd93cea06bf750ffbf8314d3ec3a192fa1bb118f24",
+					"fileSize": "7.5MB"
 				}
 			]
 		},
@@ -672,7 +672,7 @@
 					"releaseDate": "2026-11-26",
 					"isLatest": true,
 					"included": true,
-					"fileSize": "147KB"
+					"fileSize": "144KB"
 				}
 			]
 		},
