@@ -175,11 +175,13 @@ POM 템플릿이 있는 템플릿은 선택 정보에 "포함: Maven POM 설정"
 | Service            | 서비스 인터페이스   | `src/main/java/<package>/service/<Table>Service.java`                 |
 | ServiceImpl        | 서비스 구현체       | `src/main/java/<package>/service/impl/<Table>ServiceImpl.java`        |
 | Mapper Interface   | MyBatis 인터페이스  | `src/main/java/<package>/service/impl/<Table>Mapper.java`             |
-| Mapper             | MyBatis XML 매퍼    | `src/main/resources/mapper/<Table>_SQL.xml`                           |
+| Mapper | MyBatis XML 매퍼 | `src/main/resources/egovframework/sqlmap/example/mappers/<Table>_SQL.xml` |
 | Thymeleaf List     | 목록 페이지         | `src/main/resources/templates/thymeleaf/<table>/<table>List.html`     |
 | Thymeleaf Register | 등록/수정 페이지    | `src/main/resources/templates/thymeleaf/<table>/<table>Register.html` |
-| JSP List           | 목록 페이지         | `src/main/webapp/WEB-INF/jsp/<package>/<table>List.jsp`               |
-| JSP Register       | 등록/수정 페이지    | `src/main/webapp/WEB-INF/jsp/<package>/<table>Register.jsp`           |
+| JSP List | 목록 페이지 | `src/main/webapp/WEB-INF/jsp/egovframework/example/<table>/<table>List.jsp` |
+| JSP Register | 등록/수정 페이지 | `src/main/webapp/WEB-INF/jsp/egovframework/example/<table>/<table>Register.jsp` |
+
+Mapper XML과 JSP의 생성 위치는 패키지 이름과 관계없이 고정되어 있습니다. 이 확장으로 생성한 Web Project(`egovframe-web`)와 Boot > Web Project(`egovframe-boot-web`)가 매퍼 XML을 `classpath:/egovframework/sqlmap/example/mappers/*.xml`에서, JSP를 `/WEB-INF/jsp/egovframework/example/` 아래에서 읽기 때문입니다. 프로젝트의 매퍼 위치나 뷰 리졸버 접두어를 변경했다면 생성된 파일을 해당 위치로 옮겨야 합니다.
 
 DAO 템플릿은 제공하지 않으며, 데이터 접근은 Mapper Interface(MyBatis) 방식만 지원합니다.
 

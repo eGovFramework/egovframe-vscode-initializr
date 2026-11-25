@@ -24,7 +24,7 @@
 
     <script th:inline="javascript" defer>
 	    function fn_egov_list() {
-            $('#detailForm').attr('method', 'get').attr('action', contextPath + '{{listPath}}').submit();
+            $('#detailForm').attr('method', 'get').attr('action', {{concat "[[@{" listPath "}]]"}}).submit();
         }
 
         function fn_egov_add() {
@@ -35,7 +35,7 @@
                 // if (!validate{{className}}VO(frm)) {
 				//	  return;
 				// }
-				$('#detailForm').attr('method', 'post').attr('action', contextPath + '{{addPath}}').submit();
+				$('#detailForm').attr('method', 'post').attr('action', {{concat "[[@{" addPath "}]]"}}).submit();
             }
         }
 
@@ -47,13 +47,13 @@
                 // if (!validate{{className}}VO(frm)) {
 				//	  return;
 				// }
-            	$('#detailForm').attr('method', 'post').attr('action', contextPath + '{{updatePath}}').submit();
+            	$('#detailForm').attr('method', 'post').attr('action', {{concat "[[@{" updatePath "}]]"}}).submit();
 			}
         }
 
         function fn_egov_delete() {
             if (confirm('Are you sure you want to delete?')) {
-                $('#detailForm').attr('method', 'post').attr('action', contextPath + '{{deletePath}}').submit();
+                $('#detailForm').attr('method', 'post').attr('action', {{concat "[[@{" deletePath "}]]"}}).submit();
             }
         }
 
@@ -99,7 +99,7 @@
                     </div>
                     <div class="form-conts">
                         <input type="text" id="{{ccName}}" name="{{ccName}}" class="krds-input" th:value="{{concat "${" @root.voInstanceName "." ccName "}"}}">
-                        <span class="error-message" th:if="${#fields.hasErrors('{{ccName}}')}" th:errors="*{{{ccName}}}"></span>
+                        <span class="error-message" th:if="${#fields.hasErrors('{{ccName}}')}" th:errors="{{concat "*{" ccName "}"}}"></span>
                     </div>
                 </div>
 				  {{/if}}

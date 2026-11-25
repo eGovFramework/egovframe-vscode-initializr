@@ -366,7 +366,7 @@ npm run dev
 - **Handlebars 템플릿 문제**:
   - `templates/code/` 폴더의 11개 템플릿 파일 존재 확인
   - Handlebars 문법 오류 검토 (중괄호 매칭, 헬퍼 함수 등)
-  - 템플릿 메타데이터: `src/utils/codeGenerator.ts`의 `getTemplateFilesConfig()` 함수 확인
+  - 템플릿 메타데이터: `src/utils/codeTemplateFiles.ts`의 `getTemplateFilesConfig()` 함수 확인
 - **DDL 파싱 문제**:
   - Monaco Editor의 SQL Worker가 정상 작동하는지 확인
   - `dist/tree-sitter-wasms.wasm`, `dist/tree-sitter-sql.wasm` 파일 존재 확인

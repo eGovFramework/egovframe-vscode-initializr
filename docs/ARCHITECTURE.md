@@ -172,7 +172,7 @@ templates/
 ```
 
 > [!Note]
-> **CRUD Code 템플릿 메타데이터**: CRUD Code 템플릿 메타데이터는 `src/utils/codeGenerator.ts`에 getTemplateFilesConfig 함수에서 관리됩니다.
+> **CRUD Code 템플릿 메타데이터**: CRUD Code 템플릿 메타데이터는 `src/utils/codeTemplateFiles.ts`에 getTemplateFilesConfig 함수에서 관리됩니다.
 
 
 ### Webview UI (`webview-ui/`)

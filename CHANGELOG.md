@@ -8,6 +8,10 @@
   - NUMBER 타입을 정밀도/스케일 기반으로 매핑하고 누락된 SQL 타입 보강 (Refs: PR #19)
   - TEXT/BLOB/BYTE 타입을 각각 String/byte[]/byte[]로 변환하도록 매핑 추가 (Refs: PR #16)
   - ERD Preview에서 컬럼 COMMENT 본문의 "primary key"·"references" 문구를 제약조건으로 오인해 PK/FK가 잘못 표시되던 문제 수정 (Refs: PR #33)
+  - 생성된 MyBatis Mapper XML과 JSP가 프로젝트 템플릿이 읽지 않는 위치에 만들어져 목록 화면이 500(`Invalid bound statement`)·404로 실패하던 문제 수정 — Mapper XML은 `src/main/resources/egovframework/sqlmap/example/mappers/`, JSP는 `src/main/webapp/WEB-INF/jsp/egovframework/example/<table>/`에 생성 (Web Project·Boot > Web Project 템플릿의 매퍼 위치·뷰 리졸버 접두어와 일치, 패키지명과 무관하게 고정)
+  - 생성된 Thymeleaf 등록/수정 화면이 정의되지 않은 `contextPath` 변수를 참조해 등록·수정·삭제·목록 버튼이 동작하지 않던 문제 수정 — 목록 화면을 포함해 폼 action을 Thymeleaf 링크 표현식(`[[@{...}]]`)으로 생성하여 컨텍스트 경로가 루트가 아닌 환경에서도 동작
+  - 생성된 Thymeleaf 등록/수정 화면의 `th:errors`가 `*price`처럼 잘못 렌더링되어 바인딩 오류 시 500이 발생하던 문제 수정
+  - 생성된 Controller의 미사용 `RequestParam` import 제거, VO의 `EgovNullCheck` import를 사용부와 함께 주석 처리
 - Config Generation
   - AOP 트랜잭션 설정 템플릿에서 txAdvisor의 잘못된 직접 메서드 호출 수정 (Refs: PR #12)
   - TransactionForm의 READ_UNCOMMITTED 오타 수정 (Refs: PR #9)
