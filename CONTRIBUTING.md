@@ -60,7 +60,7 @@ git lfs install
 > 
 > **Git LFS 관리 파일**: `"*.zip"` 파일들은 모두 Git LFS로 관리됩니다. `"*.zip"` 파일들은 모두 `templates/projects/examples/` 폴더에만 존재합니다. 프로젝트 클론 전이라면 `git lfs install` 명령어를 실행 후 클론을 하면 됩니다. 프로젝트 클론을 먼저 했다면 `git lfs pull` 명령어로 다운로드하세요.
 > 
-> Git LFS와 관련한 Trouble Shooting은 ["Git LFS 문제 해결" 목차](./docs/DEVELOPER.md#git-lfs-문제-해결)를 참고하기 바랍니다.
+> Git LFS와 관련한 Trouble Shooting은 ["Git LFS 문제 해결" 목차](./docs/development/DEVELOPMENT_GUIDE.md#git-lfs-문제-해결)를 참고하기 바랍니다.
 
 ### 2. Fork & Clone & Upstream
 
@@ -77,7 +77,7 @@ git clone {Fork하여 생성된 개인 레포지토리의 URL}.git
 > Git LFS 패키지 설치와 전역설정에 문제가 없다면, `templates/projects/examples/` 디렉토리에 zip파일들의 size에 문제가 없어야 합니다.
 > Git LFS에 문제가 있다면 해당 zip파일들은 단순 포인터로서 개별 size가 약 매우 작고 압축해제도 오류가 발생합니다.
 > 
-> Git LFS와 관련한 Trouble Shooting은 ["Git LFS 문제 해결" 목차](./docs/DEVELOPER.md#git-lfs-문제-해결)를 참고하기 바랍니다.
+> Git LFS와 관련한 Trouble Shooting은 ["Git LFS 문제 해결" 목차](./docs/development/DEVELOPMENT_GUIDE.md#git-lfs-문제-해결)를 참고하기 바랍니다.
 
 Upstream에 egovframe-vscode-initializr 레포지토리를 연결합니다.
 
@@ -344,8 +344,8 @@ VS Code에서 F5 키를 눌러 Extension Development Host 실행
 
 ### 6. 테스트 실행
 ```bash
-# Extension 테스트 (향후 추가 예정)
-npm test
+# Extension 테스트
+npm run test
 
 # Webview UI 테스트
 cd webview-ui && npm run test
